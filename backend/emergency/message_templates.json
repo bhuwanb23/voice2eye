@@ -1,0 +1,24 @@
+{
+  "templates": [
+    {
+      "id": "emergency_alert",
+      "subject": "VOICE2EYE Emergency Alert",
+      "body": "EMERGENCY ALERT from VOICE2EYE user!\n\nLocation: {location}\nTime: {timestamp}\nTrigger: {trigger_type}\n\nPlease check on the user immediately!",
+      "variables": [
+        "location",
+        "timestamp",
+        "trigger_type"
+      ]
+    },
+    {
+      "id": "location_update",
+      "subject": "VOICE2EYE Location Update",
+      "body": "Location update from VOICE2EYE user:\n\nCurrent location: {location}\nCoordinates: {coordinates}\nTime: {timestamp}",
+      "variables": [
+        "location",
+        "coordinates",
+        "timestamp"
+      ]
+    }
+  ]
+}

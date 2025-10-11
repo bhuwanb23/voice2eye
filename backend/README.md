@@ -48,6 +48,15 @@
 - **Wave**: Hello/Goodbye
 - **Stop Gesture**: Halt current action
 
+#### 🚨 **Emergency Alert System**
+- **Location Services**: IP-based geolocation with caching and validation
+- **Emergency Triggers**: Voice, gesture, and manual emergency detection
+- **Confirmation System**: Emergency confirmation with timeout and cancellation
+- **Message Sending**: Twilio SMS integration with fallback methods
+- **Contact Management**: Emergency contact database with priority system
+- **Message Templates**: Customizable emergency message templates
+- **Offline Support**: Fallback messaging when Twilio is unavailable
+
 #### 🔄 **Multimodal Integration**
 - **Voice + Gesture**: Combined speech and gesture recognition
 - **Emergency Detection**: Both voice ("help") and gesture (two fingers)

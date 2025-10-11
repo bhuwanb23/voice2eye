@@ -15,6 +15,7 @@ from speech.text_to_speech import TextToSpeechService, test_text_to_speech
 from speech.audio_processing import test_microphone_access
 from gestures.opencv_gesture_detection import OpenCVGestureDetectionService, GestureEvent, test_opencv_gesture_detection
 from gestures.opencv_gesture_classifier import GestureType
+from emergency.emergency_alert_system import EmergencyAlertSystem, EmergencyAlert
 from config.settings import LOG_LEVEL, LOG_FORMAT
 
 # Configure logging
@@ -36,6 +37,7 @@ class Voice2EyeApp:
         self.speech_service: SpeechRecognitionService = None
         self.tts_service: TextToSpeechService = None
         self.gesture_service: OpenCVGestureDetectionService = None
+        self.emergency_system: EmergencyAlertSystem = None
         self.is_running = False
         
     def initialize(self) -> bool:
@@ -75,6 +77,21 @@ class Voice2EyeApp:
             on_emergency=self.on_gesture_emergency
         )
         
+        # Initialize Emergency Alert System
+        logger.info("Initializing Emergency Alert System...")
+        self.emergency_system = EmergencyAlertSystem()
+        if not self.emergency_system.start():
+            logger.error("Failed to initialize Emergency Alert System")
+            return False
+        
+        # Set up emergency callbacks
+        self.emergency_system.set_callbacks(
+            on_alert_triggered=self.on_emergency_alert_triggered,
+            on_alert_confirmed=self.on_emergency_alert_confirmed,
+            on_alert_cancelled=self.on_emergency_alert_cancelled,
+            on_messages_sent=self.on_emergency_messages_sent
+        )
+        
         logger.info("VOICE2EYE Lite initialized successfully!")
         return True
     
@@ -105,6 +122,10 @@ class Voice2EyeApp:
         
         else:
             self.tts_service.speak(f"I heard you say: {text}")
+        
+        # Check for emergency keywords
+        if self.emergency_system:
+            self.emergency_system.trigger_voice_emergency(text, confidence)
     
     def on_emergency_detected(self, text: str, confidence: float):
         """Handle emergency detection"""
@@ -149,6 +170,14 @@ class Voice2EyeApp:
         
         elif event.gesture_type == GestureType.POINTING:
             self.tts_service.speak("I see you're pointing. What would you like me to do?")
+        
+        # Check for emergency gesture
+        if self.emergency_system:
+            gesture_data = {
+                'gesture_type': event.gesture_type.value,
+                'confidence': event.confidence
+            }
+            self.emergency_system.trigger_gesture_emergency(gesture_data)
     
     def on_gesture_emergency(self, event: GestureEvent):
         """Handle emergency gesture detection"""
@@ -217,7 +246,42 @@ class Voice2EyeApp:
         if self.tts_service:
             self.tts_service.cleanup()
         
+        if self.emergency_system:
+            self.emergency_system.stop()
+        
         logger.info("VOICE2EYE Lite stopped")
+    
+    def on_emergency_alert_triggered(self, alert: EmergencyAlert):
+        """Handle emergency alert triggered"""
+        logger.warning(f"🚨 EMERGENCY ALERT TRIGGERED: {alert.alert_id}")
+        logger.warning(f"Trigger: {alert.trigger_type.value}")
+        logger.warning(f"Location: {alert.location.address if alert.location else 'Unknown'}")
+        
+        # Speak emergency alert
+        self.tts_service.speak_emergency("Emergency alert triggered! Please confirm if you need help.")
+    
+    def on_emergency_alert_confirmed(self, alert: EmergencyAlert):
+        """Handle emergency alert confirmed"""
+        logger.warning(f"🚨 EMERGENCY ALERT CONFIRMED: {alert.alert_id}")
+        logger.warning(f"Messages sent: {len(alert.messages_sent)}")
+        
+        # Speak confirmation
+        self.tts_service.speak_emergency("Emergency confirmed! Help is on the way!")
+    
+    def on_emergency_alert_cancelled(self, alert: EmergencyAlert):
+        """Handle emergency alert cancelled"""
+        logger.info(f"Emergency alert cancelled: {alert.alert_id}")
+        self.tts_service.speak_confirmation("Emergency cancelled. You are safe.")
+    
+    def on_emergency_messages_sent(self, results):
+        """Handle emergency messages sent"""
+        successful = sum(1 for r in results if r.success)
+        logger.info(f"Emergency messages sent: {successful}/{len(results)} successful")
+        
+        if successful > 0:
+            self.tts_service.speak_confirmation(f"Emergency messages sent to {successful} contacts.")
+        else:
+            self.tts_service.speak("Emergency messages could not be sent. Please contact help manually.")
 
 def run_tests():
     """Run all system tests"""
@@ -228,6 +292,7 @@ def run_tests():
         ("Text-to-Speech", test_text_to_speech),
         ("Speech Recognition", test_speech_recognition),
         ("OpenCV Gesture Detection", test_opencv_gesture_detection),
+        ("Emergency Alert System", test_emergency_alert_system),
     ]
     
     results = {}

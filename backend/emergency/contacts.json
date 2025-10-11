@@ -1,0 +1,18 @@
+{
+  "contacts": [
+    {
+      "name": "Emergency Contact 1",
+      "phone": "+1234567890",
+      "relationship": "Family",
+      "priority": 1,
+      "enabled": false
+    },
+    {
+      "name": "Emergency Contact 2",
+      "phone": "+1234567891",
+      "relationship": "Friend",
+      "priority": 2,
+      "enabled": false
+    }
+  ]
+}
