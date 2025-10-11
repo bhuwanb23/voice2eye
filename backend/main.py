@@ -13,6 +13,8 @@ sys.path.append(str(Path(__file__).parent))
 from speech.speech_recognition import SpeechRecognitionService, test_speech_recognition
 from speech.text_to_speech import TextToSpeechService, test_text_to_speech
 from speech.audio_processing import test_microphone_access
+from gestures.gesture_detection import GestureDetectionService, GestureEvent, test_gesture_detection
+from gestures.gesture_classifier import GestureType
 from config.settings import LOG_LEVEL, LOG_FORMAT
 
 # Configure logging
@@ -33,6 +35,7 @@ class Voice2EyeApp:
     def __init__(self):
         self.speech_service: SpeechRecognitionService = None
         self.tts_service: TextToSpeechService = None
+        self.gesture_service: GestureDetectionService = None
         self.is_running = False
         
     def initialize(self) -> bool:
@@ -53,10 +56,23 @@ class Voice2EyeApp:
             logger.error("Failed to initialize Speech Recognition service")
             return False
         
-        # Set up callbacks
+        # Set up speech callbacks
         self.speech_service.set_callbacks(
             on_result=self.on_speech_result,
             on_emergency=self.on_emergency_detected
+        )
+        
+        # Initialize Gesture Detection service
+        logger.info("Initializing Gesture Detection service...")
+        self.gesture_service = GestureDetectionService()
+        if not self.gesture_service.initialize():
+            logger.error("Failed to initialize Gesture Detection service")
+            return False
+        
+        # Set up gesture callbacks
+        self.gesture_service.set_callbacks(
+            on_gesture=self.on_gesture_detected,
+            on_emergency=self.on_gesture_emergency
         )
         
         logger.info("VOICE2EYE Lite initialized successfully!")
@@ -103,6 +119,50 @@ class Voice2EyeApp:
         # - Contact emergency services
         logger.warning("EMERGENCY PROTOCOL TRIGGERED - Implement emergency response here")
     
+    def on_gesture_detected(self, event: GestureEvent):
+        """Handle gesture detection"""
+        logger.info(f"Gesture detected: {event.gesture_type.value} "
+                   f"({event.handedness}) confidence: {event.confidence:.2f}")
+        
+        # Respond to gestures
+        if event.gesture_type == GestureType.OPEN_HAND:
+            self.tts_service.speak("Starting to listen for voice commands")
+            if self.speech_service:
+                self.speech_service.start_listening(continuous=True)
+        
+        elif event.gesture_type == GestureType.FIST:
+            self.tts_service.speak("Stopping voice recognition")
+            if self.speech_service:
+                self.speech_service.stop_listening()
+        
+        elif event.gesture_type == GestureType.THUMBS_UP:
+            self.tts_service.speak_confirmation("Yes, I understand")
+        
+        elif event.gesture_type == GestureType.THUMBS_DOWN:
+            self.tts_service.speak_confirmation("No, I understand")
+        
+        elif event.gesture_type == GestureType.WAVE:
+            self.tts_service.speak("Hello! How can I help you?")
+        
+        elif event.gesture_type == GestureType.STOP_GESTURE:
+            self.tts_service.speak("Stopping current action")
+        
+        elif event.gesture_type == GestureType.POINTING:
+            self.tts_service.speak("I see you're pointing. What would you like me to do?")
+    
+    def on_gesture_emergency(self, event: GestureEvent):
+        """Handle emergency gesture detection"""
+        logger.warning(f"EMERGENCY GESTURE DETECTED: {event.gesture_type.value}")
+        
+        # Speak emergency alert
+        self.tts_service.speak_emergency("Emergency gesture detected! Help is on the way!")
+        
+        # In a real implementation, this would trigger:
+        # - Send SMS to emergency contacts
+        # - Get current location
+        # - Contact emergency services
+        logger.warning("EMERGENCY PROTOCOL TRIGGERED - Implement emergency response here")
+    
     def start(self):
         """Start the application"""
         if not self.initialize():
@@ -110,17 +170,23 @@ class Voice2EyeApp:
             return False
         
         logger.info("Starting VOICE2EYE Lite...")
-        self.tts_service.speak("VOICE2EYE Lite is now active. Say 'help' for emergency, or speak normally.")
+        self.tts_service.speak("VOICE2EYE Lite is now active. Use voice commands or hand gestures. Say 'help' or show two fingers for emergency.")
         
         self.is_running = True
         
         try:
+            # Start gesture detection
+            if not self.gesture_service.start_detection():
+                logger.error("Failed to start gesture detection")
+                return False
+            
             # Start continuous listening
             if not self.speech_service.start_listening(continuous=True):
                 logger.error("Failed to start speech recognition")
                 return False
             
             logger.info("Application is running. Press Ctrl+C to stop.")
+            logger.info("Available gestures: Open hand (start listening), Fist (stop listening), Two fingers (emergency)")
             
             # Keep running until interrupted
             while self.is_running:
@@ -140,6 +206,10 @@ class Voice2EyeApp:
         logger.info("Stopping VOICE2EYE Lite...")
         self.is_running = False
         
+        if self.gesture_service:
+            self.gesture_service.stop_detection()
+            self.gesture_service.cleanup()
+        
         if self.speech_service:
             self.speech_service.stop_listening()
             self.speech_service.cleanup()
@@ -157,6 +227,7 @@ def run_tests():
         ("Microphone Access", test_microphone_access),
         ("Text-to-Speech", test_text_to_speech),
         ("Speech Recognition", test_speech_recognition),
+        ("Gesture Detection", test_gesture_detection),
     ]
     
     results = {}

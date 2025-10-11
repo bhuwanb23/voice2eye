@@ -32,6 +32,36 @@ TTS_VOICE_ID = 0  # Default voice
 # Emergency keywords
 EMERGENCY_KEYWORDS = ["help", "emergency", "sos", "assist", "urgent"]
 
+# Gesture Recognition Settings
+GESTURE_CONFIDENCE_THRESHOLD = 0.7
+GESTURE_HOLD_TIME = 1.0  # seconds
+GESTURE_SEQUENCE_TIMEOUT = 3.0  # seconds
+GESTURE_SMOOTHING_FACTOR = 0.3
+GESTURE_MIN_DETECTION_FRAMES = 5
+
+# Camera settings
+CAMERA_WIDTH = 640
+CAMERA_HEIGHT = 480
+CAMERA_FPS = 30
+CAMERA_INDEX = 0  # Default camera
+
+# MediaPipe settings
+MEDIAPIPE_MAX_HANDS = 2
+MEDIAPIPE_MIN_DETECTION_CONFIDENCE = 0.7
+MEDIAPIPE_MIN_TRACKING_CONFIDENCE = 0.5
+
+# Gesture vocabulary
+GESTURE_VOCABULARY = {
+    "open_hand": "Start listening",
+    "fist": "Stop listening", 
+    "two_fingers": "Emergency",
+    "thumbs_up": "Yes/Confirm",
+    "thumbs_down": "No/Cancel",
+    "pointing": "Direction/Selection",
+    "wave": "Hello/Goodbye",
+    "stop_gesture": "Halt action"
+}
+
 # Logging settings
 LOG_LEVEL = "INFO"
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
