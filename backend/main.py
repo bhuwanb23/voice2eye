@@ -13,8 +13,8 @@ sys.path.append(str(Path(__file__).parent))
 from speech.speech_recognition import SpeechRecognitionService, test_speech_recognition
 from speech.text_to_speech import TextToSpeechService, test_text_to_speech
 from speech.audio_processing import test_microphone_access
-from gestures.gesture_detection import GestureDetectionService, GestureEvent, test_gesture_detection
-from gestures.gesture_classifier import GestureType
+from gestures.opencv_gesture_detection import OpenCVGestureDetectionService, GestureEvent, test_opencv_gesture_detection
+from gestures.opencv_gesture_classifier import GestureType
 from config.settings import LOG_LEVEL, LOG_FORMAT
 
 # Configure logging
@@ -35,7 +35,7 @@ class Voice2EyeApp:
     def __init__(self):
         self.speech_service: SpeechRecognitionService = None
         self.tts_service: TextToSpeechService = None
-        self.gesture_service: GestureDetectionService = None
+        self.gesture_service: OpenCVGestureDetectionService = None
         self.is_running = False
         
     def initialize(self) -> bool:
@@ -62,11 +62,11 @@ class Voice2EyeApp:
             on_emergency=self.on_emergency_detected
         )
         
-        # Initialize Gesture Detection service
-        logger.info("Initializing Gesture Detection service...")
-        self.gesture_service = GestureDetectionService()
+        # Initialize OpenCV Gesture Detection service
+        logger.info("Initializing OpenCV Gesture Detection service...")
+        self.gesture_service = OpenCVGestureDetectionService()
         if not self.gesture_service.initialize():
-            logger.error("Failed to initialize Gesture Detection service")
+            logger.error("Failed to initialize OpenCV Gesture Detection service")
             return False
         
         # Set up gesture callbacks
@@ -227,7 +227,7 @@ def run_tests():
         ("Microphone Access", test_microphone_access),
         ("Text-to-Speech", test_text_to_speech),
         ("Speech Recognition", test_speech_recognition),
-        ("Gesture Detection", test_gesture_detection),
+        ("OpenCV Gesture Detection", test_opencv_gesture_detection),
     ]
     
     results = {}
