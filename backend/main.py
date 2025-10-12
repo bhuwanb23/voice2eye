@@ -16,6 +16,7 @@ from speech.audio_processing import test_microphone_access
 from gestures.opencv_gesture_detection import OpenCVGestureDetectionService, GestureEvent, test_opencv_gesture_detection
 from gestures.opencv_gesture_classifier import GestureType
 from emergency.emergency_alert_system import EmergencyAlertSystem, EmergencyAlert
+from storage.storage_system import StorageSystem, test_storage_system
 from config.settings import LOG_LEVEL, LOG_FORMAT
 
 # Configure logging
@@ -38,6 +39,7 @@ class Voice2EyeApp:
         self.tts_service: TextToSpeechService = None
         self.gesture_service: OpenCVGestureDetectionService = None
         self.emergency_system: EmergencyAlertSystem = None
+        self.storage_system: StorageSystem = None
         self.is_running = False
         
     def initialize(self) -> bool:
@@ -92,6 +94,18 @@ class Voice2EyeApp:
             on_messages_sent=self.on_emergency_messages_sent
         )
         
+        # Initialize Storage System
+        logger.info("Initializing Storage System...")
+        self.storage_system = StorageSystem()
+        if not self.storage_system.initialize():
+            logger.error("Failed to initialize Storage System")
+            return False
+        
+        # Start logging session
+        session_id = self.storage_system.start_session()
+        if session_id:
+            logger.info(f"Started logging session: {session_id}")
+        
         logger.info("VOICE2EYE Lite initialized successfully!")
         return True
     
@@ -122,6 +136,10 @@ class Voice2EyeApp:
         
         else:
             self.tts_service.speak(f"I heard you say: {text}")
+        
+        # Log voice command
+        if self.storage_system:
+            self.storage_system.log_voice_command(command, text, confidence)
         
         # Check for emergency keywords
         if self.emergency_system:
@@ -170,6 +188,15 @@ class Voice2EyeApp:
         
         elif event.gesture_type == GestureType.POINTING:
             self.tts_service.speak("I see you're pointing. What would you like me to do?")
+        
+        # Log gesture detection
+        if self.storage_system:
+            gesture_data = {
+                'gesture_type': event.gesture_type.value,
+                'confidence': event.confidence,
+                'timestamp': event.timestamp
+            }
+            self.storage_system.log_gesture_detected(event.gesture_type.value, event.confidence, gesture_data)
         
         # Check for emergency gesture
         if self.emergency_system:
@@ -249,6 +276,9 @@ class Voice2EyeApp:
         if self.emergency_system:
             self.emergency_system.stop()
         
+        if self.storage_system:
+            self.storage_system.cleanup()
+        
         logger.info("VOICE2EYE Lite stopped")
     
     def on_emergency_alert_triggered(self, alert: EmergencyAlert):
@@ -293,6 +323,7 @@ def run_tests():
         ("Speech Recognition", test_speech_recognition),
         ("OpenCV Gesture Detection", test_opencv_gesture_detection),
         ("Emergency Alert System", test_emergency_alert_system),
+        ("Storage System", test_storage_system),
     ]
     
     results = {}

@@ -275,8 +275,8 @@ def test_opencv_gesture_detection() -> bool:
     try:
         # Test hand detection
         if not test_opencv_hand_detection():
-        #     logger.error("OpenCV hand detection test failed")
-        #     return False
+            logger.error("OpenCV hand detection test failed")
+            return False
         
         # Test gesture classification
         if not test_gesture_classification():
