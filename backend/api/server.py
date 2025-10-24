@@ -23,16 +23,16 @@ except ImportError:
     class FastAPI:
         def __init__(self, *args, **kwargs):
             pass
-            
+
         def add_middleware(self, *args, **kwargs):
             pass
-            
+
         def include_router(self, *args, **kwargs):
             pass
-    
+
     class CORSMiddleware:
         pass
-        
+
     class JSONResponse:
         def __init__(self, *args, **kwargs):
             pass
@@ -61,8 +61,12 @@ if FASTAPI_AVAILABLE:
 # Include routers
 if FASTAPI_AVAILABLE:
     try:
-        from api.routes import health
+        from api.routes import health, speech, gestures, emergency, settings
         app.include_router(health.router, prefix="/api", tags=["health"])
+        app.include_router(speech.router, prefix="/api", tags=["speech"])
+        app.include_router(gestures.router, prefix="/api", tags=["gestures"])
+        app.include_router(emergency.router, prefix="/api", tags=["emergency"])
+        app.include_router(settings.router, prefix="/api", tags=["settings"])
     except ImportError as e:
         print(f"Could not import routes: {e}")
 
@@ -89,14 +93,20 @@ if __name__ == "__main__":
     port = int(os.getenv("API_PORT", 8000))
     host = os.getenv("API_HOST", "127.0.0.1")
     
-    print(f"Starting VOICE2EYE API server on {host}:{port}")
+    # Production settings
+    reload = os.getenv("API_RELOAD", "True").lower() == "true"
+    workers = int(os.getenv("API_WORKERS", "1"))
     
+    print(f"Starting VOICE2EYE API server on {host}:{port}")
+    print(f"Reload: {reload}, Workers: {workers}")
+
     if FASTAPI_AVAILABLE:
         uvicorn.run(
             "api.server:app",
             host=host,
             port=port,
-            reload=True,
+            reload=reload,
+            workers=workers,
             log_level="info"
         )
     else:
