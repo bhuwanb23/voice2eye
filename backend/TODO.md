@@ -53,19 +53,19 @@
   - [x] ✅ Return: `{is_listening, model_loaded, last_recognition_time}`
 
 #### 1.4 Gesture Recognition API Endpoints (`api/routes/gestures.py`)
-- [x] `POST /api/gestures/analyze` - Analyze gesture from image
-  - [x] Accept image file upload or base64 encoded image
-  - [x] Return: `{gesture_type, confidence, handedness, is_emergency, timestamp}`
-  - [x] Support batch processing for video frames
-- [ ] `POST /api/gestures/analyze/stream` - WebSocket for video streaming
-  - [ ] Accept video stream from mobile camera
-  - [ ] Process frames in real-time
-  - [ ] Return gesture events as they occur
-- [x] `GET /api/gestures/vocabulary` - Get available gestures
-  - [x] Return list of supported gestures with descriptions
-  - [x] Include confidence thresholds and hold times
-- [x] `GET /api/gestures/status` - Check gesture service status
-  - [x] Return: `{is_detecting, camera_available, last_detection_time}`
+- [x] ✅ `POST /api/gestures/analyze` - Analyze gesture from image
+  - [x] ✅ Accept image file upload or base64 encoded image
+  - [x] ✅ Return: `{gesture_type, confidence, handedness, is_emergency, timestamp}`
+  - [x] ✅ Support batch processing for video frames
+- [x] ✅ `POST /api/gestures/analyze/stream` - WebSocket for video streaming
+  - [x] ✅ Accept video stream from mobile camera
+  - [x] ✅ Process frames in real-time
+  - [x] ✅ Return gesture events as they occur
+- [x] ✅ `GET /api/gestures/vocabulary` - Get available gestures
+  - [x] ✅ Return list of supported gestures with descriptions
+  - [x] ✅ Include confidence thresholds and hold times
+- [x] ✅ `GET /api/gestures/status` - Check gesture service status
+  - [x] ✅ Return: `{is_detecting, camera_available, last_detection_time}`
 
 #### 1.5 Emergency Alert API Endpoints (`api/routes/emergency.py`)
 - [x] `POST /api/emergency/trigger` - Trigger emergency alert
