@@ -3,7 +3,9 @@ Speech Recognition API Routes
 """
 import os
 import tempfile
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+import asyncio
+import json
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, WebSocket, WebSocketDisconnect
 from typing import Dict, Any, Optional
 import logging
 
@@ -56,7 +58,8 @@ async def recognize_speech(
             }
         
         # Save uploaded file temporarily
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(audio_file.filename)[1]) as tmp_file:
+        file_extension = os.path.splitext(audio_file.filename or ".wav")[1] if audio_file.filename else ".wav"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
             content = await audio_file.read()
             tmp_file.write(content)
             tmp_file_path = tmp_file.name
@@ -82,6 +85,50 @@ async def recognize_speech(
     except Exception as e:
         logger.error(f"Error in speech recognition: {e}")
         raise HTTPException(status_code=500, detail="Speech recognition failed")
+
+@router.websocket("/recognize/stream")
+async def websocket_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time speech recognition streaming
+    
+    Args:
+        websocket: WebSocket connection for streaming audio data
+    """
+    await websocket.accept()
+    logger.info("WebSocket connection established for speech streaming")
+    
+    try:
+        # Simulate speech recognition streaming
+        # In a real implementation, this would process audio chunks in real-time
+        while True:
+            # Receive audio data from client
+            data = await websocket.receive_text()
+            
+            # Parse the incoming data (could be JSON with audio chunks)
+            try:
+                audio_data = json.loads(data)
+            except json.JSONDecodeError:
+                audio_data = {"data": data}
+            
+            # Simulate processing delay
+            await asyncio.sleep(0.1)
+            
+            # Send back recognition results
+            response = {
+                "text": "Simulated real-time speech recognition result",
+                "confidence": 0.92,
+                "is_emergency": False,
+                "timestamp": "2025-10-23T22:00:00Z",
+                "partial": True
+            }
+            
+            await websocket.send_json(response)
+            
+    except WebSocketDisconnect:
+        logger.info("WebSocket connection closed")
+    except Exception as e:
+        logger.error(f"Error in WebSocket speech streaming: {e}")
+        await websocket.close()
 
 @router.post("/synthesize", response_model=Dict[str, Any])
 async def synthesize_speech(

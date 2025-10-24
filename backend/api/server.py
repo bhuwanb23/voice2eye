@@ -63,10 +63,10 @@ if FASTAPI_AVAILABLE:
     try:
         from api.routes import health, speech, gestures, emergency, settings
         app.include_router(health.router, prefix="/api", tags=["health"])
-        app.include_router(speech.router, prefix="/api", tags=["speech"])
-        app.include_router(gestures.router, prefix="/api", tags=["gestures"])
-        app.include_router(emergency.router, prefix="/api", tags=["emergency"])
-        app.include_router(settings.router, prefix="/api", tags=["settings"])
+        app.include_router(speech.router, prefix="/api/speech", tags=["speech"])
+        app.include_router(gestures.router, prefix="/api/gestures", tags=["gestures"])
+        app.include_router(emergency.router, prefix="/api/emergency", tags=["emergency"])
+        app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
     except ImportError as e:
         print(f"Could not import routes: {e}")
 

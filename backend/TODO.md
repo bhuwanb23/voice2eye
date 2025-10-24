@@ -36,21 +36,21 @@
 - [x] ✅ Configure production-ready settings
 
 #### 1.3 Speech Recognition API Endpoints (`api/routes/speech.py`)
-- [x] `POST /api/speech/recognize` - Real-time speech recognition
-  - [x] Accept audio file upload (multipart/form-data)
-  - [x] Support base64 encoded audio data
-  - [x] Return: `{text, confidence, is_emergency, timestamp}`
-  - [x] Handle audio format conversion (webm, m4a, wav)
-- [ ] `POST /api/speech/recognize/stream` - WebSocket for streaming audio
-  - [ ] Implement WebSocket connection handler
-  - [ ] Process audio chunks in real-time
-  - [ ] Stream back partial results
-- [x] `POST /api/speech/synthesize` - Text-to-speech
-  - [x] Accept: `{text, tone, rate, volume}`
-  - [x] Return audio file or base64 encoded audio
-  - [x] Support emergency, confirmation, instructional tones
-- [x] `GET /api/speech/status` - Check speech service status
-  - [x] Return: `{is_listening, model_loaded, last_recognition_time}`
+- [x] ✅ `POST /api/speech/recognize` - Real-time speech recognition
+  - [x] ✅ Accept audio file upload (multipart/form-data)
+  - [x] ✅ Support base64 encoded audio data
+  - [x] ✅ Return: `{text, confidence, is_emergency, timestamp}`
+  - [x] ✅ Handle audio format conversion (webm, m4a, wav)
+- [x] ✅ `POST /api/speech/recognize/stream` - WebSocket for streaming audio
+  - [x] ✅ Implement WebSocket connection handler
+  - [x] ✅ Process audio chunks in real-time
+  - [x] ✅ Stream back partial results
+- [x] ✅ `POST /api/speech/synthesize` - Text-to-speech
+  - [x] ✅ Accept: `{text, tone, rate, volume}`
+  - [x] ✅ Return audio file or base64 encoded audio
+  - [x] ✅ Support emergency, confirmation, instructional tones
+- [x] ✅ `GET /api/speech/status` - Check speech service status
+  - [x] ✅ Return: `{is_listening, model_loaded, last_recognition_time}`
 
 #### 1.4 Gesture Recognition API Endpoints (`api/routes/gestures.py`)
 - [x] `POST /api/gestures/analyze` - Analyze gesture from image
