@@ -198,7 +198,7 @@ const ContactForm = ({ navigation, route }) => {
                 { 
                   backgroundColor: colors.surface,
                   color: colors.text,
-                  borderColor: errors.name ? '#f44336' : colors.border,
+                  borderColor: errors.name ? colors.error : colors.border,
                 }
               ]}
               value={formData.name}
@@ -209,7 +209,7 @@ const ContactForm = ({ navigation, route }) => {
               accessibilityHint="Enter the full name of the contact"
             />
             {errors.name && (
-              <Text style={styles.errorText}>{errors.name}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.name}</Text>
             )}
           </View>
 
@@ -224,7 +224,7 @@ const ContactForm = ({ navigation, route }) => {
                 { 
                   backgroundColor: colors.surface,
                   color: colors.text,
-                  borderColor: errors.phoneNumber ? '#f44336' : colors.border,
+                  borderColor: errors.phoneNumber ? colors.error : colors.border,
                 }
               ]}
               value={formData.phoneNumber}
@@ -236,7 +236,7 @@ const ContactForm = ({ navigation, route }) => {
               accessibilityHint="Enter the phone number of the contact"
             />
             {errors.phoneNumber && (
-              <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.phoneNumber}</Text>
             )}
           </View>
 
@@ -251,7 +251,7 @@ const ContactForm = ({ navigation, route }) => {
                 { 
                   backgroundColor: colors.surface,
                   color: colors.text,
-                  borderColor: errors.relationship ? '#f44336' : colors.border,
+                  borderColor: errors.relationship ? colors.error : colors.border,
                 }
               ]}
               value={formData.relationship}
@@ -262,7 +262,7 @@ const ContactForm = ({ navigation, route }) => {
               accessibilityHint="Enter your relationship to this contact"
             />
             {errors.relationship && (
-              <Text style={styles.errorText}>{errors.relationship}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.relationship}</Text>
             )}
           </View>
 
@@ -386,7 +386,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   errorText: {
-    color: '#f44336',
     fontSize: 14,
     marginTop: 4,
   },

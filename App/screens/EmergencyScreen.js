@@ -137,9 +137,9 @@ const EmergencyScreen = ({ navigation, route }) => {
               pitch: settings.speechPitch,
             });
             
-            // Navigate back to dashboard
+            // Navigate back to main tabs
             setTimeout(() => {
-              navigation.navigate('Dashboard');
+              navigation.navigate('MainTabs');
             }, 2000);
           },
           style: 'destructive',
@@ -164,18 +164,18 @@ const EmergencyScreen = ({ navigation, route }) => {
   const getStatusColor = () => {
     switch (emergencyStatus) {
       case 'triggered':
-        return '#FF6B6B';
+        return colors.warning;
       case 'confirmed':
-        return '#FF0000';
+        return colors.error;
       case 'cancelled':
-        return '#4CAF50';
+        return colors.success;
       default:
-        return '#FF6B6B';
+        return colors.warning;
     }
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: '#000000' }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Emergency Header */}
       <Animated.View
         style={[
@@ -201,8 +201,10 @@ const EmergencyScreen = ({ navigation, route }) => {
       {/* Main Content */}
       <View style={styles.content}>
         {/* Status Information */}
-        <View style={styles.statusContainer}>
-          <Text style={styles.statusTitle}>Emergency Status</Text>
+        <View style={[styles.statusContainer, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.statusTitle, { color: colors.text }]}>
+            Emergency Status
+          </Text>
           <Text style={[styles.statusText, { color: getStatusColor() }]}>
             {emergencyStatus.toUpperCase()}
           </Text>
@@ -210,25 +212,35 @@ const EmergencyScreen = ({ navigation, route }) => {
 
         {/* Countdown Timer */}
         {emergencyStatus === 'triggered' && (
-          <View style={styles.countdownContainer}>
-            <Text style={styles.countdownLabel}>Auto-confirm in:</Text>
-            <Text style={[styles.countdownText, { color: getStatusColor() }]}>
+          <View style={[styles.countdownContainer, { backgroundColor: getStatusColor() }]}>
+            <Text style={styles.countdownLabel}>
+              Auto-confirm in:
+            </Text>
+            <Text style={[styles.countdownText, { color: 'white' }]}>
               {countdown} seconds
             </Text>
           </View>
         )}
 
         {/* Location Information */}
-        <View style={styles.locationContainer}>
-          <Text style={styles.locationLabel}>Your Location:</Text>
-          <Text style={styles.locationText}>{location}</Text>
+        <View style={[styles.locationContainer, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.locationLabel, { color: colors.text }]}>
+            Your Location:
+          </Text>
+          <Text style={[styles.locationText, { color: colors.text }]}>
+            {location}
+          </Text>
         </View>
 
         {/* Contacts Notified */}
         {emergencyStatus === 'confirmed' && (
-          <View style={styles.contactsContainer}>
-            <Text style={styles.contactsLabel}>Emergency Contacts Notified:</Text>
-            <Text style={styles.contactsText}>{contactsNotified} contacts</Text>
+          <View style={[styles.contactsContainer, { backgroundColor: colors.success }]}>
+            <Text style={styles.contactsLabel}>
+              Emergency Contacts Notified:
+            </Text>
+            <Text style={styles.contactsText}>
+              {contactsNotified} contacts
+            </Text>
           </View>
         )}
 
@@ -273,11 +285,19 @@ const EmergencyScreen = ({ navigation, route }) => {
         </View>
 
         {/* Voice Commands */}
-        <View style={styles.voiceCommandsContainer}>
-          <Text style={styles.voiceCommandsTitle}>Voice Commands:</Text>
-          <Text style={styles.voiceCommandText}>Say "Cancel" to cancel emergency</Text>
-          <Text style={styles.voiceCommandText}>Say "Help" for more assistance</Text>
-          <Text style={styles.voiceCommandText}>Say "Location" to hear your location</Text>
+        <View style={[styles.voiceCommandsContainer, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.voiceCommandsTitle, { color: colors.text }]}>
+            Voice Commands:
+          </Text>
+          <Text style={[styles.voiceCommandText, { color: colors.text }]}>
+            Say "Cancel" to cancel emergency
+          </Text>
+          <Text style={[styles.voiceCommandText, { color: colors.text }]}>
+            Say "Help" for more assistance
+          </Text>
+          <Text style={[styles.voiceCommandText, { color: colors.text }]}>
+            Say "Location" to hear your location
+          </Text>
         </View>
       </View>
 
@@ -295,7 +315,6 @@ const EmergencyScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   emergencyHeader: {
     padding: 20,
@@ -321,16 +340,22 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   statusContainer: {
-    backgroundColor: '#FFFFFF',
     padding: 20,
     borderRadius: 12,
     marginBottom: 20,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   statusTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',
     marginBottom: 10,
   },
   statusText: {
@@ -338,7 +363,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   countdownContainer: {
-    backgroundColor: '#FF6B6B',
     padding: 20,
     borderRadius: 12,
     marginBottom: 20,
@@ -352,30 +376,41 @@ const styles = StyleSheet.create({
   countdownText: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#FFFFFF',
   },
   locationContainer: {
-    backgroundColor: '#FFFFFF',
     padding: 20,
     borderRadius: 12,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   locationLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000000',
     marginBottom: 10,
   },
   locationText: {
     fontSize: 18,
-    color: '#000000',
   },
   contactsContainer: {
-    backgroundColor: '#4CAF50',
     padding: 20,
     borderRadius: 12,
     marginBottom: 20,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   contactsLabel: {
     fontSize: 16,
@@ -398,24 +433,29 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   voiceCommandsContainer: {
-    backgroundColor: '#FFFFFF',
     padding: 20,
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   voiceCommandsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000000',
     marginBottom: 10,
   },
   voiceCommandText: {
     fontSize: 14,
-    color: '#000000',
     marginBottom: 5,
   },
   statusIndicator: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 80, // Adjusted to account for bottom navigation bar
     left: 20,
     right: 20,
   },

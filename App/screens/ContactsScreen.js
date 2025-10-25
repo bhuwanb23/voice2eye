@@ -125,13 +125,13 @@ const ContactsScreen = ({ navigation }) => {
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'high':
-        return '#f44336';
+        return colors.error;
       case 'medium':
-        return '#ff9800';
+        return colors.warning;
       case 'low':
-        return '#4caf50';
+        return colors.success;
       default:
-        return '#9e9e9e';
+        return colors.textSecondary;
     }
   };
 
@@ -151,7 +151,7 @@ const ContactsScreen = ({ navigation }) => {
   };
 
   const renderContactItem = ({ item }) => (
-    <View style={[styles.contactCard, { backgroundColor: colors.surface }]}>
+    <View style={[styles.contactCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.contactHeader}>
         <Text style={styles.contactIcon}>{getGroupIcon(item.group)}</Text>
         <View style={styles.contactInfo}>
@@ -254,6 +254,7 @@ const ContactsScreen = ({ navigation }) => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -335,6 +336,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -408,7 +410,7 @@ const styles = StyleSheet.create({
   fabContainer: {
     position: 'absolute',
     right: 20,
-    bottom: 20,
+    bottom: 80, // Adjusted to account for bottom navigation bar
   },
   fab: {
     width: 60,

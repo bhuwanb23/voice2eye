@@ -12,7 +12,6 @@ import {
   Alert,
   Vibration,
   Animated,
-  LinearGradient,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
@@ -92,9 +91,11 @@ const DashboardScreen = ({ navigation }) => {
     } else if (lowerCommand.includes('gesture')) {
       navigation.navigate('GestureTraining');
     } else if (lowerCommand.includes('help') || lowerCommand.includes('tutorial')) {
-      navigation.navigate('Help');
+      // For now, we'll navigate to settings as a placeholder
+      navigation.navigate('Settings');
     } else if (lowerCommand.includes('camera')) {
-      navigation.navigate('Camera');
+      // For now, we'll navigate to gesture training as a placeholder
+      navigation.navigate('GestureTraining');
     } else {
       // Default response
       setStatusMessage(`Command received: ${command}`);
@@ -108,41 +109,8 @@ const DashboardScreen = ({ navigation }) => {
   };
 
   const triggerEmergency = () => {
-    setIsEmergencyMode(true);
-    setCurrentStatus('emergency');
-    setStatusMessage('Emergency mode activated!');
-    
-    // Haptic feedback
-    if (settings.hapticFeedback) {
-      Vibration.vibrate([0, 500, 200, 500]); // Emergency pattern
-    }
-    
-    // Voice announcement
-    Speech.speak("Emergency mode activated! Help is being contacted.", {
-      rate: 0.7, // Slower for emergency
-      pitch: 1.2, // Higher pitch for urgency
-    });
-    
-    // Show emergency confirmation
-    Alert.alert(
-      'Emergency Mode',
-      'Emergency mode has been activated. Help is being contacted. Do you want to cancel?',
-      [
-        {
-          text: 'Cancel Emergency',
-          onPress: () => {
-            setIsEmergencyMode(false);
-            setCurrentStatus('idle');
-            setStatusMessage('Emergency cancelled');
-          },
-          style: 'destructive',
-        },
-        {
-          text: 'Keep Emergency',
-          style: 'default',
-        },
-      ]
-    );
+    // Navigate to emergency screen instead of showing alert
+    navigation.navigate('Emergency');
   };
 
   const startVoiceRecognition = () => {
@@ -237,7 +205,7 @@ const DashboardScreen = ({ navigation }) => {
       title: 'Settings',
       subtitle: 'Configure preferences',
       icon: '⚙️',
-      color: '#4A90E2',
+      color: colors.primary,
       onPress: () => navigation.navigate('Settings'),
       accessibilityLabel: 'Open settings',
     },
@@ -245,7 +213,7 @@ const DashboardScreen = ({ navigation }) => {
       title: 'Contacts',
       subtitle: 'Manage emergency contacts',
       icon: '👥',
-      color: '#2E7D32',
+      color: colors.success,
       onPress: () => navigation.navigate('Contacts'),
       accessibilityLabel: 'Manage emergency contacts',
     },
@@ -253,7 +221,7 @@ const DashboardScreen = ({ navigation }) => {
       title: 'Gesture Training',
       subtitle: 'Learn hand gestures',
       icon: '✋',
-      color: '#FF6B6B',
+      color: colors.accent,
       onPress: () => navigation.navigate('GestureTraining'),
       accessibilityLabel: 'Open gesture training',
     },
@@ -261,14 +229,14 @@ const DashboardScreen = ({ navigation }) => {
       title: 'Help & Tutorial',
       subtitle: 'Get help and learn',
       icon: '❓',
-      color: '#FF9800',
-      onPress: () => navigation.navigate('Help'),
+      color: colors.warning,
+      onPress: () => navigation.navigate('Settings'), // Placeholder until Help screen is created
       accessibilityLabel: 'Open help and tutorial',
     },
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: '#f8f9fa' }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -284,7 +252,7 @@ const DashboardScreen = ({ navigation }) => {
             },
           ]}
         >
-          <View style={styles.headerGradient}>
+          <View style={[styles.headerGradient, { backgroundColor: colors.primary }]}>
             <Text style={styles.title}>VOICE2EYE</Text>
             <Text style={styles.subtitle}>
               {isEmergencyMode ? 'Emergency Mode Active' : 'AI-Powered Assistive Technology'}
@@ -322,7 +290,7 @@ const DashboardScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
             {quickActions.map((action, index) => (
               <Animated.View
@@ -363,7 +331,7 @@ const DashboardScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={styles.sectionTitle}>Navigation</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Navigation</Text>
           <View style={styles.navigationGrid}>
             {navigationItems.map((item, index) => (
               <Animated.View
@@ -376,14 +344,15 @@ const DashboardScreen = ({ navigation }) => {
                       { translateY: slideAnim },
                       { scale: pulseAnim },
                     ],
+                    backgroundColor: colors.surface,
                   },
                 ]}
               >
                 <View style={[styles.navigationIcon, { backgroundColor: item.color }]}>
                   <Text style={styles.navigationEmoji}>{item.icon}</Text>
                 </View>
-                <Text style={styles.navigationTitle}>{item.title}</Text>
-                <Text style={styles.navigationSubtitle}>{item.subtitle}</Text>
+                <Text style={[styles.navigationTitle, { color: colors.text }]}>{item.title}</Text>
+                <Text style={[styles.navigationSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
                 <AccessibleButton
                   title="Open"
                   onPress={item.onPress}
@@ -408,23 +377,31 @@ const DashboardScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={styles.sectionTitle}>Voice Commands</Text>
-          <View style={styles.commandsContainer}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Voice Commands</Text>
+          <View style={[styles.commandsContainer, { backgroundColor: colors.surface }]}>
             <View style={styles.commandItem}>
               <Text style={styles.commandIcon}>🎤</Text>
-              <Text style={styles.commandText}>Say "Emergency" or "Help" for emergency mode</Text>
+              <Text style={[styles.commandText, { color: colors.text }]}>
+                Say "Emergency" or "Help" for emergency mode
+              </Text>
             </View>
             <View style={styles.commandItem}>
               <Text style={styles.commandIcon}>⚙️</Text>
-              <Text style={styles.commandText}>Say "Settings" to open configuration</Text>
+              <Text style={[styles.commandText, { color: colors.text }]}>
+                Say "Settings" to open configuration
+              </Text>
             </View>
             <View style={styles.commandItem}>
               <Text style={styles.commandIcon}>👥</Text>
-              <Text style={styles.commandText}>Say "Contacts" to manage emergency contacts</Text>
+              <Text style={[styles.commandText, { color: colors.text }]}>
+                Say "Contacts" to manage emergency contacts
+              </Text>
             </View>
             <View style={styles.commandItem}>
               <Text style={styles.commandIcon}>📷</Text>
-              <Text style={styles.commandText}>Say "Camera" to open camera view</Text>
+              <Text style={[styles.commandText, { color: colors.text }]}>
+                Say "Camera" to open camera view
+              </Text>
             </View>
           </View>
         </Animated.View>
@@ -437,14 +414,19 @@ const DashboardScreen = ({ navigation }) => {
               {
                 opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }],
+                backgroundColor: colors.surface,
               },
             ]}
           >
             <View style={styles.lastCommandHeader}>
               <Text style={styles.lastCommandIcon}>💬</Text>
-              <Text style={styles.lastCommandLabel}>Last Command</Text>
+              <Text style={[styles.lastCommandLabel, { color: colors.textSecondary }]}>
+                Last Command
+              </Text>
             </View>
-            <Text style={styles.lastCommandText}>"{lastCommand}"</Text>
+            <Text style={[styles.lastCommandText, { color: colors.text }]}>
+              "{lastCommand}"
+            </Text>
           </Animated.View>
         )}
       </ScrollView>
@@ -455,7 +437,6 @@ const DashboardScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   scrollView: {
     flex: 1,
@@ -467,7 +448,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   headerGradient: {
-    backgroundColor: '#667eea',
     padding: 30,
     alignItems: 'center',
     borderBottomLeftRadius: 30,
@@ -523,7 +503,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2c3e50',
     marginBottom: 20,
   },
   quickActionsGrid: {
@@ -580,7 +559,6 @@ const styles = StyleSheet.create({
   navigationCard: {
     width: '48%',
     marginBottom: 16,
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -607,13 +585,11 @@ const styles = StyleSheet.create({
   navigationTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2c3e50',
     marginBottom: 5,
     textAlign: 'center',
   },
   navigationSubtitle: {
     fontSize: 12,
-    color: '#7f8c8d',
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -624,7 +600,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   commandsContainer: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
@@ -647,13 +622,11 @@ const styles = StyleSheet.create({
   },
   commandText: {
     fontSize: 14,
-    color: '#2c3e50',
     flex: 1,
     lineHeight: 20,
   },
   lastCommandContainer: {
     margin: 20,
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
@@ -677,11 +650,9 @@ const styles = StyleSheet.create({
   lastCommandLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#7f8c8d',
   },
   lastCommandText: {
     fontSize: 16,
-    color: '#2c3e50',
     fontStyle: 'italic',
   },
 });

@@ -89,16 +89,18 @@ const SettingsScreen = ({ navigation }) => {
         {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
         },
       ]}
     >
       <View style={styles.settingContent}>
         <View style={styles.settingHeader}>
-          <Text style={styles.settingIcon}>{icon}</Text>
-          <Text style={styles.settingTitle}>{title}</Text>
+          <Text style={[styles.settingIcon, { color: colors.primary }]}>{icon}</Text>
+          <Text style={[styles.settingTitle, { color: colors.text }]}>{title}</Text>
         </View>
         {description && (
-          <Text style={styles.settingDescription}>{description}</Text>
+          <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>{description}</Text>
         )}
       </View>
       <View style={styles.settingControl}>
@@ -106,14 +108,14 @@ const SettingsScreen = ({ navigation }) => {
           <Switch
             value={value}
             onValueChange={onValueChange}
-            trackColor={{ false: '#E0E0E0', true: '#4CAF50' }}
-            thumbColor={value ? '#FFFFFF' : '#9E9E9E'}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={value ? '#FFFFFF' : colors.textSecondary}
             accessible={true}
             accessibilityLabel={`${title} setting`}
             accessibilityHint={`Tap to ${value ? 'disable' : 'enable'} ${title}`}
           />
         ) : (
-          <Text style={styles.settingValue}>{value}</Text>
+          <Text style={[styles.settingValue, { color: colors.primary }]}>{value}</Text>
         )}
       </View>
     </Animated.View>
@@ -126,15 +128,17 @@ const SettingsScreen = ({ navigation }) => {
         {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
         },
       ]}
     >
       <View style={styles.settingContent}>
         <View style={styles.settingHeader}>
-          <Text style={styles.settingIcon}>📏</Text>
-          <Text style={styles.settingTitle}>Button Size</Text>
+          <Text style={[styles.settingIcon, { color: colors.primary }]}>📏</Text>
+          <Text style={[styles.settingTitle, { color: colors.text }]}>Button Size</Text>
         </View>
-        <Text style={styles.settingDescription}>
+        <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
           Choose the size of buttons throughout the app
         </Text>
       </View>
@@ -164,15 +168,17 @@ const SettingsScreen = ({ navigation }) => {
         {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
         },
       ]}
     >
       <View style={styles.settingContent}>
         <View style={styles.settingHeader}>
-          <Text style={styles.settingIcon}>🔍</Text>
-          <Text style={styles.settingTitle}>Text Scale</Text>
+          <Text style={[styles.settingIcon, { color: colors.primary }]}>🔍</Text>
+          <Text style={[styles.settingTitle, { color: colors.text }]}>Text Scale</Text>
         </View>
-        <Text style={styles.settingDescription}>
+        <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
           Adjust text size from 100% to 200%
         </Text>
       </View>
@@ -202,15 +208,17 @@ const SettingsScreen = ({ navigation }) => {
         {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
         },
       ]}
     >
       <View style={styles.settingContent}>
         <View style={styles.settingHeader}>
-          <Text style={styles.settingIcon}>🎨</Text>
-          <Text style={styles.settingTitle}>Theme</Text>
+          <Text style={[styles.settingIcon, { color: colors.primary }]}>🎨</Text>
+          <Text style={[styles.settingTitle, { color: colors.text }]}>Theme</Text>
         </View>
-        <Text style={styles.settingDescription}>
+        <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
           Choose your preferred color theme
         </Text>
       </View>
@@ -234,7 +242,7 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: '#f8f9fa' }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Beautiful Header */}
         <Animated.View
@@ -246,7 +254,7 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <View style={styles.headerGradient}>
+          <View style={[styles.headerGradient, { backgroundColor: colors.primary }]}>
             <Text style={styles.title}>Settings</Text>
             <Text style={styles.subtitle}>Configure your VOICE2EYE experience</Text>
           </View>
@@ -262,7 +270,7 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={styles.sectionTitle}>Visual Settings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Visual Settings</Text>
           
           <SettingItem
             title="High Contrast Mode"
@@ -295,7 +303,7 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={styles.sectionTitle}>Audio Settings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Audio Settings</Text>
           
           <SettingItem
             title="Voice Navigation"
@@ -340,7 +348,7 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={styles.sectionTitle}>Navigation Settings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Navigation Settings</Text>
           
           <SettingItem
             title="Gesture Navigation"
@@ -377,7 +385,7 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={styles.sectionTitle}>System Settings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>System Settings</Text>
           
           <SettingItem
             title="Animations"
@@ -440,7 +448,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   headerGradient: {
-    backgroundColor: '#667eea',
     padding: 30,
     alignItems: 'center',
     borderBottomLeftRadius: 30,
@@ -473,7 +480,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2c3e50',
     marginBottom: 20,
   },
   settingItem: {
@@ -481,8 +487,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     marginBottom: 12,
-    backgroundColor: 'white',
     borderRadius: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -508,11 +514,9 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2c3e50',
   },
   settingDescription: {
     fontSize: 14,
-    color: '#7f8c8d',
     lineHeight: 20,
   },
   settingControl: {
@@ -521,7 +525,6 @@ const styles = StyleSheet.create({
   settingValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4CAF50',
   },
   buttonSizeContainer: {
     flexDirection: 'row',

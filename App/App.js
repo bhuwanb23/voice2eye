@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 import { AccessibilityProvider } from './components/AccessibilityProvider';
@@ -17,7 +18,28 @@ import GestureTrainingScreen from './screens/GestureTrainingScreen';
 import ContactsScreen from './screens/ContactsScreen';
 import ContactForm from './components/ContactForm';
 
+// Import navigation component
+import BottomNavigationBar from './components/BottomNavigationBar';
+
+const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+
+// Main tab navigator
+function TabNavigator() {
+  return (
+    <Tab.Navigator
+      tabBar={(props) => <BottomNavigationBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Contacts" component={ContactsScreen} />
+      <Tab.Screen name="GestureTraining" component={GestureTrainingScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
+    </Tab.Navigator>
+  );
+}
 
 export default function App() {
   return (
@@ -25,18 +47,18 @@ export default function App() {
       <NavigationContainer>
         <StatusBar style="auto" />
         <Stack.Navigator
-          initialRouteName="Dashboard"
+          initialRouteName="MainTabs"
           screenOptions={{
-            headerShown: false, // We use custom headers for accessibility
+            headerShown: false,
             gestureEnabled: true,
             animationEnabled: true,
           }}
         >
           <Stack.Screen
-            name="Dashboard"
-            component={DashboardScreen}
+            name="MainTabs"
+            component={TabNavigator}
             options={{
-              title: 'VOICE2EYE Dashboard',
+              title: 'VOICE2EYE',
             }}
           />
           <Stack.Screen
@@ -44,28 +66,7 @@ export default function App() {
             component={EmergencyScreen}
             options={{
               title: 'Emergency Mode',
-              gestureEnabled: false, // Disable gestures in emergency mode
-            }}
-          />
-          <Stack.Screen
-            name="Settings"
-            component={SettingsScreen}
-            options={{
-              title: 'Settings',
-            }}
-          />
-          <Stack.Screen
-            name="GestureTraining"
-            component={GestureTrainingScreen}
-            options={{
-              title: 'Gesture Training',
-            }}
-          />
-          <Stack.Screen
-            name="Contacts"
-            component={ContactsScreen}
-            options={{
-              title: 'Emergency Contacts',
+              gestureEnabled: false,
             }}
           />
           <Stack.Screen

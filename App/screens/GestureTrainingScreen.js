@@ -229,7 +229,7 @@ const GestureTrainingScreen = ({ navigation }) => {
       />
 
       {/* Training Mode Selector */}
-      <View style={styles.modeSelector}>
+      <View style={[styles.modeSelector, { backgroundColor: colors.surface }]}>
         <AccessibleButton
           title="Learn"
           onPress={() => setTrainingMode('learn')}
@@ -396,7 +396,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 16,
-    backgroundColor: '#F8F9FA',
   },
   scrollView: {
     flex: 1,
@@ -406,6 +405,14 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   gestureEmoji: {
     marginBottom: 16,
@@ -445,6 +452,15 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   gestureName: {
     fontSize: 18,
@@ -454,6 +470,14 @@ const styles = StyleSheet.create({
     margin: 16,
     padding: 20,
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   statsTitle: {
     fontSize: 18,
