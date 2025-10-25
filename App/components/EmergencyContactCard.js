@@ -1,9 +1,9 @@
 /**
- * Beautiful Modern Emergency Contact Card Component
- * Enhanced with gradients, shadows, and modern design
+ * Emergency Contact Card Component
+ * Reusable component for displaying emergency contact information
  */
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Animated } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useAccessibility } from './AccessibilityProvider';
 import AccessibleButton from './AccessibleButton';
 
@@ -11,194 +11,80 @@ const EmergencyContactCard = ({
   contact,
   onEdit,
   onDelete,
-  onCall,
   style,
 }) => {
-  const { getThemeColors, getAccessibilityProps } = useAccessibility();
+  const { getThemeColors } = useAccessibility();
   const colors = getThemeColors();
-  const accessibilityProps = getAccessibilityProps();
-
-  const handleCall = () => {
-    if (onCall) {
-      onCall(contact);
-    } else {
-      // Default behavior - open phone dialer
-      Linking.openURL(`tel:${contact.phone}`);
-    }
-  };
-
-  const handleEdit = () => {
-    if (onEdit) {
-      onEdit(contact);
-    }
-  };
-
-  const handleDelete = () => {
-    if (onDelete) {
-      onDelete(contact);
-    }
-  };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 1:
-        return '#f44336'; // High priority - red
-      case 2:
-        return '#FF9800'; // Medium priority - orange
-      case 3:
-        return '#4CAF50'; // Low priority - green
+      case 'high':
+        return '#f44336';
+      case 'medium':
+        return '#ff9800';
+      case 'low':
+        return '#4caf50';
       default:
-        return '#9E9E9E';
+        return '#9e9e9e';
     }
   };
 
-  const getPriorityText = (priority) => {
-    switch (priority) {
-      case 1:
-        return 'High Priority';
-      case 2:
-        return 'Medium Priority';
-      case 3:
-        return 'Low Priority';
+  const getGroupIcon = (group) => {
+    switch (group) {
+      case 'family':
+        return '👨‍👩‍👧‍👦';
+      case 'medical':
+        return '🏥';
+      case 'friends':
+        return '👥';
+      case 'emergency':
+        return '🚨';
       default:
-        return 'Normal Priority';
-    }
-  };
-
-  const getPriorityGradient = (priority) => {
-    switch (priority) {
-      case 1:
-        return ['#ff6b6b', '#ee5a24'];
-      case 2:
-        return ['#fa709a', '#fee140'];
-      case 3:
-        return ['#43e97b', '#38f9d7'];
-      default:
-        return ['#9E9E9E', '#757575'];
+        return '👤';
     }
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: 'white',
-          shadowColor: '#000',
-        },
-        contact.enabled ? styles.enabled : styles.disabled,
-        style,
-      ]}
-      accessible={true}
-      accessibilityRole="summary"
-      accessibilityLabel={`Emergency contact: ${contact.name}, ${contact.phone}, ${getPriorityText(contact.priority)}`}
-    >
-      {/* Header with gradient background */}
-      <View style={[styles.header, { backgroundColor: getPriorityColor(contact.priority) }]}>
-        <View style={styles.nameContainer}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {contact.name.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-          <View style={styles.nameInfo}>
-            <Text style={styles.name}>{contact.name}</Text>
-            <View style={styles.priorityContainer}>
-              <View style={[styles.priorityBadge, { backgroundColor: 'rgba(255, 255, 255, 0.3)' }]}>
-                <Text style={styles.priorityText}>
-                  {contact.priority}
-                </Text>
-              </View>
-              <Text style={styles.priorityLabel}>
-                {getPriorityText(contact.priority)}
-              </Text>
-            </View>
-          </View>
+    <View style={[styles.container, { backgroundColor: colors.surface }, style]}>
+      <View style={styles.header}>
+        <Text style={styles.icon}>{getGroupIcon(contact.group)}</Text>
+        <View style={styles.info}>
+          <Text style={[styles.name, { color: colors.text }]}>
+            {contact.name}
+            {contact.isPrimary && (
+              <Text style={styles.primaryBadge}> PRIMARY</Text>
+            )}
+          </Text>
+          <Text style={[styles.phone, { color: colors.textSecondary }]}>
+            {contact.phoneNumber}
+          </Text>
+          <Text style={[styles.details, { color: colors.textSecondary }]}>
+            {contact.relationship} • {contact.group.charAt(0).toUpperCase() + contact.group.slice(1)}
+          </Text>
         </View>
-      </View>
-
-      {/* Contact Information */}
-      <View style={styles.infoContainer}>
-        <View style={styles.infoRow}>
-          <View style={styles.infoIcon}>
-            <Text style={styles.infoIconText}>📞</Text>
-          </View>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>Phone</Text>
-            <Text style={[styles.infoValue, !contact.enabled && styles.disabledText]}>
-              {contact.phone}
-            </Text>
-          </View>
-        </View>
-        
-        {contact.relationship && (
-          <View style={styles.infoRow}>
-            <View style={styles.infoIcon}>
-              <Text style={styles.infoIconText}>👤</Text>
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Relationship</Text>
-              <Text style={[styles.infoValue, !contact.enabled && styles.disabledText]}>
-                {contact.relationship}
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* Status Indicator */}
-      <View style={styles.statusContainer}>
-        <View style={styles.statusRow}>
-          <View
-            style={[
-              styles.statusIndicator,
-              {
-                backgroundColor: contact.enabled ? '#4CAF50' : '#f44336',
-              },
-            ]}
-          />
-          <Text
-            style={[
-              styles.statusText,
-              { color: contact.enabled ? '#4CAF50' : '#f44336' },
-            ]}
-          >
-            {contact.enabled ? 'Active' : 'Inactive'}
+        <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(contact.priority) }]}>
+          <Text style={styles.priorityText}>
+            {contact.priority.toUpperCase()}
           </Text>
         </View>
       </View>
-
-      {/* Action Buttons */}
-      <View style={styles.actionsContainer}>
-        <AccessibleButton
-          title="Call"
-          onPress={handleCall}
-          variant="primary"
-          size="small"
-          disabled={!contact.enabled}
-          accessibilityLabel={`Call ${contact.name} at ${contact.phone}`}
-          accessibilityHint="Opens phone dialer to call this emergency contact"
-          style={[styles.actionButton, { backgroundColor: '#4CAF50' }]}
-        />
-        
+      
+      <View style={styles.actions}>
         <AccessibleButton
           title="Edit"
-          onPress={handleEdit}
+          onPress={() => onEdit && onEdit(contact)}
           variant="outline"
           size="small"
           accessibilityLabel={`Edit contact ${contact.name}`}
-          accessibilityHint="Opens edit form for this contact"
-          style={[styles.actionButton, { borderColor: '#2196F3' }]}
+          style={styles.actionButton}
         />
-        
         <AccessibleButton
           title="Delete"
-          onPress={handleDelete}
+          onPress={() => onDelete && onDelete(contact)}
           variant="error"
           size="small"
           accessibilityLabel={`Delete contact ${contact.name}`}
-          accessibilityHint="Removes this contact from emergency list"
-          style={[styles.actionButton, { backgroundColor: '#f44336' }]}
+          style={styles.actionButton}
         />
       </View>
     </View>
@@ -207,143 +93,64 @@ const EmergencyContactCard = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 20,
-    marginVertical: 12,
-    marginHorizontal: 20,
-    overflow: 'hidden',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  enabled: {
-    opacity: 1,
-  },
-  disabled: {
-    opacity: 0.6,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   header: {
-    padding: 20,
-  },
-  nameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  avatarText: {
+  icon: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    marginRight: 12,
   },
-  nameInfo: {
+  info: {
     flex: 1,
   },
   name: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  priorityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  primaryBadge: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#f44336',
   },
-  priorityBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+  phone: {
+    fontSize: 16,
+    marginBottom: 2,
+  },
+  details: {
+    fontSize: 14,
+  },
+  priorityIndicator: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   priorityText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: 'bold',
   },
-  priorityLabel: {
-    fontSize: 14,
-    color: 'white',
-    fontWeight: '600',
-  },
-  infoContainer: {
-    padding: 20,
-  },
-  infoRow: {
+  actions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  infoIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f5f5f5',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  infoIconText: {
-    fontSize: 18,
-  },
-  infoContent: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  infoValue: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
-  statusContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 20,
-    paddingTop: 0,
+    justifyContent: 'flex-end',
   },
   actionButton: {
-    flex: 1,
-    marginHorizontal: 4,
-    borderRadius: 8,
-  },
-  disabledText: {
-    opacity: 0.5,
+    marginLeft: 12,
+    minWidth: 80,
   },
 });
 

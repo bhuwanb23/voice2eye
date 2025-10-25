@@ -14,6 +14,8 @@ import DashboardScreen from './screens/DashboardScreen';
 import EmergencyScreen from './screens/EmergencyScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import GestureTrainingScreen from './screens/GestureTrainingScreen';
+import ContactsScreen from './screens/ContactsScreen';
+import ContactForm from './components/ContactForm';
 
 const Stack = createStackNavigator();
 
@@ -57,6 +59,20 @@ export default function App() {
             component={GestureTrainingScreen}
             options={{
               title: 'Gesture Training',
+            }}
+          />
+          <Stack.Screen
+            name="Contacts"
+            component={ContactsScreen}
+            options={{
+              title: 'Emergency Contacts',
+            }}
+          />
+          <Stack.Screen
+            name="ContactForm"
+            component={ContactForm}
+            options={{
+              title: 'Contact Form',
             }}
           />
         </Stack.Navigator>
