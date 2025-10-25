@@ -17,6 +17,8 @@ import SettingsScreen from './screens/SettingsScreen';
 import GestureTrainingScreen from './screens/GestureTrainingScreen';
 import ContactsScreen from './screens/ContactsScreen';
 import ContactForm from './components/ContactForm';
+import HelpScreen from './screens/HelpScreen';
+import CameraScreen from './screens/CameraScreen';
 
 // Import navigation component
 import BottomNavigationBar from './components/BottomNavigationBar';
@@ -74,6 +76,20 @@ export default function App() {
             component={ContactForm}
             options={{
               title: 'Contact Form',
+            }}
+          />
+          <Stack.Screen
+            name="Help"
+            component={HelpScreen}
+            options={{
+              title: 'Help & Tutorial',
+            }}
+          />
+          <Stack.Screen
+            name="Camera"
+            component={CameraScreen}
+            options={{
+              title: 'Camera View',
             }}
           />
         </Stack.Navigator>

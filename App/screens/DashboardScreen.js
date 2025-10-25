@@ -91,11 +91,9 @@ const DashboardScreen = ({ navigation }) => {
     } else if (lowerCommand.includes('gesture')) {
       navigation.navigate('GestureTraining');
     } else if (lowerCommand.includes('help') || lowerCommand.includes('tutorial')) {
-      // For now, we'll navigate to settings as a placeholder
-      navigation.navigate('Settings');
+      navigation.navigate('Help');
     } else if (lowerCommand.includes('camera')) {
-      // For now, we'll navigate to gesture training as a placeholder
-      navigation.navigate('GestureTraining');
+      navigation.navigate('Camera');
     } else {
       // Default response
       setStatusMessage(`Command received: ${command}`);
@@ -230,7 +228,7 @@ const DashboardScreen = ({ navigation }) => {
       subtitle: 'Get help and learn',
       icon: '❓',
       color: colors.warning,
-      onPress: () => navigation.navigate('Settings'), // Placeholder until Help screen is created
+      onPress: () => navigation.navigate('Help'),
       accessibilityLabel: 'Open help and tutorial',
     },
   ];
