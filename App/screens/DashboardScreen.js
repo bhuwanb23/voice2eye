@@ -17,6 +17,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import AccessibleButton from '../components/AccessibleButton';
 import StatusIndicator from '../components/StatusIndicator';
+import AnalyticsCards from '../components/AnalyticsCards';
+import ServiceStatus from '../components/ServiceStatus';
+import EmergencyHistory from '../components/EmergencyHistory';
 import * as Speech from 'expo-speech';
 
 const { width, height } = Dimensions.get('window');
@@ -29,6 +32,25 @@ const DashboardScreen = ({ navigation }) => {
   const [statusMessage, setStatusMessage] = useState('');
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const [lastCommand, setLastCommand] = useState('');
+  
+  // New states for enhanced features
+  const [usageStats, setUsageStats] = useState({
+    totalEvents: 0,
+    voiceCommands: 0,
+    gestureDetections: 0,
+    emergencyEvents: 0,
+    averageSessionDuration: 0
+  });
+  
+  const [serviceStatus, setServiceStatus] = useState({
+    speech: 'ready',
+    gesture: 'ready',
+    emergency: 'ready',
+    camera: 'ready'
+  });
+  
+  const [emergencyHistory, setEmergencyHistory] = useState([]);
+  const [personalizedMessage, setPersonalizedMessage] = useState('');
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -54,12 +76,43 @@ const DashboardScreen = ({ navigation }) => {
     if (settings.voiceNavigation) {
       announceScreenEntry();
     }
+    
+    // Load mock data for enhanced features
+    loadDashboardData();
   }, []);
+
+  const loadDashboardData = () => {
+    // Simulate loading analytics/statistics data
+    setTimeout(() => {
+      setUsageStats({
+        totalEvents: 127,
+        voiceCommands: 89,
+        gestureDetections: 36,
+        emergencyEvents: 2,
+        averageSessionDuration: 145.6
+      });
+      
+      // Simulate emergency history
+      setEmergencyHistory([
+        { id: '1', type: 'voice', time: '2023-10-15 14:30', status: 'confirmed' },
+        { id: '2', type: 'gesture', time: '2023-10-10 09:15', status: 'cancelled' }
+      ]);
+      
+      // Set personalized welcome message
+      const hours = new Date().getHours();
+      let greeting = 'Welcome';
+      if (hours < 12) greeting = 'Good morning';
+      else if (hours < 18) greeting = 'Good afternoon';
+      else greeting = 'Good evening';
+      
+      setPersonalizedMessage(`${greeting}! Ready to assist you.`);
+    }, 500);
+  };
 
   const announceScreenEntry = () => {
     const message = isEmergencyMode 
       ? "Emergency mode active. Main dashboard. Use voice commands or gestures to navigate."
-      : "Main dashboard. Voice recognition and gesture detection ready.";
+      : personalizedMessage || "Main dashboard. Voice recognition and gesture detection ready.";
     
     Speech.speak(message, {
       rate: settings.speechRate,
@@ -255,6 +308,9 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.subtitle}>
               {isEmergencyMode ? 'Emergency Mode Active' : 'AI-Powered Assistive Technology'}
             </Text>
+            {personalizedMessage ? (
+              <Text style={styles.welcomeMessage}>{personalizedMessage}</Text>
+            ) : null}
             <View style={styles.statusBadge}>
               <View style={[styles.statusDot, { backgroundColor: isEmergencyMode ? '#ff6b6b' : '#4CAF50' }]} />
               <Text style={styles.statusText}>
@@ -276,6 +332,32 @@ const DashboardScreen = ({ navigation }) => {
             message={statusMessage}
             announceVoice={true}
           />
+        </Animated.View>
+
+        {/* Analytics/Statistics Display Section */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <AnalyticsCards usageStats={usageStats} />
+        </Animated.View>
+
+        {/* Real-time Status Indicators */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <ServiceStatus serviceStatus={serviceStatus} />
         </Animated.View>
 
         {/* Quick Actions with Beautiful Cards */}
@@ -317,6 +399,19 @@ const DashboardScreen = ({ navigation }) => {
               </Animated.View>
             ))}
           </View>
+        </Animated.View>
+
+        {/* Emergency Alert History Preview */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <EmergencyHistory emergencyHistory={emergencyHistory} />
         </Animated.View>
 
         {/* Navigation Menu with Beautiful Cards */}
@@ -443,65 +538,73 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   headerGradient: {
-    padding: 30,
+    padding: 20,
     alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'white',
     opacity: 0.9,
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: 4,
+  },
+  welcomeMessage: {
+    fontSize: 13,
+    color: 'white',
+    opacity: 0.9,
+    textAlign: 'center',
+    marginBottom: 8,
+    fontStyle: 'italic',
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
   },
   statusText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
   },
   section: {
-    marginVertical: 16,
-    paddingHorizontal: 20,
+    marginVertical: 12,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   quickActionsGrid: {
     flexDirection: 'row',
@@ -510,44 +613,44 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     width: '48%',
-    marginBottom: 16,
-    borderRadius: 16,
+    marginBottom: 12,
+    borderRadius: 12,
     backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 4,
+    elevation: 2,
   },
   actionCardGradient: {
-    padding: 20,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    padding: 16,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
     alignItems: 'center',
   },
   actionIcon: {
-    fontSize: 32,
-    marginBottom: 10,
+    fontSize: 28,
+    marginBottom: 8,
   },
   actionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 5,
+    marginBottom: 4,
     textAlign: 'center',
   },
   actionSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: 'white',
     opacity: 0.9,
     textAlign: 'center',
   },
   actionButton: {
-    margin: 15,
-    borderRadius: 8,
+    margin: 12,
+    borderRadius: 6,
   },
   navigationGrid: {
     flexDirection: 'row',
@@ -556,9 +659,9 @@ const styles = StyleSheet.create({
   },
   navigationCard: {
     width: '48%',
-    marginBottom: 16,
-    borderRadius: 16,
-    padding: 20,
+    marginBottom: 12,
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
@@ -570,36 +673,36 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   navigationIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   navigationEmoji: {
-    fontSize: 24,
+    fontSize: 20,
   },
   navigationTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 4,
     textAlign: 'center',
   },
   navigationSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   navigationButton: {
-    borderRadius: 8,
+    borderRadius: 6,
   },
   commandsSection: {
-    marginTop: 8,
+    marginTop: 4,
   },
   commandsContainer: {
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 12,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -612,21 +715,21 @@ const styles = StyleSheet.create({
   commandItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   commandIcon: {
-    fontSize: 20,
-    marginRight: 12,
+    fontSize: 18,
+    marginRight: 10,
   },
   commandText: {
-    fontSize: 14,
+    fontSize: 13,
     flex: 1,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   lastCommandContainer: {
-    margin: 20,
-    borderRadius: 16,
-    padding: 20,
+    margin: 16,
+    borderRadius: 12,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -639,18 +742,18 @@ const styles = StyleSheet.create({
   lastCommandHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   lastCommandIcon: {
-    fontSize: 16,
-    marginRight: 8,
+    fontSize: 14,
+    marginRight: 6,
   },
   lastCommandLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   lastCommandText: {
-    fontSize: 16,
+    fontSize: 15,
     fontStyle: 'italic',
   },
 });
