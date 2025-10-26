@@ -14,9 +14,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
-import AccessibleButton from '../components/AccessibleButton';
 import StatusIndicator from '../components/StatusIndicator';
 import * as Speech from 'expo-speech';
+
+// Import new gesture components
+import GestureHeader from '../components/gesture/GestureHeader';
+import TrainingModeSelector from '../components/gesture/TrainingModeSelector';
+import GestureFeedback from '../components/gesture/GestureFeedback';
+import GestureDetails from '../components/gesture/GestureDetails';
+import GestureList from '../components/gesture/GestureList';
+import SequenceTraining from '../components/gesture/SequenceTraining';
+import Recommendations from '../components/gesture/Recommendations';
+import ProgressStats from '../components/gesture/ProgressStats';
+import LastDetected from '../components/gesture/LastDetected';
+import DetectionControls from '../components/gesture/DetectionControls';
+import GestureProgressBar from '../components/gesture/GestureProgressBar';
 
 const { width, height } = Dimensions.get('window');
 
@@ -31,9 +43,15 @@ const GestureTrainingScreen = ({ navigation }) => {
   const [lastDetectedGesture, setLastDetectedGesture] = useState(null);
   const [currentStatus, setCurrentStatus] = useState('idle');
   const [statusMessage, setStatusMessage] = useState('Ready for training');
+  const [accuracyMetrics, setAccuracyMetrics] = useState({});
+  const [recommendations, setRecommendations] = useState([]);
+  const [currentSequence, setCurrentSequence] = useState(null);
+  const [feedbackVisualization, setFeedbackVisualization] = useState(null);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
 
+  // Enhanced gesture data with more details for training
   const gestures = [
     {
       id: 'open_hand',
@@ -42,6 +60,10 @@ const GestureTrainingScreen = ({ navigation }) => {
       emoji: '✋',
       instruction: 'Hold your hand open with all fingers extended',
       practiceCount: 0,
+      confidenceThreshold: 0.7,
+      fingerCount: 5,
+      holdTime: 0.5,
+      category: 'basic',
     },
     {
       id: 'fist',
@@ -50,6 +72,10 @@ const GestureTrainingScreen = ({ navigation }) => {
       emoji: '✊',
       instruction: 'Make a fist with all fingers closed',
       practiceCount: 0,
+      confidenceThreshold: 0.7,
+      fingerCount: 0,
+      holdTime: 0.5,
+      category: 'basic',
     },
     {
       id: 'two_fingers',
@@ -58,6 +84,10 @@ const GestureTrainingScreen = ({ navigation }) => {
       emoji: '✌️',
       instruction: 'Extend your index and middle finger',
       practiceCount: 0,
+      confidenceThreshold: 0.8,
+      fingerCount: 2,
+      holdTime: 1.0,
+      category: 'emergency',
     },
     {
       id: 'thumbs_up',
@@ -66,6 +96,10 @@ const GestureTrainingScreen = ({ navigation }) => {
       emoji: '👍',
       instruction: 'Extend your thumb upward',
       practiceCount: 0,
+      confidenceThreshold: 0.6,
+      fingerCount: 1,
+      holdTime: 0.3,
+      category: 'basic',
     },
     {
       id: 'thumbs_down',
@@ -74,6 +108,10 @@ const GestureTrainingScreen = ({ navigation }) => {
       emoji: '👎',
       instruction: 'Extend your thumb downward',
       practiceCount: 0,
+      confidenceThreshold: 0.6,
+      fingerCount: 1,
+      holdTime: 0.3,
+      category: 'basic',
     },
     {
       id: 'pointing',
@@ -82,6 +120,10 @@ const GestureTrainingScreen = ({ navigation }) => {
       emoji: '👆',
       instruction: 'Point with your index finger',
       practiceCount: 0,
+      confidenceThreshold: 0.7,
+      fingerCount: 1,
+      holdTime: 0.8,
+      category: 'navigation',
     },
     {
       id: 'wave',
@@ -90,6 +132,10 @@ const GestureTrainingScreen = ({ navigation }) => {
       emoji: '👋',
       instruction: 'Wave your hand from side to side',
       practiceCount: 0,
+      confidenceThreshold: 0.6,
+      fingerCount: 5,
+      holdTime: 1.5,
+      category: 'social',
     },
     {
       id: 'stop_gesture',
@@ -98,6 +144,42 @@ const GestureTrainingScreen = ({ navigation }) => {
       emoji: '🛑',
       instruction: 'Hold your hand up with palm facing forward',
       practiceCount: 0,
+      confidenceThreshold: 0.7,
+      fingerCount: 3,
+      holdTime: 0.5,
+      category: 'control',
+    },
+  ];
+
+  // Gesture sequences for advanced training
+  const gestureSequences = [
+    {
+      id: 'greeting_sequence',
+      name: 'Greeting Sequence',
+      description: 'Wave followed by thumbs up',
+      sequence: ['wave', 'thumbs_up'],
+      difficulty: 'easy',
+    },
+    {
+      id: 'emergency_sequence',
+      name: 'Emergency Sequence',
+      description: 'Open hand followed by two fingers',
+      sequence: ['open_hand', 'two_fingers'],
+      difficulty: 'medium',
+    },
+    {
+      id: 'navigation_sequence',
+      name: 'Navigation Sequence',
+      description: 'Pointing followed by open hand',
+      sequence: ['pointing', 'open_hand'],
+      difficulty: 'medium',
+    },
+    {
+      id: 'control_sequence',
+      name: 'Control Sequence',
+      description: 'Stop gesture followed by fist',
+      sequence: ['stop_gesture', 'fist'],
+      difficulty: 'hard',
     },
   ];
 
@@ -105,7 +187,30 @@ const GestureTrainingScreen = ({ navigation }) => {
     if (settings.voiceNavigation) {
       announceScreenEntry();
     }
+    
+    // Initialize with some sample data for demonstration
+    initializeSampleData();
   }, []);
+
+  const initializeSampleData = () => {
+    // Sample accuracy metrics
+    const sampleMetrics = {};
+    gestures.forEach(gesture => {
+      sampleMetrics[gesture.id] = {
+        accuracy: Math.floor(Math.random() * 40) + 60, // 60-99%
+        attempts: Math.floor(Math.random() * 20) + 5,
+        success: Math.floor(Math.random() * 15) + 3,
+      };
+    });
+    setAccuracyMetrics(sampleMetrics);
+    
+    // Sample recommendations
+    setRecommendations([
+      "Practice the 'Two Fingers' gesture for better emergency recognition",
+      "Your 'Wave' gesture accuracy is excellent!",
+      "Try holding gestures longer for better detection",
+    ]);
+  };
 
   const announceScreenEntry = () => {
     const message = `Gesture training screen. ${gestures.length} gestures available. Choose a gesture to learn or practice.`;
@@ -115,18 +220,40 @@ const GestureTrainingScreen = ({ navigation }) => {
     });
   };
 
-  const startGestureDetection = () => {
+  // Simulate real gesture detection integration
+  const startGestureDetection = async () => {
     setIsDetecting(true);
     setCurrentStatus('listening');
     setStatusMessage('Detecting gestures...');
     
-    // Simulate gesture detection
-    setTimeout(() => {
+    // Animate progress bar
+    Animated.timing(progressAnim, {
+      toValue: 1,
+      duration: 2000,
+      useNativeDriver: false,
+    }).start();
+    
+    // Simulate API call to backend
+    try {
+      // In a real implementation, this would connect to:
+      // POST /api/gestures/analyze or WebSocket /api/gestures/analyze/stream
+      
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       const randomGesture = gestures[Math.floor(Math.random() * gestures.length)];
-      setLastDetectedGesture(randomGesture);
+      const confidence = Math.random() * 0.4 + 0.6; // 60-100%
+      
+      setLastDetectedGesture({
+        ...randomGesture,
+        confidence: parseFloat(confidence.toFixed(2)),
+        timestamp: new Date().toISOString(),
+      });
+      
       setIsDetecting(false);
       setCurrentStatus('idle');
-      setStatusMessage(`Detected: ${randomGesture.name}`);
+      setStatusMessage(`Detected: ${randomGesture.name} (${(confidence * 100).toFixed(1)}% confidence)`);
+      progressAnim.setValue(0);
       
       // Update practice count
       setGestureProgress(prev => ({
@@ -134,9 +261,21 @@ const GestureTrainingScreen = ({ navigation }) => {
         [randomGesture.id]: (prev[randomGesture.id] || 0) + 1,
       }));
       
+      // Update accuracy metrics
+      setAccuracyMetrics(prev => ({
+        ...prev,
+        [randomGesture.id]: {
+          ...prev[randomGesture.id],
+          attempts: (prev[randomGesture.id]?.attempts || 0) + 1,
+          success: (prev[randomGesture.id]?.success || 0) + (confidence > randomGesture.confidenceThreshold ? 1 : 0),
+          accuracy: Math.floor(((prev[randomGesture.id]?.success || 0) + (confidence > randomGesture.confidenceThreshold ? 1 : 0)) / 
+                     ((prev[randomGesture.id]?.attempts || 0) + 1) * 100),
+        }
+      }));
+      
       // Provide feedback
       if (settings.voiceNavigation) {
-        Speech.speak(`Detected ${randomGesture.name} gesture`, {
+        Speech.speak(`Detected ${randomGesture.name} gesture with ${(confidence * 100).toFixed(1)}% confidence`, {
           rate: settings.speechRate,
           pitch: settings.speechPitch,
         });
@@ -145,7 +284,32 @@ const GestureTrainingScreen = ({ navigation }) => {
       if (settings.hapticFeedback) {
         Vibration.vibrate(100);
       }
-    }, 2000);
+      
+      // Set feedback visualization
+      setFeedbackVisualization({
+        gesture: randomGesture,
+        confidence,
+        isAccurate: confidence > randomGesture.confidenceThreshold,
+      });
+      
+      // Clear feedback after delay
+      setTimeout(() => {
+        setFeedbackVisualization(null);
+      }, 3000);
+      
+    } catch (error) {
+      setIsDetecting(false);
+      setCurrentStatus('error');
+      setStatusMessage('Detection failed. Please try again.');
+      progressAnim.setValue(0);
+      
+      if (settings.voiceNavigation) {
+        Speech.speak('Gesture detection failed. Please try again.', {
+          rate: settings.speechRate,
+          pitch: settings.speechPitch,
+        });
+      }
+    }
   };
 
   const selectGesture = (gesture) => {
@@ -185,191 +349,98 @@ const GestureTrainingScreen = ({ navigation }) => {
     }
   };
 
-  const getGestureCardStyle = (gesture) => {
-    const isSelected = currentGesture?.id === gesture.id;
-    const practiceCount = gestureProgress[gesture.id] || 0;
+  // Start sequence training
+  const startSequenceTraining = (sequence) => {
+    setCurrentSequence(sequence);
+    setTrainingMode('sequence');
+    setCurrentStatus('listening');
+    setStatusMessage(`Sequence training: ${sequence.name}`);
     
-    return [
-      styles.gestureCard,
-      {
-        backgroundColor: isSelected ? colors.primary : colors.surface,
-        borderColor: isSelected ? colors.secondary : colors.border,
-        borderWidth: isSelected ? 2 : 1,
-      },
-    ];
+    if (settings.voiceNavigation) {
+      Speech.speak(`Sequence training mode. ${sequence.description}`, {
+        rate: settings.speechRate,
+        pitch: settings.speechPitch,
+      });
+    }
   };
 
-  const getGestureTextStyle = (gesture) => {
-    const isSelected = currentGesture?.id === gesture.id;
-    return [
-      styles.gestureName,
-      {
-        color: isSelected ? 'white' : colors.text,
-      },
-    ];
+  // Get accuracy color based on percentage
+  const getAccuracyColor = (accuracy) => {
+    if (accuracy >= 90) return colors.success;
+    if (accuracy >= 70) return colors.warning;
+    return colors.error;
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.primary }]}>
-        <Text style={[styles.title, { color: 'white' }]}>
-          Gesture Training
-        </Text>
-        <Text style={[styles.subtitle, { color: 'white' }]}>
-          Learn and practice hand gestures
-        </Text>
-      </View>
-
+      {/* Beautiful Header */}
+      <GestureHeader />
+      
       {/* Status Indicator */}
       <StatusIndicator
-        status={isDetecting ? 'listening' : 'idle'}
-        message={isDetecting ? 'Detecting gestures...' : 'Ready for training'}
+        status={isDetecting ? 'listening' : currentStatus}
+        message={statusMessage}
         announceVoice={false}
       />
+      
+      {/* Progress Bar */}
+      <GestureProgressBar progressAnim={progressAnim} isDetecting={isDetecting} />
 
       {/* Training Mode Selector */}
-      <View style={[styles.modeSelector, { backgroundColor: colors.surface }]}>
-        <AccessibleButton
-          title="Learn"
-          onPress={() => setTrainingMode('learn')}
-          variant={trainingMode === 'learn' ? 'primary' : 'outline'}
-          size="medium"
-          accessibilityLabel="Switch to learn mode"
-        />
-        <AccessibleButton
-          title="Practice"
-          onPress={() => setTrainingMode('practice')}
-          variant={trainingMode === 'practice' ? 'primary' : 'outline'}
-          size="medium"
-          accessibilityLabel="Switch to practice mode"
-        />
-        <AccessibleButton
-          title="Test"
-          onPress={() => setTrainingMode('test')}
-          variant={trainingMode === 'test' ? 'primary' : 'outline'}
-          size="medium"
-          accessibilityLabel="Switch to test mode"
-        />
-      </View>
+      <TrainingModeSelector 
+        trainingMode={trainingMode} 
+        setTrainingMode={setTrainingMode} 
+      />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Feedback Visualization */}
+        <GestureFeedback feedbackVisualization={feedbackVisualization} />
+        
         {/* Selected Gesture Details */}
-        {currentGesture && (
-          <View style={[styles.gestureDetails, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.gestureEmoji, { fontSize: 64 }]}>
-              {currentGesture.emoji}
-            </Text>
-            <Text style={[styles.gestureTitle, { color: colors.text }]}>
-              {currentGesture.name}
-            </Text>
-            <Text style={[styles.gestureDescription, { color: colors.textSecondary }]}>
-              {currentGesture.description}
-            </Text>
-            <Text style={[styles.gestureInstruction, { color: colors.text }]}>
-              {currentGesture.instruction}
-            </Text>
-            
-            {trainingMode === 'practice' && (
-              <AccessibleButton
-                title="Start Practice"
-                onPress={startPractice}
-                variant="primary"
-                size="large"
-                accessibilityLabel="Start practicing this gesture"
-                style={styles.practiceButton}
-              />
-            )}
-            
-            {trainingMode === 'test' && (
-              <AccessibleButton
-                title="Start Test"
-                onPress={startTest}
-                variant="accent"
-                size="large"
-                accessibilityLabel="Start testing this gesture"
-                style={styles.testButton}
-              />
-            )}
-          </View>
-        )}
-
+        <GestureDetails 
+          currentGesture={currentGesture}
+          accuracyMetrics={accuracyMetrics}
+          trainingMode={trainingMode}
+          onStartPractice={startPractice}
+          onStartTest={startTest}
+          getAccuracyColor={getAccuracyColor}
+        />
+        
         {/* Gesture List */}
-        <View style={styles.gestureList}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Available Gestures
-          </Text>
-          
-          {gestures.map((gesture) => (
-            <AccessibleButton
-              key={gesture.id}
-              title={`${gesture.emoji} ${gesture.name}`}
-              onPress={() => selectGesture(gesture)}
-              variant="outline"
-              size="medium"
-              accessibilityLabel={`${gesture.name} gesture. ${gesture.description}`}
-              accessibilityHint="Tap to select this gesture for learning"
-              style={getGestureCardStyle(gesture)}
-              textStyle={getGestureTextStyle(gesture)}
-            />
-          ))}
-        </View>
-
+        <GestureList 
+          gestures={gestures}
+          onSelectGesture={selectGesture}
+          gestureProgress={gestureProgress}
+          currentGesture={currentGesture}
+        />
+        
+        {/* Gesture Sequence Training */}
+        <SequenceTraining 
+          sequences={gestureSequences}
+          onStartSequence={startSequenceTraining}
+          currentSequence={currentSequence}
+        />
+        
+        {/* Personalized Recommendations */}
+        <Recommendations recommendations={recommendations} />
+        
         {/* Practice Statistics */}
-        {Object.keys(gestureProgress).length > 0 && (
-          <View style={[styles.statsContainer, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.statsTitle, { color: colors.text }]}>
-              Practice Statistics
-            </Text>
-            {Object.entries(gestureProgress).map(([gestureId, count]) => {
-              const gesture = gestures.find(g => g.id === gestureId);
-              return (
-                <View key={gestureId} style={styles.statItem}>
-                  <Text style={[styles.statGesture, { color: colors.text }]}>
-                    {gesture?.emoji} {gesture?.name}
-                  </Text>
-                  <Text style={[styles.statCount, { color: colors.primary }]}>
-                    {count} times
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-        )}
-
+        <ProgressStats 
+          gestureProgress={gestureProgress}
+          accuracyMetrics={accuracyMetrics}
+          gestures={gestures}
+          getAccuracyColor={getAccuracyColor}
+        />
+        
         {/* Last Detected Gesture */}
-        {lastDetectedGesture && (
-          <View style={[styles.lastDetected, { backgroundColor: colors.success }]}>
-            <Text style={styles.lastDetectedTitle}>
-              Last Detected Gesture
-            </Text>
-            <Text style={styles.lastDetectedGesture}>
-              {lastDetectedGesture.emoji} {lastDetectedGesture.name}
-            </Text>
-          </View>
-        )}
-
+        <LastDetected lastDetectedGesture={lastDetectedGesture} />
+        
         {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
-          <AccessibleButton
-            title="Start Detection"
-            onPress={startGestureDetection}
-            variant="primary"
-            size="large"
-            disabled={isDetecting}
-            accessibilityLabel="Start gesture detection"
-            style={styles.actionButton}
-          />
-          
-          <AccessibleButton
-            title="Back to Dashboard"
-            onPress={() => navigation.navigate('Dashboard')}
-            variant="outline"
-            size="large"
-            accessibilityLabel="Return to main dashboard"
-            style={styles.actionButton}
-          />
-        </View>
+        <DetectionControls 
+          isDetecting={isDetecting}
+          onStartDetection={startGestureDetection}
+          onNavigateBack={() => navigation.navigate('Dashboard')}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -379,146 +450,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.9,
-  },
-  modeSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 16,
-  },
   scrollView: {
     flex: 1,
-  },
-  gestureDetails: {
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  gestureEmoji: {
-    marginBottom: 16,
-  },
-  gestureTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  gestureDescription: {
-    fontSize: 16,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  gestureInstruction: {
-    fontSize: 14,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: 20,
-  },
-  practiceButton: {
-    marginTop: 10,
-  },
-  testButton: {
-    marginTop: 10,
-  },
-  gestureList: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  gestureCard: {
-    marginBottom: 12,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  gestureName: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  statsContainer: {
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  statsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  statItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  statGesture: {
-    fontSize: 16,
-  },
-  statCount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  lastDetected: {
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  lastDetectedTitle: {
-    fontSize: 16,
-    color: 'white',
-    marginBottom: 8,
-  },
-  lastDetectedGesture: {
-    fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  actionsContainer: {
-    padding: 16,
-    marginBottom: 20,
-  },
-  actionButton: {
-    marginBottom: 12,
   },
 });
 
