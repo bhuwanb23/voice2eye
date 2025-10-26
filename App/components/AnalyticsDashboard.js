@@ -33,7 +33,8 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
     marginHorizontal: 16,
-    marginVertical: 8,
+    marginTop: -8, // Negative margin to reduce gap with header
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

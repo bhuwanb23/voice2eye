@@ -46,13 +46,14 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
+    paddingBottom: 16, // Reduced padding at the bottom
     alignItems: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: '800',
     color: 'white',
-    marginBottom: 8,
+    marginBottom: 6, // Reduced margin
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
@@ -61,13 +62,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 10, // Reduced margin
   },
   welcomeMessage: {
     fontSize: 15,
     color: 'rgba(255, 255, 255, 0.95)',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12, // Reduced margin
     fontStyle: 'italic',
     fontWeight: '500',
   },

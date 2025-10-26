@@ -207,8 +207,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
     borderWidth: 2,
-    marginVertical: 8,
-    marginHorizontal: 20,
+    // Removed default margins to prevent unwanted spacing
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {

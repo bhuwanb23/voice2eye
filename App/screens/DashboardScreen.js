@@ -301,22 +301,24 @@ const DashboardScreen = ({ navigation }) => {
           />
         </Animated.View>
 
-        {/* Status Indicator */}
-        <Animated.View
-          style={[
-            styles.statusContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <StatusIndicator
-            status={currentStatus}
-            message={statusMessage}
-            announceVoice={true}
-          />
-        </Animated.View>
+        {/* Status Indicator - Only show when there's an active status */}
+        {currentStatus !== 'idle' && (
+          <Animated.View
+            style={[
+              styles.statusContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <StatusIndicator
+              status={currentStatus}
+              message={statusMessage}
+              announceVoice={true}
+            />
+          </Animated.View>
+        )}
 
         {/* Analytics Dashboard */}
         <Animated.View
@@ -397,7 +399,8 @@ const styles = StyleSheet.create({
   },
   statusContainer: {
     marginHorizontal: 16,
-    marginVertical: 12,
+    marginTop: 8,
+    marginBottom: 8,
   },
 });
 
