@@ -130,7 +130,7 @@ const SettingsScreen = ({ navigation }) => {
   const ButtonSizeSelector = () => (
     <Animated.View
       style={[
-        styles.settingItem,
+        styles.compactSettingItem,
         {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
@@ -139,16 +139,11 @@ const SettingsScreen = ({ navigation }) => {
         },
       ]}
     >
-      <View style={styles.settingContent}>
-        <View style={styles.settingHeader}>
-          <Text style={[styles.settingIcon, { color: colors.primary }]}>📏</Text>
-          <Text style={[styles.settingTitle, { color: colors.text }]}>Button Size</Text>
-        </View>
-        <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-          Choose the size of buttons throughout the app
-        </Text>
+      <View style={styles.compactSettingHeader}>
+        <Text style={[styles.settingIcon, { color: colors.primary }]}>📏</Text>
+        <Text style={[styles.settingTitle, { color: colors.text }]}>Button Size</Text>
       </View>
-      <View style={styles.buttonSizeContainer}>
+      <View style={styles.compactButtonSizeContainer}>
         {['small', 'medium', 'large', 'extra-large'].map((size) => (
           <AccessibleButton
             key={size}
@@ -157,7 +152,7 @@ const SettingsScreen = ({ navigation }) => {
             variant={settings.buttonSize === size ? 'primary' : 'outline'}
             size="small"
             style={[
-              styles.buttonSizeOption,
+              styles.compactButtonSizeOption,
               settings.buttonSize === size && styles.selectedOption,
             ]}
             accessibilityLabel={`Set button size to ${size}`}
@@ -170,7 +165,7 @@ const SettingsScreen = ({ navigation }) => {
   const TextScaleSelector = () => (
     <Animated.View
       style={[
-        styles.settingItem,
+        styles.compactSettingItem,
         {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
@@ -179,16 +174,11 @@ const SettingsScreen = ({ navigation }) => {
         },
       ]}
     >
-      <View style={styles.settingContent}>
-        <View style={styles.settingHeader}>
-          <Text style={[styles.settingIcon, { color: colors.primary }]}>🔍</Text>
-          <Text style={[styles.settingTitle, { color: colors.text }]}>Text Scale</Text>
-        </View>
-        <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-          Adjust text size from 100% to 200%
-        </Text>
+      <View style={styles.compactSettingHeader}>
+        <Text style={[styles.settingIcon, { color: colors.primary }]}>🔍</Text>
+        <Text style={[styles.settingTitle, { color: colors.text }]}>Text Scale</Text>
       </View>
-      <View style={styles.textScaleContainer}>
+      <View style={styles.compactTextScaleContainer}>
         {[1.0, 1.25, 1.5, 1.75, 2.0].map((scale) => (
           <AccessibleButton
             key={scale}
@@ -197,7 +187,7 @@ const SettingsScreen = ({ navigation }) => {
             variant={settings.textScale === scale ? 'primary' : 'outline'}
             size="small"
             style={[
-              styles.textScaleOption,
+              styles.compactTextScaleOption,
               settings.textScale === scale && styles.selectedOption,
             ]}
             accessibilityLabel={`Set text scale to ${Math.round(scale * 100)} percent`}
@@ -210,7 +200,7 @@ const SettingsScreen = ({ navigation }) => {
   const ThemeSelector = () => (
     <Animated.View
       style={[
-        styles.settingItem,
+        styles.compactSettingItem,
         {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
@@ -219,16 +209,11 @@ const SettingsScreen = ({ navigation }) => {
         },
       ]}
     >
-      <View style={styles.settingContent}>
-        <View style={styles.settingHeader}>
-          <Text style={[styles.settingIcon, { color: colors.primary }]}>🎨</Text>
-          <Text style={[styles.settingTitle, { color: colors.text }]}>Theme</Text>
-        </View>
-        <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-          Choose your preferred color theme
-        </Text>
+      <View style={styles.compactSettingHeader}>
+        <Text style={[styles.settingIcon, { color: colors.primary }]}>🎨</Text>
+        <Text style={[styles.settingTitle, { color: colors.text }]}>Theme</Text>
       </View>
-      <View style={styles.themeContainer}>
+      <View style={styles.compactThemeContainer}>
         {['light', 'dark', 'high-contrast'].map((theme) => (
           <AccessibleButton
             key={theme}
@@ -237,7 +222,7 @@ const SettingsScreen = ({ navigation }) => {
             variant={settings.theme === theme ? 'primary' : 'outline'}
             size="small"
             style={[
-              styles.themeOption,
+              styles.compactThemeOption,
               settings.theme === theme && styles.selectedOption,
             ]}
             accessibilityLabel={`Set theme to ${theme}`}
@@ -628,29 +613,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  buttonSizeContainer: {
+  compactSettingItem: {
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  compactSettingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  compactButtonSizeContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
-  buttonSizeOption: {
-    minWidth: 60,
+  compactButtonSizeOption: {
+    flex: 1,
+    minWidth: 70,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
-  textScaleContainer: {
+  compactTextScaleContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
-  textScaleOption: {
-    minWidth: 50,
+  compactTextScaleOption: {
+    flex: 1,
+    minWidth: 55,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
-  themeContainer: {
+  compactThemeContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
-  themeOption: {
-    minWidth: 80,
+  compactThemeOption: {
+    flex: 1,
+    minWidth: 90,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   selectedOption: {
     backgroundColor: '#4CAF50',
