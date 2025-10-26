@@ -1,65 +1,138 @@
 /**
  * Enhanced Navigation Menu Component
- * Beautifully designed navigation cards with improved layout
+ * Compact design with smooth animations and visual effects
  */
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { useAccessibility } from '../components/AccessibilityProvider';
-import AccessibleButton from '../components/AccessibleButton';
 
 const NavigationMenu = ({ items }) => {
   const { getThemeColors } = useAccessibility();
   const colors = getThemeColors();
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   return (
-    <View style={styles.container}>
+    <Animated.View 
+      style={[
+        styles.container, 
+        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+      ]}
+    >
       <Text style={[styles.title, { color: colors.text }]}>Navigation</Text>
       <View style={styles.grid}>
         {items.map((item, index) => (
-          <View 
-            key={index} 
-            style={[styles.card, { backgroundColor: colors.surface }]}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
-              <Text style={styles.icon}>{item.icon}</Text>
-            </View>
-            <View style={styles.textContainer}>
-              <Text style={[styles.itemTitle, { color: colors.text }]}>{item.title}</Text>
-              <Text style={[styles.itemSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
-            </View>
-            <AccessibleButton
-              title="Open"
-              onPress={item.onPress}
-              variant="outline"
-              size="small"
-              accessibilityLabel={item.accessibilityLabel}
-              style={[styles.navButton, { borderColor: item.color }]}
-            />
-          </View>
+          <NavCard key={index} item={item} colors={colors} delay={index * 80} />
         ))}
       </View>
-    </View>
+    </Animated.View>
+  );
+};
+
+const NavCard = ({ item, colors, delay }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const cardFade = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardFade, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, delay);
+  }, [delay]);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={item.onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={0.9}
+      accessibilityLabel={item.accessibilityLabel}
+    >
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            backgroundColor: colors.surface,
+            borderLeftWidth: 3,
+            borderLeftColor: item.color,
+            transform: [{ scale: scaleAnim }],
+            opacity: cardFade,
+          },
+        ]}
+      >
+        <View style={[styles.iconContainer, { backgroundColor: `${item.color}20` }]}>
+          <Text style={[styles.icon, { color: item.color }]}>{item.icon}</Text>
+        </View>
+        <View style={styles.textContainer}>
+          <Text style={[styles.itemTitle, { color: colors.text }]}>{item.title}</Text>
+          <Text style={[styles.itemSubtitle, { color: colors.textSecondary }]}>
+            {item.subtitle}
+          </Text>
+        </View>
+      </Animated.View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
-    marginVertical: 8,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 22,
+    fontSize: 13,
     fontWeight: '700',
-    marginBottom: 16,
-    marginLeft: 4,
+    marginBottom: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   grid: {
-    flexDirection: 'column',
-    gap: 12,
+    gap: 10,
   },
   card: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 12,
+    padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
@@ -67,36 +140,31 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginRight: 12,
   },
   icon: {
-    fontSize: 24,
-    color: 'white',
+    fontSize: 20,
   },
   textContainer: {
     flex: 1,
-    marginRight: 16,
   },
   itemTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   itemSubtitle: {
-    fontSize: 14,
-  },
-  navButton: {
-    minWidth: 80,
+    fontSize: 11,
   },
 });
 

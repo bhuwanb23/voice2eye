@@ -50,8 +50,8 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
     marginHorizontal: 16,
-    marginTop: -8, // Negative margin to reduce gap with header
-    marginBottom: 16,
+    marginTop: -8,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -63,20 +63,20 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   header: {
-    padding: 20,
-    paddingBottom: 16,
+    padding: 16,
+    paddingBottom: 12,
   },
   title: {
-    fontSize: 22,
+    fontSize: 16,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   divider: {
     height: 1,
     width: '100%',
   },
   content: {
-    padding: 16,
+    padding: 14,
     paddingTop: 0,
   },
 });

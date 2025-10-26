@@ -1,71 +1,138 @@
 /**
  * Voice Commands Guide Component
- * Beautifully designed voice command reference with improved layout
+ * Compact design with smooth animations and visual effects
  */
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useAccessibility } from '../components/AccessibilityProvider';
 
 const VoiceCommandsGuide = () => {
   const { getThemeColors } = useAccessibility();
   const colors = getThemeColors();
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const commands = [
-    { icon: '🚨', text: 'Say "Emergency" or "Help" for emergency mode' },
-    { icon: '⚙️', text: 'Say "Settings" to open configuration' },
-    { icon: '👥', text: 'Say "Contacts" to manage emergency contacts' },
-    { icon: '📷', text: 'Say "Camera" to open camera view' },
+    { icon: '🚨', text: 'Say "Emergency" or "Help"' },
+    { icon: '⚙️', text: 'Say "Settings"' },
+    { icon: '👥', text: 'Say "Contacts"' },
+    { icon: '📷', text: 'Say "Camera"' },
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <Animated.View 
+      style={[
+        styles.container, 
+        { 
+          backgroundColor: colors.surface,
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
+        }
+      ]}
+    >
       <Text style={[styles.title, { color: colors.text }]}>Voice Commands</Text>
       <View style={styles.commandsList}>
         {commands.map((command, index) => (
-          <View key={index} style={styles.commandItem}>
-            <Text style={[styles.commandIcon, { color: colors.primary }]}>{command.icon}</Text>
-            <Text style={[styles.commandText, { color: colors.text }]}>{command.text}</Text>
-          </View>
+          <CommandItem 
+            key={index} 
+            command={command} 
+            colors={colors} 
+            delay={index * 100}
+          />
         ))}
       </View>
-    </View>
+    </Animated.View>
+  );
+};
+
+const CommandItem = ({ command, colors, delay }) => {
+  const fadeIn = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(-10)).current;
+
+  useEffect(() => {
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(fadeIn, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateX, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, delay);
+  }, [delay]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.commandItem,
+        {
+          opacity: fadeIn,
+          transform: [{ translateX }],
+        },
+      ]}
+    >
+      <Text style={[styles.commandIcon, { color: colors.primary }]}>{command.icon}</Text>
+      <Text style={[styles.commandText, { color: colors.text }]}>{command.text}</Text>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
+    borderRadius: 12,
     margin: 16,
-    padding: 20,
+    padding: 14,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   title: {
-    fontSize: 22,
+    fontSize: 13,
     fontWeight: '700',
-    marginBottom: 16,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   commandsList: {
-    gap: 16,
+    gap: 10,
   },
   commandItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   commandIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    marginTop: 2,
+    fontSize: 18,
+    marginRight: 10,
   },
   commandText: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 12,
+    lineHeight: 18,
     flex: 1,
   },
 });
