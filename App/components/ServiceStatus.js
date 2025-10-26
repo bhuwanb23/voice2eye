@@ -1,24 +1,14 @@
 /**
  * Service Status Component
- * Displays real-time status with compact design and pulse animations
+ * Displays real-time status with compact design
  */
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { useAccessibility } from './AccessibilityProvider';
 
 const ServiceStatus = ({ serviceStatus }) => {
   const { getThemeColors } = useAccessibility();
   const colors = getThemeColors();
-  
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-  }, []);
 
   const services = [
     { 
@@ -48,53 +38,28 @@ const ServiceStatus = ({ serviceStatus }) => {
   ];
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+    <View style={styles.container}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>Service Status</Text>
       <View style={styles.grid}>
-        {services.map((service, index) => {
-          const isReady = service.status === 'ready';
-          const pulseAnim = useRef(new Animated.Value(1)).current;
-          
-          useEffect(() => {
-            if (isReady) {
-              Animated.loop(
-                Animated.sequence([
-                  Animated.timing(pulseAnim, {
-                    toValue: 1.2,
-                    duration: 800,
-                    useNativeDriver: true,
-                  }),
-                  Animated.timing(pulseAnim, {
-                    toValue: 1,
-                    duration: 800,
-                    useNativeDriver: true,
-                  }),
-                ])
-              ).start();
-            }
-          }, [isReady]);
-
-          return (
-            <Animated.View 
-              key={index} 
-              style={[
-                styles.card, 
-                { 
-                  backgroundColor: colors.surface,
-                  transform: [{ scale: pulseAnim }]
-                }
-              ]}
-              accessible={true}
-              accessibilityLabel={`${service.name} service is ${service.status}`}
-            >
-              <View style={[styles.statusDot, { backgroundColor: service.color }]} />
-              <Text style={styles.icon}>{service.icon}</Text>
-              <Text style={[styles.name, { color: colors.text }]}>{service.name}</Text>
-            </Animated.View>
-          );
-        })}
+        {services.map((service, index) => (
+          <View 
+            key={index} 
+            style={[
+              styles.card, 
+              { 
+                backgroundColor: colors.surface
+              }
+            ]}
+            accessible={true}
+            accessibilityLabel={`${service.name} service is ${service.status}`}
+          >
+            <View style={[styles.statusDot, { backgroundColor: service.color }]} />
+            <Text style={styles.icon}>{service.icon}</Text>
+            <Text style={[styles.name, { color: colors.text }]}>{service.name}</Text>
+          </View>
+        ))}
       </View>
-    </Animated.View>
+    </View>
   );
 };
 

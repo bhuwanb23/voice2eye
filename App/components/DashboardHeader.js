@@ -1,17 +1,13 @@
 /**
  * Beautiful Dashboard Header Component
- * Elegant header with personalized greeting and status indicator
+ * Elegant header with blue background and white text
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useAccessibility } from '../components/AccessibilityProvider';
 
 const DashboardHeader = ({ personalizedMessage, isEmergencyMode }) => {
-  const { getThemeColors } = useAccessibility();
-  const colors = getThemeColors();
-
   return (
-    <View style={[styles.container, { backgroundColor: colors.primary }]}>
+    <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>VOICE2EYE</Text>
         <Text style={styles.subtitle}>
@@ -33,6 +29,7 @@ const DashboardHeader = ({ personalizedMessage, isEmergencyMode }) => {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: '#007AFF', // Blue background
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     shadowColor: '#000',
@@ -46,29 +43,29 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
-    paddingBottom: 16, // Reduced padding at the bottom
+    paddingBottom: 16,
     alignItems: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: '800',
-    color: 'white',
-    marginBottom: 6, // Reduced margin
+    color: 'white', // White text
+    marginBottom: 6,
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: 'rgba(255, 255, 255, 0.95)', // White text with slight transparency
     textAlign: 'center',
-    marginBottom: 10, // Reduced margin
+    marginBottom: 10,
   },
   welcomeMessage: {
     fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.95)',
+    color: 'rgba(255, 255, 255, 0.98)', // White text
     textAlign: 'center',
-    marginBottom: 12, // Reduced margin
+    marginBottom: 12,
     fontStyle: 'italic',
     fontWeight: '500',
   },
@@ -87,7 +84,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   statusText: {
-    color: 'white',
+    color: 'white', // White text
     fontSize: 14,
     fontWeight: '600',
   },
