@@ -17,12 +17,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import AccessibleButton from '../components/AccessibleButton';
-import AnalyticsPreferences from '../components/AnalyticsPreferences';
-import AdvancedAccessibility from '../components/AdvancedAccessibility';
-import EmergencySystemSettings from '../components/EmergencySystemSettings';
-import NotificationPreferences from '../components/NotificationPreferences';
-import DataPrivacyControls from '../components/DataPrivacyControls';
-import BackupRestore from '../components/BackupRestore';
 import * as Speech from 'expo-speech';
 import apiService from '../api/services/apiService';
 
@@ -32,13 +26,36 @@ const SettingsScreen = ({ navigation }) => {
   const { settings, updateSetting, getThemeColors, resetToDefaults } = useAccessibility();
   const colors = getThemeColors();
   
+  // Simple hardcoded settings for testing
+  const testSettings = {
+    usageAnalytics: true,
+    performanceTracking: true,
+    featureSuggestions: false,
+    screenMagnification: false,
+    colorInversion: false,
+    voiceNavigation: true,
+    emergencyMode: false,
+    emergencyContacts: 3,
+    voiceCommands: true,
+    hapticFeedback: true,
+    highContrast: false,
+    textScale: 1.0,
+    largeText: false,
+    buttonSize: 'medium',
+    audioOnlyMode: false,
+    speechRate: 1.0,
+    speechPitch: 1.0,
+    gestureNavigation: false,
+    screenReader: false,
+  };
+  
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [backendSettings, setBackendSettings] = useState(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const slideAnim = useState(new Animated.Value(50))[0];
 
-  // Load settings from backend on mount
+  // Load backend settings on mount
   useEffect(() => {
     loadBackendSettings();
     
@@ -63,36 +80,18 @@ const SettingsScreen = ({ navigation }) => {
       const data = await apiService.getSettings();
       setBackendSettings(data.settings);
       setApiError(null);
-      console.log('Backend settings loaded:', data.settings);
+      console.log('✅ Backend settings loaded:', data.settings);
     } catch (error) {
-      console.warn('Failed to load backend settings:', error.message);
+      console.warn('❌ Failed to load backend settings:', error.message);
       setApiError('Backend not available - using local settings');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSettingChange = async (key, value) => {
-    // Update local settings immediately
-    updateSetting(key, value);
-    
-    // Try to sync with backend
-    try {
-      await apiService.updateSetting(key, value);
-      console.log(`Setting ${key} synced to backend:`, value);
-    } catch (error) {
-      console.warn(`Failed to sync setting ${key}:`, error.message);
-      // Settings still work locally even if backend sync fails
-    }
-    
-    // Provide audio feedback for setting changes
-    if (settings.voiceNavigation) {
-      const settingName = key.replace(/([A-Z])/g, ' $1').toLowerCase();
-      Speech.speak(`${settingName} ${value ? 'enabled' : 'disabled'}`, {
-        rate: settings.speechRate,
-        pitch: settings.speechPitch,
-      });
-    }
+  const handleSettingChange = (key, value) => {
+    console.log(`Setting changed: ${key} = ${value}`);
+    // For now, just log the change
   };
 
   const handleResetSettings = () => {
@@ -107,13 +106,7 @@ const SettingsScreen = ({ navigation }) => {
         {
           text: 'Reset',
           onPress: () => {
-            resetToDefaults();
-            if (settings.voiceNavigation) {
-              Speech.speak('Settings reset to default values', {
-                rate: settings.speechRate,
-                pitch: settings.speechPitch,
-              });
-            }
+            console.log('Settings reset requested');
           },
           style: 'destructive',
         },
@@ -265,31 +258,11 @@ const SettingsScreen = ({ navigation }) => {
     </Animated.View>
   );
 
-  // Show loading indicator while fetching settings
-  if (isLoading) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary, marginTop: 16 }]}>
-          Loading settings...
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Error Banner */}
-        {apiError && (
-          <View style={[styles.errorBanner, { backgroundColor: colors.warning }]}>
-            <Text style={[styles.errorText, { color: 'white' }]}>
-              ⚠️ {apiError}
-            </Text>
-          </View>
-        )}
-
-        {/* Beautiful Header */}
+        
+        {/* Simple Header */}
         <Animated.View
           style={[
             styles.header,
@@ -305,7 +278,7 @@ const SettingsScreen = ({ navigation }) => {
           </View>
         </Animated.View>
 
-        {/* Analytics & Preferences Section */}
+        {/* Test Card - Simple Hardcoded Content */}
         <Animated.View
           style={[
             styles.section,
@@ -315,13 +288,21 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <AnalyticsPreferences 
-            settings={settings} 
-            onSettingChange={handleSettingChange} 
-          />
+          <View style={[styles.card, { backgroundColor: '#FFFFFF', borderColor: '#000000' }]}>
+            <Text style={[styles.cardTitle, { color: '#000000' }]}>✅ Test Card - Hardcoded</Text>
+            <Text style={[styles.cardText, { color: '#333333' }]}>
+              This is a test card with hardcoded colors
+            </Text>
+            <Text style={[styles.cardText, { color: '#333333' }]}>
+              If you can see this, the rendering works!
+            </Text>
+            <Text style={[styles.cardText, { color: '#333333' }]}>
+              Settings count: {Object.keys(testSettings).length}
+            </Text>
+          </View>
         </Animated.View>
 
-        {/* Advanced Accessibility Section */}
+        {/* Simple Settings Card */}
         <Animated.View
           style={[
             styles.section,
@@ -331,13 +312,24 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <AdvancedAccessibility 
-            settings={settings} 
-            onSettingChange={handleSettingChange} 
-          />
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Basic Settings</Text>
+            <Text style={[styles.cardText, { color: colors.textSecondary }]}>
+              Usage Analytics: {testSettings.usageAnalytics ? 'Enabled' : 'Disabled'}
+            </Text>
+            <Text style={[styles.cardText, { color: colors.textSecondary }]}>
+              Performance Tracking: {testSettings.performanceTracking ? 'Enabled' : 'Disabled'}
+            </Text>
+            <Text style={[styles.cardText, { color: colors.textSecondary }]}>
+              Voice Navigation: {testSettings.voiceNavigation ? 'Enabled' : 'Disabled'}
+            </Text>
+            <Text style={[styles.cardText, { color: colors.textSecondary }]}>
+              Emergency Contacts: {testSettings.emergencyContacts} contacts
+            </Text>
+          </View>
         </Animated.View>
 
-        {/* Emergency System Settings */}
+        {/* Interactive Settings Card */}
         <Animated.View
           style={[
             styles.section,
@@ -347,13 +339,42 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <EmergencySystemSettings 
-            settings={settings} 
-            onSettingChange={handleSettingChange} 
-          />
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Interactive Settings</Text>
+            
+            <View style={styles.settingRow}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Voice Navigation</Text>
+              <Switch
+                value={testSettings.voiceNavigation}
+                onValueChange={(value) => handleSettingChange('voiceNavigation', value)}
+                trackColor={{ false: colors.border, true: colors.primary }}
+                thumbColor={testSettings.voiceNavigation ? '#FFFFFF' : colors.textSecondary}
+              />
+            </View>
+
+            <View style={styles.settingRow}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Haptic Feedback</Text>
+              <Switch
+                value={testSettings.hapticFeedback}
+                onValueChange={(value) => handleSettingChange('hapticFeedback', value)}
+                trackColor={{ false: colors.border, true: colors.primary }}
+                thumbColor={testSettings.hapticFeedback ? '#FFFFFF' : colors.textSecondary}
+              />
+            </View>
+
+            <View style={styles.settingRow}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Usage Analytics</Text>
+              <Switch
+                value={testSettings.usageAnalytics}
+                onValueChange={(value) => handleSettingChange('usageAnalytics', value)}
+                trackColor={{ false: colors.border, true: colors.primary }}
+                thumbColor={testSettings.usageAnalytics ? '#FFFFFF' : colors.textSecondary}
+              />
+            </View>
+          </View>
         </Animated.View>
 
-        {/* Notification Preferences */}
+        {/* Reset Button */}
         <Animated.View
           style={[
             styles.section,
@@ -363,41 +384,11 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <NotificationPreferences 
-            settings={settings} 
-            onSettingChange={handleSettingChange} 
-          />
-        </Animated.View>
-
-        {/* Data Privacy Controls */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <DataPrivacyControls 
-            settings={settings} 
-            onSettingChange={handleSettingChange} 
-          />
-        </Animated.View>
-
-        {/* Backup & Restore */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <BackupRestore 
-            settings={settings} 
-            onSettingChange={handleSettingChange} 
+          <AccessibleButton
+            title="Reset Settings"
+            onPress={handleResetSettings}
+            style={[styles.resetButton, { backgroundColor: colors.error }]}
+            textStyle={[styles.resetButtonText, { color: 'white' }]}
           />
         </Animated.View>
 
@@ -597,6 +588,50 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 13,
     textAlign: 'center',
+    fontWeight: '600',
+  },
+  card: {
+    padding: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  cardText: {
+    fontSize: 14,
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  settingLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    flex: 1,
+  },
+  resetButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  resetButtonText: {
+    fontSize: 16,
     fontWeight: '600',
   },
   header: {
