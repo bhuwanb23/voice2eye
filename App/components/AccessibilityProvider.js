@@ -26,7 +26,7 @@ export const AccessibilityProvider = ({ children }) => {
     // Audio Settings
     voiceNavigation: true,
     audioOnlyMode: false,
-    speechRate: 0.8,
+    speechRate: 1.0,
     speechPitch: 1.0,
     hapticFeedback: true,
     
@@ -38,6 +38,36 @@ export const AccessibilityProvider = ({ children }) => {
     // Emergency Settings
     emergencyMode: false,
     emergencyContacts: [],
+    
+    // Analytics & Preferences
+    usageAnalytics: true,
+    performanceTracking: true,
+    featureSuggestions: true,
+    
+    // Advanced Accessibility
+    screenMagnification: false,
+    colorInversion: false,
+    
+    // Emergency System Settings
+    autoTriggerEmergency: false,
+    emergencyTimeout: 10,
+    locationTracking: true,
+    silentEmergency: false,
+    multipleContactAttempts: true,
+    
+    // Notification Preferences
+    emergencyNotifications: true,
+    systemUpdates: true,
+    usageReminders: true,
+    hapticNotifications: true,
+    ledNotifications: true,
+    
+    // Data Privacy Controls
+    localDataStorage: true,
+    dataEncryption: true,
+    anonymousUsageData: true,
+    locationDataSharing: true,
+    automaticDataCleanup: true,
     
     // UI Settings
     theme: 'light', // light, dark, high-contrast
@@ -86,7 +116,7 @@ export const AccessibilityProvider = ({ children }) => {
       buttonSize: 'medium',
       voiceNavigation: true,
       audioOnlyMode: false,
-      speechRate: 0.8,
+      speechRate: 1.0,
       speechPitch: 1.0,
       hapticFeedback: true,
       gestureNavigation: false,
@@ -94,6 +124,26 @@ export const AccessibilityProvider = ({ children }) => {
       voiceCommands: true,
       emergencyMode: false,
       emergencyContacts: [],
+      usageAnalytics: true,
+      performanceTracking: true,
+      featureSuggestions: true,
+      screenMagnification: false,
+      colorInversion: false,
+      autoTriggerEmergency: false,
+      emergencyTimeout: 10,
+      locationTracking: true,
+      silentEmergency: false,
+      multipleContactAttempts: true,
+      emergencyNotifications: true,
+      systemUpdates: true,
+      usageReminders: true,
+      hapticNotifications: true,
+      ledNotifications: true,
+      localDataStorage: true,
+      dataEncryption: true,
+      anonymousUsageData: true,
+      locationDataSharing: true,
+      automaticDataCleanup: true,
       theme: 'light',
       animations: true,
       soundEffects: true,

@@ -16,6 +16,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import AccessibleButton from '../components/AccessibleButton';
+import AnalyticsPreferences from '../components/AnalyticsPreferences';
+import AdvancedAccessibility from '../components/AdvancedAccessibility';
+import EmergencySystemSettings from '../components/EmergencySystemSettings';
+import NotificationPreferences from '../components/NotificationPreferences';
+import DataPrivacyControls from '../components/DataPrivacyControls';
+import BackupRestore from '../components/BackupRestore';
 import * as Speech from 'expo-speech';
 
 const { width } = Dimensions.get('window');
@@ -258,6 +264,102 @@ const SettingsScreen = ({ navigation }) => {
             <Text style={styles.title}>Settings</Text>
             <Text style={styles.subtitle}>Configure your VOICE2EYE experience</Text>
           </View>
+        </Animated.View>
+
+        {/* Analytics & Preferences Section */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <AnalyticsPreferences 
+            settings={settings} 
+            onSettingChange={handleSettingChange} 
+          />
+        </Animated.View>
+
+        {/* Advanced Accessibility Section */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <AdvancedAccessibility 
+            settings={settings} 
+            onSettingChange={handleSettingChange} 
+          />
+        </Animated.View>
+
+        {/* Emergency System Settings */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <EmergencySystemSettings 
+            settings={settings} 
+            onSettingChange={handleSettingChange} 
+          />
+        </Animated.View>
+
+        {/* Notification Preferences */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <NotificationPreferences 
+            settings={settings} 
+            onSettingChange={handleSettingChange} 
+          />
+        </Animated.View>
+
+        {/* Data Privacy Controls */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <DataPrivacyControls 
+            settings={settings} 
+            onSettingChange={handleSettingChange} 
+          />
+        </Animated.View>
+
+        {/* Backup & Restore */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <BackupRestore 
+            settings={settings} 
+            onSettingChange={handleSettingChange} 
+          />
         </Animated.View>
 
         {/* Visual Settings */}
