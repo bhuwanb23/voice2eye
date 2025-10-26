@@ -2,7 +2,7 @@
  * Beautiful Modern Settings Screen
  * Enhanced with gradients, cards, and modern design
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Alert,
   Dimensions,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
@@ -23,6 +24,7 @@ import NotificationPreferences from '../components/NotificationPreferences';
 import DataPrivacyControls from '../components/DataPrivacyControls';
 import BackupRestore from '../components/BackupRestore';
 import * as Speech from 'expo-speech';
+import apiService from '../api/services/apiService';
 
 const { width } = Dimensions.get('window');
 
@@ -31,10 +33,16 @@ const SettingsScreen = ({ navigation }) => {
   const colors = getThemeColors();
   
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  const [backendSettings, setBackendSettings] = useState(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const slideAnim = useState(new Animated.Value(50))[0];
 
-  React.useEffect(() => {
+  // Load settings from backend on mount
+  useEffect(() => {
+    loadBackendSettings();
+    
+    // Start animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -49,8 +57,33 @@ const SettingsScreen = ({ navigation }) => {
     ]).start();
   }, []);
 
-  const handleSettingChange = (key, value) => {
+  const loadBackendSettings = async () => {
+    setIsLoading(true);
+    try {
+      const data = await apiService.getSettings();
+      setBackendSettings(data.settings);
+      setApiError(null);
+      console.log('Backend settings loaded:', data.settings);
+    } catch (error) {
+      console.warn('Failed to load backend settings:', error.message);
+      setApiError('Backend not available - using local settings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSettingChange = async (key, value) => {
+    // Update local settings immediately
     updateSetting(key, value);
+    
+    // Try to sync with backend
+    try {
+      await apiService.updateSetting(key, value);
+      console.log(`Setting ${key} synced to backend:`, value);
+    } catch (error) {
+      console.warn(`Failed to sync setting ${key}:`, error.message);
+      // Settings still work locally even if backend sync fails
+    }
     
     // Provide audio feedback for setting changes
     if (settings.voiceNavigation) {
@@ -232,9 +265,30 @@ const SettingsScreen = ({ navigation }) => {
     </Animated.View>
   );
 
+  // Show loading indicator while fetching settings
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary, marginTop: 16 }]}>
+          Loading settings...
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Error Banner */}
+        {apiError && (
+          <View style={[styles.errorBanner, { backgroundColor: colors.warning }]}>
+            <Text style={[styles.errorText, { color: 'white' }]}>
+              ⚠️ {apiError}
+            </Text>
+          </View>
+        )}
+
         {/* Beautiful Header */}
         <Animated.View
           style={[
@@ -530,6 +584,20 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  loadingText: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  errorBanner: {
+    margin: 16,
+    padding: 12,
+    borderRadius: 8,
+  },
+  errorText: {
+    fontSize: 13,
+    textAlign: 'center',
+    fontWeight: '600',
   },
   header: {
     marginBottom: 20,

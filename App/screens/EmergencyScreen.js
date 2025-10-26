@@ -12,6 +12,7 @@ import {
   Dimensions,
   Animated,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
@@ -22,6 +23,7 @@ import EmergencyHistoryTimeline from '../components/EmergencyHistoryTimeline';
 import EmergencyTypeSelector from '../components/EmergencyTypeSelector';
 import EmergencyMessageCustomizer from '../components/EmergencyMessageCustomizer';
 import * as Speech from 'expo-speech';
+import apiService from '../api/services/apiService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,65 +31,148 @@ const EmergencyScreen = ({ navigation, route }) => {
   const { settings, getThemeColors } = useAccessibility();
   const colors = getThemeColors();
   
-  const [emergencyStatus, setEmergencyStatus] = useState('triggered'); // triggered, confirmed, cancelled
+  const [emergencyStatus, setEmergencyStatus] = useState('idle'); // idle, triggered, confirmed, cancelled
   const [countdown, setCountdown] = useState(10);
   const [contactsNotified, setContactsNotified] = useState(0);
   const [location, setLocation] = useState('Location being determined...');
   const [emergencyType, setEmergencyType] = useState('general');
   const [customMessage, setCustomMessage] = useState('');
+  const [currentAlertId, setCurrentAlertId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
   
-  // Mock data for demonstration
-  const [emergencyContacts] = useState([
-    {
-      id: '1',
-      name: 'Emergency Services',
-      phoneNumber: '911',
-      priority: 'high',
-      group: 'emergency',
-      relationship: 'Emergency Services',
-      isPrimary: true,
-      enabled: true
-    },
-    {
-      id: '2',
-      name: 'John Doe',
-      phoneNumber: '+1 (555) 123-4567',
-      priority: 'high',
-      group: 'family',
-      relationship: 'Spouse',
-      isPrimary: false,
-      enabled: true
-    },
-    {
-      id: '3',
-      name: 'Jane Smith',
-      phoneNumber: '+1 (555) 987-6543',
-      priority: 'medium',
-      group: 'medical',
-      relationship: 'Doctor',
-      isPrimary: false,
-      enabled: true
-    }
-  ]);
+  // Load emergency contacts and history from API
+  const [emergencyContacts, setEmergencyContacts] = useState([]);
+  const [emergencyHistory, setEmergencyHistory] = useState([]);
   
-  const [emergencyHistory] = useState([
-    {
-      alert_id: 'alert_1',
-      trigger_type: 'voice',
-      status: 'confirmed',
-      timestamp: '2023-10-15T14:30:00Z',
-      location: { latitude: 40.7128, longitude: -74.0060 },
-      messages_sent: 2
-    },
-    {
-      alert_id: 'alert_2',
-      trigger_type: 'gesture',
-      status: 'cancelled',
-      timestamp: '2023-10-10T09:15:00Z',
-      location: { latitude: 40.7589, longitude: -73.9851 },
-      messages_sent: 0
+  // Load data from backend on mount
+  useEffect(() => {
+    loadEmergencyData();
+  }, []);
+
+  const loadEmergencyData = async () => {
+    setIsLoading(true);
+    try {
+      // Load emergency contacts
+      const contactsData = await apiService.getEmergencyContacts();
+      setEmergencyContacts(contactsData.contacts || []);
+      
+      // Load emergency history
+      const historyData = await apiService.getEmergencyHistory(30, 10);
+      setEmergencyHistory(historyData.alerts || []);
+      
+      setApiError(null);
+      console.log('Emergency data loaded:', { contacts: contactsData.contacts, history: historyData.alerts });
+    } catch (error) {
+      console.warn('Failed to load emergency data:', error.message);
+      setApiError('Backend not available - using mock data');
+      // Fallback to mock data
+      setEmergencyContacts([
+        {
+          id: '1',
+          name: 'Emergency Services',
+          phoneNumber: '911',
+          priority: 'high',
+          group: 'emergency',
+          relationship: 'Emergency Services',
+          isPrimary: true,
+          enabled: true
+        },
+        {
+          id: '2',
+          name: 'Family Contact',
+          phoneNumber: '+1234567890',
+          priority: 'medium',
+          group: 'family',
+          relationship: 'Family',
+          isPrimary: false,
+          enabled: true
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  };
+
+  const triggerEmergency = async () => {
+    try {
+      setIsLoading(true);
+      const result = await apiService.triggerEmergency({
+        trigger_type: 'manual',
+        trigger_data: {
+          emergency_type: emergencyType,
+          custom_message: customMessage,
+          location: location
+        }
+      });
+      
+      setCurrentAlertId(result.alert_id);
+      setEmergencyStatus('triggered');
+      setCountdown(30); // 30 second confirmation window
+      
+      console.log('Emergency triggered:', result);
+      
+      // Start countdown
+      startCountdown();
+      
+    } catch (error) {
+      console.error('Failed to trigger emergency:', error);
+      Alert.alert('Error', 'Failed to trigger emergency. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const confirmEmergency = async () => {
+    if (!currentAlertId) return;
+    
+    try {
+      const result = await apiService.confirmEmergency(currentAlertId);
+      setEmergencyStatus('confirmed');
+      setContactsNotified(result.messages_sent || 0);
+      
+      console.log('Emergency confirmed:', result);
+      
+      // Reload history to show new emergency
+      loadEmergencyData();
+      
+    } catch (error) {
+      console.error('Failed to confirm emergency:', error);
+      Alert.alert('Error', 'Failed to confirm emergency.');
+    }
+  };
+
+  const cancelEmergency = async () => {
+    if (!currentAlertId) return;
+    
+    try {
+      await apiService.cancelEmergency(currentAlertId, 'User cancelled');
+      setEmergencyStatus('cancelled');
+      setCurrentAlertId(null);
+      
+      console.log('Emergency cancelled');
+      
+    } catch (error) {
+      console.error('Failed to cancel emergency:', error);
+      Alert.alert('Error', 'Failed to cancel emergency.');
+    }
+  };
+
+  const startCountdown = () => {
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          // Auto-confirm if user doesn't cancel
+          if (emergencyStatus === 'triggered') {
+            confirmEmergency();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const flashAnim = useRef(new Animated.Value(0)).current;
@@ -163,51 +248,6 @@ const EmergencyScreen = ({ navigation, route }) => {
     });
   };
 
-  const confirmEmergency = () => {
-    setEmergencyStatus('confirmed');
-    setContactsNotified(3); // Simulate contacting 3 emergency contacts
-    
-    // Emergency confirmed announcement
-    Speech.speak("Emergency confirmed! Help has been contacted. Emergency services are on their way.", {
-      rate: 0.7,
-      pitch: 1.2,
-    });
-
-    // Strong haptic feedback
-    if (settings.hapticFeedback) {
-      Vibration.vibrate([0, 1000, 200, 1000, 200, 1000]);
-    }
-  };
-
-  const cancelEmergency = () => {
-    Alert.alert(
-      'Cancel Emergency',
-      'Are you sure you want to cancel the emergency alert?',
-      [
-        {
-          text: 'Keep Emergency',
-          style: 'cancel',
-        },
-        {
-          text: 'Cancel Emergency',
-          onPress: () => {
-            setEmergencyStatus('cancelled');
-            Speech.speak("Emergency cancelled. You are safe.", {
-              rate: settings.speechRate,
-              pitch: settings.speechPitch,
-            });
-            
-            // Navigate back to main tabs
-            setTimeout(() => {
-              navigation.navigate('MainTabs');
-            }, 2000);
-          },
-          style: 'destructive',
-        },
-      ]
-    );
-  };
-
   const getEmergencyMessage = () => {
     switch (emergencyStatus) {
       case 'triggered':
@@ -234,8 +274,29 @@ const EmergencyScreen = ({ navigation, route }) => {
     }
   };
 
+  // Show loading indicator while fetching data
+  if (isLoading && emergencyContacts.length === 0) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.error} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary, marginTop: 16 }]}>
+          Loading emergency data...
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Error Banner */}
+      {apiError && (
+        <View style={[styles.errorBanner, { backgroundColor: colors.warning }]}>
+          <Text style={[styles.errorText, { color: 'white' }]}>
+            ⚠️ {apiError}
+          </Text>
+        </View>
+      )}
+
       {/* Emergency Header */}
       <Animated.View
         style={[
@@ -396,6 +457,20 @@ const EmergencyScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingText: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  errorBanner: {
+    margin: 16,
+    padding: 12,
+    borderRadius: 8,
+  },
+  errorText: {
+    fontSize: 13,
+    textAlign: 'center',
+    fontWeight: '600',
   },
   emergencyHeader: {
     padding: 20,

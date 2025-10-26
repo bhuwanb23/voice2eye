@@ -11,11 +11,13 @@ import {
   Dimensions,
   Animated,
   Vibration,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import StatusIndicator from '../components/StatusIndicator';
 import * as Speech from 'expo-speech';
+import apiService from '../api/services/apiService';
 
 // Import new gesture components
 import GestureHeader from '../components/gesture/GestureHeader';
@@ -47,6 +49,99 @@ const GestureTrainingScreen = ({ navigation }) => {
   const [recommendations, setRecommendations] = useState([]);
   const [currentSequence, setCurrentSequence] = useState(null);
   const [feedbackVisualization, setFeedbackVisualization] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  
+  // Load gesture vocabulary and status from API
+  const [gestureVocabulary, setGestureVocabulary] = useState({});
+  const [gestureStatus, setGestureStatus] = useState(null);
+  
+  // Load data from backend on mount
+  useEffect(() => {
+    loadGestureData();
+  }, []);
+
+  const loadGestureData = async () => {
+    setIsLoading(true);
+    try {
+      // Load gesture vocabulary
+      const vocabularyData = await apiService.getGestureVocabulary();
+      setGestureVocabulary(vocabularyData.gestures || {});
+      
+      // Load gesture status
+      const statusData = await apiService.getGestureStatus();
+      setGestureStatus(statusData);
+      
+      setApiError(null);
+      console.log('Gesture data loaded:', { vocabulary: vocabularyData.gestures, status: statusData });
+    } catch (error) {
+      console.warn('Failed to load gesture data:', error.message);
+      setApiError('Backend not available - using mock data');
+      // Fallback to mock data
+      setGestureVocabulary({
+        "open_hand": {
+          "description": "Start listening for voice commands",
+          "emergency": false,
+          "finger_count": 5,
+          "confidence_threshold": 0.7,
+          "hold_time": 0.5
+        },
+        "fist": {
+          "description": "Stop listening for voice commands", 
+          "emergency": false,
+          "finger_count": 0,
+          "confidence_threshold": 0.7,
+          "hold_time": 0.5
+        },
+        "two_fingers": {
+          "description": "Emergency alert trigger",
+          "emergency": true,
+          "finger_count": 2,
+          "confidence_threshold": 0.8,
+          "hold_time": 1.0
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const analyzeGesture = async (imageUri) => {
+    try {
+      setIsDetecting(true);
+      setCurrentStatus('processing');
+      setStatusMessage('Analyzing gesture...');
+      
+      const result = await apiService.analyzeGesture(imageUri, 0.7);
+      
+      setLastDetectedGesture(result);
+      setCurrentStatus('success');
+      setStatusMessage(`Detected: ${result.gesture_type} (${Math.round(result.confidence * 100)}% confidence)`);
+      
+      // Update progress
+      setGestureProgress(prev => ({
+        ...prev,
+        [result.gesture_type]: (prev[result.gesture_type] || 0) + 1
+      }));
+      
+      console.log('Gesture analyzed:', result);
+      
+      // Provide feedback
+      if (settings.voiceNavigation) {
+        Speech.speak(`${result.gesture_type} detected with ${Math.round(result.confidence * 100)} percent confidence`, {
+          rate: settings.speechRate,
+          pitch: settings.speechPitch,
+        });
+      }
+      
+    } catch (error) {
+      console.error('Failed to analyze gesture:', error);
+      setCurrentStatus('error');
+      setStatusMessage('Failed to analyze gesture');
+    } finally {
+      setIsDetecting(false);
+    }
+  };
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -371,8 +466,29 @@ const GestureTrainingScreen = ({ navigation }) => {
     return colors.error;
   };
 
+  // Show loading indicator while fetching data
+  if (isLoading && Object.keys(gestureVocabulary).length === 0) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary, marginTop: 16 }]}>
+          Loading gesture data...
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Error Banner */}
+      {apiError && (
+        <View style={[styles.errorBanner, { backgroundColor: colors.warning }]}>
+          <Text style={[styles.errorText, { color: 'white' }]}>
+            ⚠️ {apiError}
+          </Text>
+        </View>
+      )}
+
       {/* Beautiful Header */}
       <GestureHeader />
       
@@ -449,6 +565,20 @@ const GestureTrainingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingText: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  errorBanner: {
+    margin: 16,
+    padding: 12,
+    borderRadius: 8,
+  },
+  errorText: {
+    fontSize: 13,
+    textAlign: 'center',
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,

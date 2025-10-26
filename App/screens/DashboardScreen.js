@@ -12,6 +12,7 @@ import {
   Alert,
   Vibration,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
@@ -23,6 +24,7 @@ import NavigationMenu from '../components/NavigationMenu';
 import VoiceCommandsGuide from '../components/VoiceCommandsGuide';
 import LastCommandDisplay from '../components/LastCommandDisplay';
 import * as Speech from 'expo-speech';
+import apiService from '../api/services/apiService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -34,6 +36,8 @@ const DashboardScreen = ({ navigation }) => {
   const [statusMessage, setStatusMessage] = useState('');
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const [lastCommand, setLastCommand] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
   
   // New states for enhanced features
   const [usageStats, setUsageStats] = useState({
@@ -54,7 +58,7 @@ const DashboardScreen = ({ navigation }) => {
   const [emergencyHistory, setEmergencyHistory] = useState([]);
   const [personalizedMessage, setPersonalizedMessage] = useState('');
   
-  // Mock data for new analytics components
+  // API-loaded data for analytics components
   const [metrics, setMetrics] = useState({
     latency: 150,
     accuracy: 94.5,
@@ -94,6 +98,86 @@ const DashboardScreen = ({ navigation }) => {
     avgAccuracy: 94.5,
     avgResponseTime: 4.2
   });
+
+  // Load analytics data from API
+  useEffect(() => {
+    loadAnalyticsData();
+    checkHealth();
+  }, []);
+
+  const checkHealth = async () => {
+    try {
+      const health = await apiService.checkHealth();
+      console.log('Backend health:', health);
+      setApiError(null);
+    } catch (error) {
+      console.warn('Backend not available, using mock data:', error.message);
+      setApiError('Backend not available - using mock data');
+    }
+  };
+
+  const loadAnalyticsData = async () => {
+    setIsLoading(true);
+    try {
+      // Load usage statistics
+      const usageData = await apiService.getUsageStatistics(7);
+      setUsageStats({
+        totalEvents: usageData.total_events || 0,
+        voiceCommands: usageData.voice_commands || 0,
+        gestureDetections: usageData.gesture_detections || 0,
+        emergencyEvents: usageData.emergency_events || 0,
+        averageSessionDuration: usageData.average_session_duration || 0
+      });
+
+      // Load performance metrics
+      const perfData = await apiService.getPerformanceMetrics(7);
+      if (perfData && perfData.metrics) {
+        const latencyMetric = perfData.metrics.find(m => m.name === 'speech_recognition_latency');
+        const gestureMetric = perfData.metrics.find(m => m.name === 'gesture_detection_latency');
+        
+        setMetrics({
+          latency: latencyMetric?.value || 150,
+          accuracy: 94.5, // Not in API response
+          uptime: 99.8,
+          cpuUsage: 45
+        });
+      }
+
+      // Load emergency analytics
+      const emergencyData = await apiService.getEmergencyAnalytics(30);
+      if (emergencyData) {
+        const timePatterns = emergencyData.hourly_patterns || {};
+        const triggerTypes = emergencyData.trigger_types || {};
+        
+        setPatterns(prev => ({
+          ...prev,
+          timeOfDay: Object.keys(timePatterns).map((hour, idx) => ({
+            hour: `${hour}-${parseInt(hour) + 6}`,
+            count: timePatterns[hour],
+            percentage: (timePatterns[hour] / (emergencyData.triggered_count || 1)) * 100
+          })),
+          triggerType: [
+            { type: 'voice', count: triggerTypes.voice || 0, color: '#007AFF' },
+            { type: 'gesture', count: triggerTypes.gesture || 0, color: '#FF9500' },
+            { type: 'manual', count: triggerTypes.manual || 0, color: '#FF3B30' }
+          ],
+          totalEmergencies: emergencyData.triggered_count || 0,
+          avgResponseTime: 5.2 // Not in API response
+        }));
+
+        setExportData(prev => ({
+          ...prev,
+          emergencies: emergencyData.triggered_count || 0
+        }));
+      }
+
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+      setApiError('Failed to load analytics - using mock data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -317,6 +401,18 @@ const DashboardScreen = ({ navigation }) => {
     },
   ];
 
+  // Show loading indicator while fetching data
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary, marginTop: 16 }]}>
+          Loading dashboard data...
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
@@ -324,6 +420,15 @@ const DashboardScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Error Banner */}
+        {apiError && (
+          <View style={[styles.errorBanner, { backgroundColor: colors.warning }]}>
+            <Text style={[styles.errorText, { color: 'white' }]}>
+              ⚠️ {apiError}
+            </Text>
+          </View>
+        )}
+
         {/* Beautiful Header */}
         <Animated.View
           style={[
@@ -445,6 +550,20 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 8,
     marginBottom: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  errorBanner: {
+    margin: 16,
+    padding: 12,
+    borderRadius: 8,
+  },
+  errorText: {
+    fontSize: 13,
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });
 

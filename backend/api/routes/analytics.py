@@ -187,7 +187,7 @@ async def get_emergency_analytics(
         logger.error(f"Error getting emergency analytics: {e}")
         raise HTTPException(status_code=500, detail="Failed to get emergency analytics")
 
-@router.get("/report", response_model=Dict[str, Any])
+@router.get("/report")
 async def generate_report(
     start_date: Optional[str] = Query(None, description="Start date (ISO format)"),
     end_date: Optional[str] = Query(None, description="End date (ISO format)"),
