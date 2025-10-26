@@ -1,6 +1,6 @@
 /**
  * Beautiful Modern Dashboard Screen
- * Stunning UI with gradients, animations, and professional design
+ * Completely redesigned with stunning UI, improved layout, and professional design
  */
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -15,17 +15,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
-import AccessibleButton from '../components/AccessibleButton';
 import StatusIndicator from '../components/StatusIndicator';
-import AnalyticsCards from '../components/AnalyticsCards';
-import ServiceStatus from '../components/ServiceStatus';
-import EmergencyHistory from '../components/EmergencyHistory';
+import DashboardHeader from '../components/DashboardHeader';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import QuickActions from '../components/QuickActions';
+import NavigationMenu from '../components/NavigationMenu';
+import VoiceCommandsGuide from '../components/VoiceCommandsGuide';
+import LastCommandDisplay from '../components/LastCommandDisplay';
 import * as Speech from 'expo-speech';
 
 const { width, height } = Dimensions.get('window');
 
 const DashboardScreen = ({ navigation }) => {
-  const { settings, getThemeColors, updateSetting } = useAccessibility();
+  const { settings, getThemeColors } = useAccessibility();
   const colors = getThemeColors();
   
   const [currentStatus, setCurrentStatus] = useState('idle');
@@ -55,19 +57,24 @@ const DashboardScreen = ({ navigation }) => {
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
-    // Entrance animations
+    // Entrance animations with staggered timing
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 600,
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 800,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 600,
         useNativeDriver: true,
       }),
     ]).start();
@@ -168,22 +175,6 @@ const DashboardScreen = ({ navigation }) => {
     setCurrentStatus('listening');
     setStatusMessage('Listening for voice commands...');
     
-    // Start pulsing animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-    
     // Simulate voice recognition
     setTimeout(() => {
       const mockCommands = [
@@ -196,7 +187,6 @@ const DashboardScreen = ({ navigation }) => {
       ];
       const randomCommand = mockCommands[Math.floor(Math.random() * mockCommands.length)];
       handleVoiceCommand(randomCommand);
-      pulseAnim.stopAnimation();
     }, 2000);
   };
 
@@ -293,39 +283,33 @@ const DashboardScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Beautiful Header with Gradient */}
+        {/* Beautiful Header */}
         <Animated.View
           style={[
-            styles.header,
+            {
+              opacity: fadeAnim,
+              transform: [
+                { translateY: slideAnim },
+                { scale: scaleAnim }
+              ],
+            },
+          ]}
+        >
+          <DashboardHeader 
+            personalizedMessage={personalizedMessage}
+            isEmergencyMode={isEmergencyMode}
+          />
+        </Animated.View>
+
+        {/* Status Indicator */}
+        <Animated.View
+          style={[
+            styles.statusContainer,
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
             },
           ]}
-        >
-          <View style={[styles.headerGradient, { backgroundColor: colors.primary }]}>
-            <Text style={styles.title}>VOICE2EYE</Text>
-            <Text style={styles.subtitle}>
-              {isEmergencyMode ? 'Emergency Mode Active' : 'AI-Powered Assistive Technology'}
-            </Text>
-            {personalizedMessage ? (
-              <Text style={styles.welcomeMessage}>{personalizedMessage}</Text>
-            ) : null}
-            <View style={styles.statusBadge}>
-              <View style={[styles.statusDot, { backgroundColor: isEmergencyMode ? '#ff6b6b' : '#4CAF50' }]} />
-              <Text style={styles.statusText}>
-                {isEmergencyMode ? 'Emergency Active' : 'System Ready'}
-              </Text>
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Status Indicator */}
-        <Animated.View
-          style={{
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          }}
         >
           <StatusIndicator
             status={currentStatus}
@@ -334,194 +318,68 @@ const DashboardScreen = ({ navigation }) => {
           />
         </Animated.View>
 
-        {/* Analytics/Statistics Display Section */}
+        {/* Analytics Dashboard */}
         <Animated.View
           style={[
-            styles.section,
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
             },
           ]}
         >
-          <AnalyticsCards usageStats={usageStats} />
+          <AnalyticsDashboard 
+            usageStats={usageStats} 
+            serviceStatus={serviceStatus} 
+          />
         </Animated.View>
 
-        {/* Real-time Status Indicators */}
+        {/* Quick Actions */}
         <Animated.View
           style={[
-            styles.section,
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
             },
           ]}
         >
-          <ServiceStatus serviceStatus={serviceStatus} />
+          <QuickActions actions={quickActions} />
         </Animated.View>
 
-        {/* Quick Actions with Beautiful Cards */}
+        {/* Navigation Menu */}
         <Animated.View
           style={[
-            styles.section,
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
-          <View style={styles.quickActionsGrid}>
-            {quickActions.map((action, index) => (
-              <Animated.View
-                key={index}
-                style={[
-                  styles.actionCard,
-                  {
-                    transform: [{ scale: pulseAnim }],
-                  },
-                ]}
-              >
-                <View style={[styles.actionCardGradient, { backgroundColor: action.gradient[0] }]}>
-                  <Text style={styles.actionIcon}>{action.icon}</Text>
-                  <Text style={styles.actionTitle}>{action.title}</Text>
-                  <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
-                </View>
-                <AccessibleButton
-                  title="Activate"
-                  onPress={action.onPress}
-                  variant="primary"
-                  size="medium"
-                  accessibilityLabel={action.accessibilityLabel}
-                  accessibilityHint={action.accessibilityHint}
-                  style={styles.actionButton}
-                />
-              </Animated.View>
-            ))}
-          </View>
+          <NavigationMenu items={navigationItems} />
         </Animated.View>
 
-        {/* Emergency Alert History Preview */}
+        {/* Voice Commands Guide */}
         <Animated.View
           style={[
-            styles.section,
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
             },
           ]}
         >
-          <EmergencyHistory emergencyHistory={emergencyHistory} />
+          <VoiceCommandsGuide />
         </Animated.View>
 
-        {/* Navigation Menu with Beautiful Cards */}
+        {/* Last Command Display */}
         <Animated.View
           style={[
-            styles.section,
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Navigation</Text>
-          <View style={styles.navigationGrid}>
-            {navigationItems.map((item, index) => (
-              <Animated.View
-                key={index}
-                style={[
-                  styles.navigationCard,
-                  {
-                    opacity: fadeAnim,
-                    transform: [
-                      { translateY: slideAnim },
-                      { scale: pulseAnim },
-                    ],
-                    backgroundColor: colors.surface,
-                  },
-                ]}
-              >
-                <View style={[styles.navigationIcon, { backgroundColor: item.color }]}>
-                  <Text style={styles.navigationEmoji}>{item.icon}</Text>
-                </View>
-                <Text style={[styles.navigationTitle, { color: colors.text }]}>{item.title}</Text>
-                <Text style={[styles.navigationSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
-                <AccessibleButton
-                  title="Open"
-                  onPress={item.onPress}
-                  variant="outline"
-                  size="small"
-                  accessibilityLabel={item.accessibilityLabel}
-                  style={[styles.navigationButton, { borderColor: item.color }]}
-                />
-              </Animated.View>
-            ))}
-          </View>
+          <LastCommandDisplay lastCommand={lastCommand} />
         </Animated.View>
-
-        {/* Voice Commands Reference with Beautiful Design */}
-        <Animated.View
-          style={[
-            styles.section,
-            styles.commandsSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Voice Commands</Text>
-          <View style={[styles.commandsContainer, { backgroundColor: colors.surface }]}>
-            <View style={styles.commandItem}>
-              <Text style={styles.commandIcon}>🎤</Text>
-              <Text style={[styles.commandText, { color: colors.text }]}>
-                Say "Emergency" or "Help" for emergency mode
-              </Text>
-            </View>
-            <View style={styles.commandItem}>
-              <Text style={styles.commandIcon}>⚙️</Text>
-              <Text style={[styles.commandText, { color: colors.text }]}>
-                Say "Settings" to open configuration
-              </Text>
-            </View>
-            <View style={styles.commandItem}>
-              <Text style={styles.commandIcon}>👥</Text>
-              <Text style={[styles.commandText, { color: colors.text }]}>
-                Say "Contacts" to manage emergency contacts
-              </Text>
-            </View>
-            <View style={styles.commandItem}>
-              <Text style={styles.commandIcon}>📷</Text>
-              <Text style={[styles.commandText, { color: colors.text }]}>
-                Say "Camera" to open camera view
-              </Text>
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Last Command Display with Beautiful Design */}
-        {lastCommand && (
-          <Animated.View
-            style={[
-              styles.lastCommandContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-                backgroundColor: colors.surface,
-              },
-            ]}
-          >
-            <View style={styles.lastCommandHeader}>
-              <Text style={styles.lastCommandIcon}>💬</Text>
-              <Text style={[styles.lastCommandLabel, { color: colors.textSecondary }]}>
-                Last Command
-              </Text>
-            </View>
-            <Text style={[styles.lastCommandText, { color: colors.text }]}>
-              "{lastCommand}"
-            </Text>
-          </Animated.View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -535,226 +393,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: 30,
   },
-  header: {
-    marginBottom: 10,
-  },
-  headerGradient: {
-    padding: 20,
-    alignItems: 'center',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 4,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: 'white',
-    opacity: 0.9,
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  welcomeMessage: {
-    fontSize: 13,
-    color: 'white',
-    opacity: 0.9,
-    textAlign: 'center',
-    marginBottom: 8,
-    fontStyle: 'italic',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 6,
-  },
-  statusText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  section: {
+  statusContainer: {
+    marginHorizontal: 16,
     marginVertical: 12,
-    paddingHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  actionCard: {
-    width: '48%',
-    marginBottom: 12,
-    borderRadius: 12,
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  actionCardGradient: {
-    padding: 16,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    alignItems: 'center',
-  },
-  actionIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  actionTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  actionSubtitle: {
-    fontSize: 11,
-    color: 'white',
-    opacity: 0.9,
-    textAlign: 'center',
-  },
-  actionButton: {
-    margin: 12,
-    borderRadius: 6,
-  },
-  navigationGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  navigationCard: {
-    width: '48%',
-    marginBottom: 12,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  navigationIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
-  navigationEmoji: {
-    fontSize: 20,
-  },
-  navigationTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  navigationSubtitle: {
-    fontSize: 11,
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  navigationButton: {
-    borderRadius: 6,
-  },
-  commandsSection: {
-    marginTop: 4,
-  },
-  commandsContainer: {
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  commandItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  commandIcon: {
-    fontSize: 18,
-    marginRight: 10,
-  },
-  commandText: {
-    fontSize: 13,
-    flex: 1,
-    lineHeight: 18,
-  },
-  lastCommandContainer: {
-    margin: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  lastCommandHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  lastCommandIcon: {
-    fontSize: 14,
-    marginRight: 6,
-  },
-  lastCommandLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  lastCommandText: {
-    fontSize: 15,
-    fontStyle: 'italic',
   },
 });
 

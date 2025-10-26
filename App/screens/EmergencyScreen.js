@@ -11,11 +11,16 @@ import {
   Vibration,
   Dimensions,
   Animated,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import AccessibleButton from '../components/AccessibleButton';
 import StatusIndicator from '../components/StatusIndicator';
+import EmergencyContactDisplay from '../components/EmergencyContactDisplay';
+import EmergencyHistoryTimeline from '../components/EmergencyHistoryTimeline';
+import EmergencyTypeSelector from '../components/EmergencyTypeSelector';
+import EmergencyMessageCustomizer from '../components/EmergencyMessageCustomizer';
 import * as Speech from 'expo-speech';
 
 const { width, height } = Dimensions.get('window');
@@ -28,6 +33,61 @@ const EmergencyScreen = ({ navigation, route }) => {
   const [countdown, setCountdown] = useState(10);
   const [contactsNotified, setContactsNotified] = useState(0);
   const [location, setLocation] = useState('Location being determined...');
+  const [emergencyType, setEmergencyType] = useState('general');
+  const [customMessage, setCustomMessage] = useState('');
+  
+  // Mock data for demonstration
+  const [emergencyContacts] = useState([
+    {
+      id: '1',
+      name: 'Emergency Services',
+      phoneNumber: '911',
+      priority: 'high',
+      group: 'emergency',
+      relationship: 'Emergency Services',
+      isPrimary: true,
+      enabled: true
+    },
+    {
+      id: '2',
+      name: 'John Doe',
+      phoneNumber: '+1 (555) 123-4567',
+      priority: 'high',
+      group: 'family',
+      relationship: 'Spouse',
+      isPrimary: false,
+      enabled: true
+    },
+    {
+      id: '3',
+      name: 'Jane Smith',
+      phoneNumber: '+1 (555) 987-6543',
+      priority: 'medium',
+      group: 'medical',
+      relationship: 'Doctor',
+      isPrimary: false,
+      enabled: true
+    }
+  ]);
+  
+  const [emergencyHistory] = useState([
+    {
+      alert_id: 'alert_1',
+      trigger_type: 'voice',
+      status: 'confirmed',
+      timestamp: '2023-10-15T14:30:00Z',
+      location: { latitude: 40.7128, longitude: -74.0060 },
+      messages_sent: 2
+    },
+    {
+      alert_id: 'alert_2',
+      trigger_type: 'gesture',
+      status: 'cancelled',
+      timestamp: '2023-10-10T09:15:00Z',
+      location: { latitude: 40.7589, longitude: -73.9851 },
+      messages_sent: 0
+    }
+  ]);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const flashAnim = useRef(new Animated.Value(0)).current;
@@ -199,7 +259,10 @@ const EmergencyScreen = ({ navigation, route }) => {
       </Animated.View>
 
       {/* Main Content */}
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Status Information */}
         <View style={[styles.statusContainer, { backgroundColor: colors.surface }]}>
           <Text style={[styles.statusTitle, { color: colors.text }]}>
@@ -222,6 +285,15 @@ const EmergencyScreen = ({ navigation, route }) => {
           </View>
         )}
 
+        {/* Emergency Type Selection */}
+        <EmergencyTypeSelector 
+          selectedType={emergencyType}
+          onTypeChange={setEmergencyType}
+        />
+
+        {/* Emergency Contact Display with Priority Levels */}
+        <EmergencyContactDisplay contacts={emergencyContacts} />
+
         {/* Location Information */}
         <View style={[styles.locationContainer, { backgroundColor: colors.surface }]}>
           <Text style={[styles.locationLabel, { color: colors.text }]}>
@@ -231,6 +303,12 @@ const EmergencyScreen = ({ navigation, route }) => {
             {location}
           </Text>
         </View>
+
+        {/* Emergency Message Customization */}
+        <EmergencyMessageCustomizer 
+          defaultMessage="HELP! I need immediate assistance. My location is: {{location}}. Time: {{time}}"
+          onMessageChange={setCustomMessage}
+        />
 
         {/* Contacts Notified */}
         {emergencyStatus === 'confirmed' && (
@@ -243,6 +321,9 @@ const EmergencyScreen = ({ navigation, route }) => {
             </Text>
           </View>
         )}
+
+        {/* Emergency History Timeline */}
+        <EmergencyHistoryTimeline history={emergencyHistory} />
 
         {/* Action Buttons */}
         <View style={styles.actionsContainer}>
@@ -299,7 +380,7 @@ const EmergencyScreen = ({ navigation, route }) => {
             Say "Location" to hear your location
           </Text>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Status Indicator */}
       <StatusIndicator
