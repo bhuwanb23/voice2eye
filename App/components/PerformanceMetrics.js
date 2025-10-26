@@ -1,9 +1,9 @@
 /**
  * Performance Metrics Component
- * Visualizes system performance with charts and graphs
+ * Compact visualization with smooth animations
  */
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { useAccessibility } from './AccessibilityProvider';
 
 const PerformanceMetrics = ({ metrics }) => {
@@ -11,10 +11,28 @@ const PerformanceMetrics = ({ metrics }) => {
   const colors = getThemeColors();
   const [selectedMetric, setSelectedMetric] = useState('latency');
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   const metricsData = [
     {
       id: 'latency',
-      label: 'Response Time',
+      label: 'Response',
       value: metrics?.latency || 0,
       unit: 'ms',
       threshold: 200,
@@ -23,7 +41,7 @@ const PerformanceMetrics = ({ metrics }) => {
     },
     {
       id: 'accuracy',
-      label: 'Recognition Accuracy',
+      label: 'Accuracy',
       value: metrics?.accuracy || 0,
       unit: '%',
       threshold: 90,
@@ -35,315 +53,198 @@ const PerformanceMetrics = ({ metrics }) => {
       label: 'Uptime',
       value: metrics?.uptime || 0,
       unit: '%',
-      threshold: 99,
-      color: colors.accent,
-      icon: '⏱️'
+      threshold: 95,
+      color: colors.success,
+      icon: '✅'
     },
     {
-      id: 'cpu',
-      label: 'CPU Usage',
+      id: 'cpuUsage',
+      label: 'CPU',
       value: metrics?.cpuUsage || 0,
       unit: '%',
-      threshold: 70,
+      threshold: 80,
       color: colors.warning,
       icon: '💻'
     }
   ];
 
-  const selectedData = metricsData.find(m => m.id === selectedMetric);
+  const selectedData = metricsData.find(m => m.id === selectedMetric) || metricsData[0];
+  const isHealthy = selectedData.value <= selectedData.threshold;
 
-  const renderProgressBar = (data) => {
-    const percentage = Math.min((data.value / data.threshold) * 100, 100);
-    const isHealthy = data.value <= data.threshold;
-    
-    return (
-      <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBarTrack, { backgroundColor: colors.border }]}>
+  return (
+    <Animated.View 
+      style={[
+        styles.container, 
+        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+      ]}
+    >
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Performance</Text>
+      </View>
+
+      {/* Compact Metric Selector */}
+      <View style={styles.selectorContainer}>
+        {metricsData.map((metric) => (
+          <TouchableOpacity
+            key={metric.id}
+            style={[
+              styles.selectorButton,
+              {
+                backgroundColor: selectedMetric === metric.id ? metric.color : colors.surface,
+                borderColor: metric.color,
+              }
+            ]}
+            onPress={() => setSelectedMetric(metric.id)}
+          >
+            <Text style={styles.selectorIcon}>{metric.icon}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Selected Metric Display */}
+      <View style={[styles.metricCard, { backgroundColor: colors.surface }]}>
+        <View style={styles.metricHeader}>
+          <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>
+            {selectedData.label}
+          </Text>
+          <View style={[
+            styles.healthIndicator, 
+            { backgroundColor: isHealthy ? colors.success : colors.error }
+          ]} />
+        </View>
+        
+        <View style={styles.metricValueContainer}>
+          <Text style={[styles.metricValue, { color: selectedData.color }]}>
+            {selectedData.value}
+          </Text>
+          <Text style={[styles.metricUnit, { color: colors.textSecondary }]}>
+            {selectedData.unit}
+          </Text>
+        </View>
+
+        {/* Compact Progress Bar */}
+        <View style={[styles.progressContainer, { backgroundColor: `${colors.border}30` }]}>
           <View 
             style={[
-              styles.progressBarFill, 
+              styles.progressBar, 
               { 
-                width: `${percentage}%`, 
-                backgroundColor: isHealthy ? colors.success : colors.error 
+                width: `${Math.min((selectedData.value / selectedData.threshold) * 100, 100)}%`,
+                backgroundColor: isHealthy ? colors.success : colors.error
               }
             ]} 
           />
         </View>
-        <Text style={[styles.progressValue, { color: colors.text }]}>
-          {data.value}{data.unit}
-        </Text>
       </View>
-    );
-  };
 
-  const renderMetricCard = (data) => (
-    <TouchableOpacity
-      key={data.id}
-      style={[
-        styles.metricCard,
-        { 
-          backgroundColor: colors.surface,
-          borderColor: selectedMetric === data.id ? data.color : colors.border,
-          borderWidth: selectedMetric === data.id ? 2 : 1
-        }
-      ]}
-      onPress={() => setSelectedMetric(data.id)}
-      accessible={true}
-      accessibilityLabel={`${data.label}: ${data.value}${data.unit}`}
-      accessibilityRole="button"
-    >
-      <Text style={[styles.metricIcon, { color: data.color }]}>{data.icon}</Text>
-      <Text style={[styles.metricLabel, { color: colors.text }]}>{data.label}</Text>
-      <Text style={[styles.metricValue, { color: data.color }]}>
-        {data.value}{data.unit}
-      </Text>
-      {data.value <= data.threshold ? (
-        <Text style={[styles.statusBadge, { color: colors.success }]}>✓ Good</Text>
-      ) : (
-        <Text style={[styles.statusBadge, { color: colors.error }]}>⚠ High</Text>
-      )}
-    </TouchableOpacity>
-  );
-
-  const renderChart = () => {
-    // Simple bar chart representation
-    const maxValue = selectedData.threshold * 1.2;
-    const barHeight = (selectedData.value / maxValue) * 100;
-
-    return (
-      <View style={styles.chartContainer}>
-        <View style={styles.chartYAxis}>
-          <Text style={[styles.chartLabel, { color: colors.textSecondary }]}>
-            {maxValue}{selectedData.unit}
-          </Text>
-          <Text style={[styles.chartLabel, { color: colors.textSecondary }]}>
-            {(maxValue / 2)}{selectedData.unit}
-          </Text>
-          <Text style={[styles.chartLabel, { color: colors.textSecondary }]}>0</Text>
-        </View>
-        <View style={styles.chartArea}>
-          <View style={styles.chartGrid}>
-            {[100, 50, 0].map((percent, i) => (
-              <View 
-                key={i} 
-                style={[
-                  styles.gridLine, 
-                  { backgroundColor: colors.border, top: `${percent}%` }
-                ]} 
-              />
-            ))}
+      {/* Mini Summary Grid */}
+      <View style={styles.miniGrid}>
+        {metricsData.slice(0, 3).map((metric, index) => (
+          <View key={index} style={styles.miniCard}>
+            <Text style={[styles.miniIcon, { color: metric.color }]}>{metric.icon}</Text>
+            <Text style={[styles.miniValue, { color: colors.text }]}>{metric.value}{metric.unit}</Text>
           </View>
-          <View 
-            style={[
-              styles.chartBar,
-              { 
-                height: `${barHeight}%`,
-                backgroundColor: selectedData.value <= selectedData.threshold 
-                  ? colors.success 
-                  : colors.error
-              }
-            ]}
-          />
-          <View 
-            style={[
-              styles.chartThreshold,
-              { 
-                height: `${(selectedData.threshold / maxValue) * 100}%`,
-                backgroundColor: selectedData.color
-              }
-            ]}
-          />
-        </View>
+        ))}
       </View>
-    );
-  };
-
-  return (
-    <View style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Performance Metrics</Text>
-      
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.metricsScroll}
-        contentContainerStyle={styles.metricsScrollContent}
-      >
-        {metricsData.map(renderMetricCard)}
-      </ScrollView>
-
-      <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
-        <View style={styles.detailHeader}>
-          <Text style={[styles.detailIcon, { color: selectedData.color }]}>
-            {selectedData.icon}
-          </Text>
-          <View style={styles.detailInfo}>
-            <Text style={[styles.detailLabel, { color: colors.text }]}>
-              {selectedData.label}
-            </Text>
-            <Text style={[styles.detailValue, { color: selectedData.color }]}>
-              {selectedData.value}{selectedData.unit}
-            </Text>
-          </View>
-        </View>
-
-        {renderProgressBar(selectedData)}
-
-        <View style={styles.chartSection}>
-          <Text style={[styles.chartTitle, { color: colors.text }]}>Visualization</Text>
-          {renderChart()}
-        </View>
-      </View>
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  sectionTitle: {
+  header: {
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  selectorContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  selectorButton: {
+    width: '23%',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectorIcon: {
     fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    paddingHorizontal: 16,
-  },
-  metricsScroll: {
-    marginBottom: 12,
-  },
-  metricsScrollContent: {
-    paddingHorizontal: 16,
-    gap: 12,
   },
   metricCard: {
-    minWidth: 120,
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
-    alignItems: 'center',
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
-  metricIcon: {
-    fontSize: 32,
+  metricHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   metricLabel: {
-    fontSize: 12,
-    textAlign: 'center',
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  healthIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  metricValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
     marginBottom: 8,
   },
   metricValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    fontSize: 28,
+    fontWeight: '700',
+    marginRight: 4,
   },
-  statusBadge: {
+  metricUnit: {
     fontSize: 12,
     fontWeight: '600',
   },
-  detailCard: {
-    marginHorizontal: 16,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  detailHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  detailIcon: {
-    fontSize: 40,
-    marginRight: 12,
-  },
-  detailInfo: {
-    flex: 1,
-  },
-  detailLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  detailValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  progressBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  progressBarTrack: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 12,
+  progressContainer: {
+    height: 4,
+    borderRadius: 2,
     overflow: 'hidden',
   },
-  progressBarFill: {
+  progressBar: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 2,
   },
-  progressValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    minWidth: 60,
-    textAlign: 'right',
-  },
-  chartSection: {
-    marginTop: 8,
-  },
-  chartTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  chartContainer: {
+  miniGrid: {
     flexDirection: 'row',
-    height: 200,
-  },
-  chartYAxis: {
-    width: 50,
     justifyContent: 'space-between',
-    paddingRight: 8,
   },
-  chartLabel: {
-    fontSize: 12,
-    textAlign: 'right',
-  },
-  chartArea: {
+  miniCard: {
     flex: 1,
-    position: 'relative',
+    alignItems: 'center',
+    paddingVertical: 8,
   },
-  chartGrid: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+  miniIcon: {
+    fontSize: 20,
+    marginBottom: 4,
   },
-  gridLine: {
-    position: 'absolute',
-    width: '100%',
-    height: 1,
-  },
-  chartBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: '20%',
-    right: '20%',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-  },
-  chartThreshold: {
-    position: 'absolute',
-    left: '20%',
-    right: '20%',
-    opacity: 0.3,
+  miniValue: {
+    fontSize: 11,
+    fontWeight: '600',
   },
 });
 

@@ -1,73 +1,113 @@
 /**
  * Service Status Component
- * Displays real-time status indicators for all system services
+ * Displays real-time status with compact design and pulse animations
  */
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useAccessibility } from './AccessibilityProvider';
 
 const ServiceStatus = ({ serviceStatus }) => {
   const { getThemeColors } = useAccessibility();
   const colors = getThemeColors();
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   const services = [
     { 
       name: 'Speech', 
-      status: serviceStatus.speech, 
+      status: serviceStatus?.speech || 'ready', 
       icon: '🎤',
-      color: serviceStatus.speech === 'ready' ? colors.success : colors.error
+      color: (serviceStatus?.speech || 'ready') === 'ready' ? colors.success : colors.error
     },
     { 
       name: 'Gesture', 
-      status: serviceStatus.gesture, 
+      status: serviceStatus?.gesture || 'ready', 
       icon: '✋',
-      color: serviceStatus.gesture === 'ready' ? colors.success : colors.error
+      color: (serviceStatus?.gesture || 'ready') === 'ready' ? colors.success : colors.error
     },
     { 
       name: 'Emergency', 
-      status: serviceStatus.emergency, 
+      status: serviceStatus?.emergency || 'ready', 
       icon: '🚨',
-      color: serviceStatus.emergency === 'ready' ? colors.success : colors.error
+      color: (serviceStatus?.emergency || 'ready') === 'ready' ? colors.success : colors.error
     },
     { 
       name: 'Camera', 
-      status: serviceStatus.camera, 
+      status: serviceStatus?.camera || 'ready', 
       icon: '📷',
-      color: serviceStatus.camera === 'ready' ? colors.success : colors.error
+      color: (serviceStatus?.camera || 'ready') === 'ready' ? colors.success : colors.error
     }
   ];
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>Service Status</Text>
       <View style={styles.grid}>
-        {services.map((service, index) => (
-          <View 
-            key={index} 
-            style={[styles.card, { backgroundColor: colors.surface }]}
-            accessible={true}
-            accessibilityLabel={`${service.name} service is ${service.status}`}
-          >
-            <Text style={[styles.icon, { color: service.color }]}>{service.icon}</Text>
-            <Text style={[styles.status, { color: service.color }]}>
-              {service.status === 'ready' ? '✓ Ready' : '✗ Offline'}
-            </Text>
-            <Text style={[styles.name, { color: colors.text }]}>{service.name}</Text>
-          </View>
-        ))}
+        {services.map((service, index) => {
+          const isReady = service.status === 'ready';
+          const pulseAnim = useRef(new Animated.Value(1)).current;
+          
+          useEffect(() => {
+            if (isReady) {
+              Animated.loop(
+                Animated.sequence([
+                  Animated.timing(pulseAnim, {
+                    toValue: 1.2,
+                    duration: 800,
+                    useNativeDriver: true,
+                  }),
+                  Animated.timing(pulseAnim, {
+                    toValue: 1,
+                    duration: 800,
+                    useNativeDriver: true,
+                  }),
+                ])
+              ).start();
+            }
+          }, [isReady]);
+
+          return (
+            <Animated.View 
+              key={index} 
+              style={[
+                styles.card, 
+                { 
+                  backgroundColor: colors.surface,
+                  transform: [{ scale: pulseAnim }]
+                }
+              ]}
+              accessible={true}
+              accessibilityLabel={`${service.name} service is ${service.status}`}
+            >
+              <View style={[styles.statusDot, { backgroundColor: service.color }]} />
+              <Text style={styles.icon}>{service.icon}</Text>
+              <Text style={[styles.name, { color: colors.text }]}>{service.name}</Text>
+            </Animated.View>
+          );
+        })}
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   grid: {
     flexDirection: 'row',
@@ -76,30 +116,32 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '48%',
-    marginBottom: 12,
-    padding: 16,
+    marginBottom: 10,
+    padding: 12,
     borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 3,
     elevation: 2,
-    alignItems: 'center',
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
   },
   icon: {
-    fontSize: 24,
-    marginBottom: 8,
-  },
-  status: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontSize: 18,
+    marginRight: 8,
   },
   name: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
   },
 });
