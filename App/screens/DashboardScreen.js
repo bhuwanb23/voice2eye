@@ -54,6 +54,47 @@ const DashboardScreen = ({ navigation }) => {
   const [emergencyHistory, setEmergencyHistory] = useState([]);
   const [personalizedMessage, setPersonalizedMessage] = useState('');
   
+  // Mock data for new analytics components
+  const [metrics, setMetrics] = useState({
+    latency: 150,
+    accuracy: 94.5,
+    uptime: 99.8,
+    cpuUsage: 45
+  });
+  
+  const [patterns, setPatterns] = useState({
+    timeOfDay: [
+      { hour: '00-06', count: 2, percentage: 10 },
+      { hour: '06-12', count: 8, percentage: 40 },
+      { hour: '12-18', count: 6, percentage: 30 },
+      { hour: '18-24', count: 4, percentage: 20 }
+    ],
+    dayOfWeek: [
+      { day: 'Mon', count: 3 },
+      { day: 'Tue', count: 5 },
+      { day: 'Wed', count: 2 },
+      { day: 'Thu', count: 4 },
+      { day: 'Fri', count: 6 },
+      { day: 'Sat', count: 1 },
+      { day: 'Sun', count: 1 }
+    ],
+    triggerType: [
+      { type: 'voice', count: 12, color: '#007AFF' },
+      { type: 'gesture', count: 5, color: '#FF9500' },
+      { type: 'manual', count: 3, color: '#FF3B30' }
+    ],
+    avgResponseTime: 5.2,
+    totalEmergencies: 22
+  });
+  
+  const [exportData, setExportData] = useState({
+    voiceCommands: 145,
+    gestures: 89,
+    emergencies: 12,
+    avgAccuracy: 94.5,
+    avgResponseTime: 4.2
+  });
+  
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -331,7 +372,10 @@ const DashboardScreen = ({ navigation }) => {
         >
           <AnalyticsDashboard 
             usageStats={usageStats} 
-            serviceStatus={serviceStatus} 
+            serviceStatus={serviceStatus}
+            metrics={metrics}
+            patterns={patterns}
+            exportData={exportData}
           />
         </Animated.View>
 
