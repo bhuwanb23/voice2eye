@@ -12,10 +12,14 @@ import {
   Animated,
   TouchableOpacity,
   ActivityIndicator,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import * as Speech from 'expo-speech';
+import * as Haptics from 'expo-haptics';
 import apiService from '../api/services/apiService';
 
 const { width, height } = Dimensions.get('window');
@@ -141,9 +145,27 @@ const GestureTrainingScreen = ({ navigation }) => {
   const [apiError, setApiError] = useState(null);
   const [gestureVocabulary, setGestureVocabulary] = useState({});
   
+  // Animation references
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  
   // Load gesture vocabulary and status from API
   useEffect(() => {
     loadGestureData();
+    
+    // Start animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
 
   const loadGestureData = async () => {
@@ -297,35 +319,66 @@ const GestureTrainingScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: '#F9FAFB' }]}>
-      {/* Error Banner */}
-      {apiError && (
-        <View style={[styles.errorBanner, { backgroundColor: '#F59E0B' }]}>
-          <Text style={styles.errorText}>⚠️ {apiError}</Text>
-        </View>
-      )}
+    <>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Modern Compact Header */}
+        <LinearGradient
+          colors={[colors.primary, colors.primary + 'DD', colors.primary + '99']}
+          style={styles.compactHeader}
+        >
+          <Animated.View 
+            style={[
+              styles.headerContent,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <Text style={styles.headerTitle}>✋ Gesture Training</Text>
+            <Text style={styles.headerSubtitle}>Master your moves with precision</Text>
+            
+            {/* Quick Stats */}
+            <View style={styles.quickStats}>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>12</Text>
+                <Text style={styles.statLabel}>Mastered</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>{progress}%</Text>
+                <Text style={styles.statLabel}>Progress</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>92%</Text>
+                <Text style={styles.statLabel}>Accuracy</Text>
+              </View>
+            </View>
+          </Animated.View>
+        </LinearGradient>
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>GestureFlow</Text>
-        <Text style={styles.headerSubtitle}>Master your moves with precision</Text>
-      </View>
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Mode & Status Section */}
-        <View style={styles.section}>
-          <View style={[styles.modeSelector, { backgroundColor: '#F3F4F6' }]}>
-            <ModeButton mode="learn" label="Learn" isActive={trainingMode === 'learn'} />
-            <ModeButton mode="practice" label="Practice" isActive={trainingMode === 'practice'} />
-            <ModeButton mode="test" label="Test" isActive={trainingMode === 'test'} />
+        {/* Error Banner */}
+        {apiError && (
+          <View style={[styles.errorBanner, { backgroundColor: colors.warning }]}>
+            <Text style={[styles.errorText, { color: 'white' }]}>⚠️ {apiError}</Text>
           </View>
+        )}
 
-          <View style={[styles.statusIndicator, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.statusText, { color: colors.primary }]}>
-              {trainingMode.toUpperCase()} MODE
-            </Text>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Mode & Status Section */}
+          <View style={styles.section}>
+            <View style={[styles.modeSelector, { backgroundColor: colors.surface }]}>
+              <ModeButton mode="learn" label="Learn" isActive={trainingMode === 'learn'} />
+              <ModeButton mode="practice" label="Practice" isActive={trainingMode === 'practice'} />
+              <ModeButton mode="test" label="Test" isActive={trainingMode === 'test'} />
+            </View>
+
+            <View style={[styles.statusIndicator, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.statusText, { color: colors.primary }]}>
+                {trainingMode.toUpperCase()} MODE
+              </Text>
+            </View>
           </View>
-        </View>
 
         {/* Detection & Feedback Section */}
         <View style={styles.section}>
@@ -400,20 +453,70 @@ const GestureTrainingScreen = ({ navigation }) => {
             ) : (
               <Text style={[styles.buttonText, { color: '#FFFFFF', fontSize: 13, fontWeight: '600' }]}>Start Detection →</Text>
          
-         )}
-          </TouchableOpacity>
-        </View>
+          )}
+        </TouchableOpacity>
       </View>
-    </SafeAreaView>
-  );
+    </View>
+  </SafeAreaView>
+</>
+
+);
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  compactHeader: {
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  headerContent: {
+    padding: 16,
+    alignItems: 'center',
+    width: '100%',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'white',
+    textAlign: 'center',
+    opacity: 0.9,
+    marginBottom: 16,
+  },
+  quickStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 8,
+  },
+  statCard: {
+    padding: 12,
+    borderRadius: 10,
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  statLabel: {
+    fontSize: 10,
+    marginTop: 2,
+    color: 'white',
+    opacity: 0.8,
+  },
   errorBanner: {
-    margin: 16,
+    margin: 12,
     padding: 12,
     borderRadius: 8,
   },
@@ -421,22 +524,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     fontWeight: '600',
-    color: 'white',
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#4B5563',
-    marginTop: 4,
   },
   scrollView: {
     flex: 1,

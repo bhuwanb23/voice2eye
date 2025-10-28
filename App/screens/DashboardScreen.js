@@ -13,8 +13,11 @@ import {
   Vibration,
   Animated,
   ActivityIndicator,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import StatusIndicator from '../components/StatusIndicator';
 import DashboardHeader from '../components/DashboardHeader';
@@ -24,6 +27,7 @@ import NavigationMenu from '../components/NavigationMenu';
 import VoiceCommandsGuide from '../components/VoiceCommandsGuide';
 import LastCommandDisplay from '../components/LastCommandDisplay';
 import * as Speech from 'expo-speech';
+import * as Haptics from 'expo-haptics';
 import apiService from '../api/services/apiService';
 
 const { width, height } = Dimensions.get('window');
@@ -414,75 +418,96 @@ const DashboardScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Error Banner */}
-        {apiError && (
-          <View style={[styles.errorBanner, { backgroundColor: colors.warning }]}>
-            <Text style={[styles.errorText, { color: 'white' }]}>
-              ⚠️ {apiError}
-            </Text>
-          </View>
-        )}
-
-        {/* Beautiful Header */}
-        <Animated.View
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [
-                { translateY: slideAnim },
-                { scale: scaleAnim }
-              ],
-            },
-          ]}
+    <>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Modern Compact Header */}
+        <LinearGradient
+          colors={[colors.primary, colors.primary + 'DD', colors.primary + '99']}
+          style={styles.compactHeader}
         >
-          <DashboardHeader 
-            personalizedMessage={personalizedMessage}
-            isEmergencyMode={isEmergencyMode}
-          />
-        </Animated.View>
+          <Animated.View 
+            style={[
+              styles.headerContent,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <Text style={styles.headerTitle}>🏠 Dashboard</Text>
+            <Text style={styles.headerSubtitle}>
+              {personalizedMessage || 'Voice & Gesture Control Center'}
+            </Text>
+            
+            {/* Quick Stats */}
+            <View style={styles.quickStats}>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>{usageStats.voiceCommands}</Text>
+                <Text style={styles.statLabel}>Voice</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>{usageStats.gestureDetections}</Text>
+                <Text style={styles.statLabel}>Gestures</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>{metrics.accuracy}%</Text>
+                <Text style={styles.statLabel}>Accuracy</Text>
+              </View>
+            </View>
+          </Animated.View>
+        </LinearGradient>
 
-        {/* Status Indicator - Only show when there's an active status */}
-        {currentStatus !== 'idle' && (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Error Banner */}
+          {apiError && (
+            <View style={[styles.errorBanner, { backgroundColor: colors.warning }]}>
+              <Text style={[styles.errorText, { color: 'white' }]}>
+                ⚠️ {apiError}
+              </Text>
+            </View>
+          )}
+
+          {/* Status Indicator - Only show when there's an active status */}
+          {currentStatus !== 'idle' && (
+            <Animated.View
+              style={[
+                styles.statusContainer,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }],
+                },
+              ]}
+            >
+              <StatusIndicator
+                status={currentStatus}
+                message={statusMessage}
+                announceVoice={true}
+              />
+            </Animated.View>
+          )}
+
+          {/* Analytics Dashboard */}
           <Animated.View
             style={[
-              styles.statusContainer,
               {
                 opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }],
               },
             ]}
           >
-            <StatusIndicator
-              status={currentStatus}
-              message={statusMessage}
-              announceVoice={true}
+            <AnalyticsDashboard 
+              usageStats={usageStats} 
+              serviceStatus={serviceStatus}
+              metrics={metrics}
+              patterns={patterns}
+              exportData={exportData}
             />
           </Animated.View>
-        )}
-
-        {/* Analytics Dashboard */}
-        <Animated.View
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <AnalyticsDashboard 
-            usageStats={usageStats} 
-            serviceStatus={serviceStatus}
-            metrics={metrics}
-            patterns={patterns}
-            exportData={exportData}
-          />
-        </Animated.View>
 
         {/* Quick Actions */}
         <Animated.View
@@ -531,14 +556,63 @@ const DashboardScreen = ({ navigation }) => {
         >
           <LastCommandDisplay lastCommand={lastCommand} />
         </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  compactHeader: {
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  headerContent: {
+    padding: 16,
+    alignItems: 'center',
+    width: '100%',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'white',
+    textAlign: 'center',
+    opacity: 0.9,
+    marginBottom: 16,
+  },
+  quickStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 8,
+  },
+  statCard: {
+    padding: 12,
+    borderRadius: 10,
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  statLabel: {
+    fontSize: 10,
+    marginTop: 2,
+    color: 'white',
+    opacity: 0.8,
   },
   scrollView: {
     flex: 1,
