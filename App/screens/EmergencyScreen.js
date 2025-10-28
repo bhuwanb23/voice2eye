@@ -1,6 +1,6 @@
 /**
  * Emergency Mode Screen
- * High-contrast, accessible emergency interface
+ * High-contrast, accessible emergency interface with tab navigation
  */
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -13,6 +13,7 @@ import {
   Animated,
   ScrollView,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
@@ -20,8 +21,9 @@ import AccessibleButton from '../components/AccessibleButton';
 import StatusIndicator from '../components/StatusIndicator';
 import EmergencyContactDisplay from '../components/EmergencyContactDisplay';
 import EmergencyHistoryTimeline from '../components/EmergencyHistoryTimeline';
-import EmergencyTypeSelector from '../components/EmergencyTypeSelector';
 import EmergencyMessageCustomizer from '../components/EmergencyMessageCustomizer';
+import EmergencyPatterns from '../components/EmergencyPatterns';
+import EmergencySystemSettings from '../components/EmergencySystemSettings';
 import * as Speech from 'expo-speech';
 import apiService from '../api/services/apiService';
 
@@ -40,10 +42,18 @@ const EmergencyScreen = ({ navigation, route }) => {
   const [currentAlertId, setCurrentAlertId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
+  const [activeTab, setActiveTab] = useState('contacts'); // contacts, history, settings, patterns
   
   // Load emergency contacts and history from API
   const [emergencyContacts, setEmergencyContacts] = useState([]);
   const [emergencyHistory, setEmergencyHistory] = useState([]);
+  const [emergencySettings, setEmergencySettings] = useState({
+    autoTriggerEmergency: true,
+    emergencyTimeout: 10,
+    locationTracking: true,
+    silentEmergency: false,
+    multipleContactAttempts: true,
+  });
   
   // Load data from backend on mount
   useEffect(() => {
@@ -274,6 +284,13 @@ const EmergencyScreen = ({ navigation, route }) => {
     }
   };
 
+  const handleSettingChange = (key, value) => {
+    setEmergencySettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
   // Show loading indicator while fetching data
   if (isLoading && emergencyContacts.length === 0) {
     return (
@@ -319,137 +336,125 @@ const EmergencyScreen = ({ navigation, route }) => {
         </Text>
       </Animated.View>
 
+      {/* Tab Navigation */}
+      <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'contacts' && styles.activeTab]}
+          onPress={() => setActiveTab('contacts')}
+        >
+          <Text style={[styles.tabText, { color: activeTab === 'contacts' ? colors.primary : colors.textSecondary }]}>
+            Contacts
+          </Text>
+          {activeTab === 'contacts' && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'history' && styles.activeTab]}
+          onPress={() => setActiveTab('history')}
+        >
+          <Text style={[styles.tabText, { color: activeTab === 'history' ? colors.primary : colors.textSecondary }]}>
+            History
+          </Text>
+          {activeTab === 'history' && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'patterns' && styles.activeTab]}
+          onPress={() => setActiveTab('patterns')}
+        >
+          <Text style={[styles.tabText, { color: activeTab === 'patterns' ? colors.primary : colors.textSecondary }]}>
+            Patterns
+          </Text>
+          {activeTab === 'patterns' && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'settings' && styles.activeTab]}
+          onPress={() => setActiveTab('settings')}
+        >
+          <Text style={[styles.tabText, { color: activeTab === 'settings' ? colors.primary : colors.textSecondary }]}>
+            Settings
+          </Text>
+          {activeTab === 'settings' && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
+        </TouchableOpacity>
+      </View>
+
       {/* Main Content */}
       <ScrollView 
         style={styles.content}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}
       >
-        {/* Status Information */}
-        <View style={[styles.statusContainer, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.statusTitle, { color: colors.text }]}>
-            Emergency Status
-          </Text>
-          <Text style={[styles.statusText, { color: getStatusColor() }]}>
-            {emergencyStatus.toUpperCase()}
-          </Text>
-        </View>
-
-        {/* Countdown Timer */}
-        {emergencyStatus === 'triggered' && (
-          <View style={[styles.countdownContainer, { backgroundColor: getStatusColor() }]}>
-            <Text style={styles.countdownLabel}>
-              Auto-confirm in:
-            </Text>
-            <Text style={[styles.countdownText, { color: 'white' }]}>
-              {countdown} seconds
-            </Text>
+        {/* Contacts Tab */}
+        {activeTab === 'contacts' && (
+          <View style={styles.tabContent}>
+            <EmergencyContactDisplay contacts={emergencyContacts} />
           </View>
         )}
 
-        {/* Emergency Type Selection */}
-        <EmergencyTypeSelector 
-          selectedType={emergencyType}
-          onTypeChange={setEmergencyType}
-        />
-
-        {/* Emergency Contact Display with Priority Levels */}
-        <EmergencyContactDisplay contacts={emergencyContacts} />
-
-        {/* Location Information */}
-        <View style={[styles.locationContainer, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.locationLabel, { color: colors.text }]}>
-            Your Location:
-          </Text>
-          <Text style={[styles.locationText, { color: colors.text }]}>
-            {location}
-          </Text>
-        </View>
-
-        {/* Emergency Message Customization */}
-        <EmergencyMessageCustomizer 
-          defaultMessage="HELP! I need immediate assistance. My location is: {{location}}. Time: {{time}}"
-          onMessageChange={setCustomMessage}
-        />
-
-        {/* Contacts Notified */}
-        {emergencyStatus === 'confirmed' && (
-          <View style={[styles.contactsContainer, { backgroundColor: colors.success }]}>
-            <Text style={styles.contactsLabel}>
-              Emergency Contacts Notified:
-            </Text>
-            <Text style={styles.contactsText}>
-              {contactsNotified} contacts
-            </Text>
+        {/* History Tab */}
+        {activeTab === 'history' && (
+          <View style={styles.tabContent}>
+            <EmergencyHistoryTimeline history={emergencyHistory} />
           </View>
         )}
 
-        {/* Emergency History Timeline */}
-        <EmergencyHistoryTimeline history={emergencyHistory} />
+        {/* Patterns Tab */}
+        {activeTab === 'patterns' && (
+          <View style={styles.tabContent}>
+            <EmergencyPatterns />
+          </View>
+        )}
 
-        {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
-          {emergencyStatus === 'triggered' && (
-            <AccessibleButton
-              title="CANCEL EMERGENCY"
-              onPress={cancelEmergency}
-              variant="warning"
-              size="extra-large"
-              accessibilityLabel="Cancel emergency alert"
-              accessibilityHint="Tap to cancel the emergency and stop contacting help"
-              style={styles.cancelButton}
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <View style={styles.tabContent}>
+            <EmergencySystemSettings 
+              settings={emergencySettings} 
+              onSettingChange={handleSettingChange} 
             />
-          )}
-
-          {emergencyStatus === 'confirmed' && (
-            <AccessibleButton
-              title="CANCEL EMERGENCY"
-              onPress={cancelEmergency}
-              variant="warning"
-              size="extra-large"
-              accessibilityLabel="Cancel emergency alert"
-              accessibilityHint="Tap to cancel the emergency if help is no longer needed"
-              style={styles.cancelButton}
+            <EmergencyMessageCustomizer 
+              defaultMessage="HELP! I need immediate assistance. My location is: {{location}}. Time: {{time}}"
+              onMessageChange={setCustomMessage}
             />
-          )}
-
-          <AccessibleButton
-            title="CALL 911"
-            onPress={() => {
-              // In a real app, this would open the phone dialer
-              Alert.alert('Calling 911', 'Emergency services will be contacted.');
-            }}
-            variant="error"
-            size="extra-large"
-            accessibilityLabel="Call 911 emergency services"
-            accessibilityHint="Tap to directly call 911 emergency services"
-            style={styles.emergencyButton}
-          />
-        </View>
-
-        {/* Voice Commands */}
-        <View style={[styles.voiceCommandsContainer, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.voiceCommandsTitle, { color: colors.text }]}>
-            Voice Commands:
-          </Text>
-          <Text style={[styles.voiceCommandText, { color: colors.text }]}>
-            Say "Cancel" to cancel emergency
-          </Text>
-          <Text style={[styles.voiceCommandText, { color: colors.text }]}>
-            Say "Help" for more assistance
-          </Text>
-          <Text style={[styles.voiceCommandText, { color: colors.text }]}>
-            Say "Location" to hear your location
-          </Text>
-        </View>
+          </View>
+        )}
       </ScrollView>
 
-      {/* Status Indicator */}
-      <StatusIndicator
-        status="emergency"
-        message={getEmergencyMessage()}
-        announceVoice={false}
-        style={styles.statusIndicator}
-      />
+      {/* Floating Emergency Button - Fixed at bottom right */}
+      <View style={styles.floatingButtonContainer}>
+        {emergencyStatus === 'triggered' && (
+          <AccessibleButton
+            title="CANCEL"
+            onPress={cancelEmergency}
+            variant="warning"
+            size="large"
+            accessibilityLabel="Cancel emergency alert"
+            style={styles.cancelButton}
+          />
+        )}
+        
+        <AccessibleButton
+          title="CALLTYPE"
+          onPress={() => {
+            // In a real app, this would open the phone dialer
+            Alert.alert('Calling 911', 'Emergency services will be contacted.');
+          }}
+          variant="error"
+          size="large"
+          accessibilityLabel="Call 911 emergency services"
+          style={styles.emergencyButton}
+        />
+      </View>
+
+      {/* Status Indicator - Positioned properly to avoid overlap */}
+      <View style={styles.statusIndicatorContainer}>
+        <StatusIndicator
+          status="emergency"
+          message={getEmergencyMessage()}
+          announceVoice={false}
+        />
+      </View>
     </SafeAreaView>
   );
 };
@@ -465,7 +470,12 @@ const styles = StyleSheet.create({
   errorBanner: {
     margin: 16,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   errorText: {
     fontSize: 13,
@@ -479,139 +489,85 @@ const styles = StyleSheet.create({
     borderBottomColor: '#FFFFFF',
   },
   emergencyTitle: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   emergencySubtitle: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#FFFFFF',
     textAlign: 'center',
     fontWeight: '600',
   },
+  tabContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    height: 3,
+    width: '80%',
+    borderRadius: 2,
+  },
+  activeTab: {
+    // Active tab styling
+  },
   content: {
     flex: 1,
-    padding: 20,
   },
-  statusContainer: {
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  contentContainer: {
+    padding: 16,
+    paddingBottom: 100, // Extra padding to account for floating button
   },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+  tabContent: {
+    flex: 1,
   },
-  statusText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  countdownContainer: {
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  countdownLabel: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginBottom: 10,
-  },
-  countdownText: {
-    fontSize: 48,
-    fontWeight: 'bold',
-  },
-  locationContainer: {
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  locationLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  locationText: {
-    fontSize: 18,
-  },
-  contactsContainer: {
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  contactsLabel: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginBottom: 10,
-  },
-  contactsText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  actionsContainer: {
-    marginBottom: 20,
+  // Floating button container - positioned at bottom right
+  floatingButtonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    flexDirection: 'column',
+    gap: 12,
+    alignItems: 'flex-end',
   },
   cancelButton: {
-    marginBottom: 16,
-    minHeight: 80,
+    minWidth: 120,
+    minHeight: 50,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   emergencyButton: {
-    minHeight: 80,
-  },
-  voiceCommandsContainer: {
-    padding: 20,
-    borderRadius: 12,
+    minWidth: 120,
+    minHeight: 50,
+    borderRadius: 25,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  voiceCommandsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  voiceCommandText: {
-    fontSize: 14,
-    marginBottom: 5,
-  },
-  statusIndicator: {
+  // Status indicator container - positioned above floating button
+  statusIndicatorContainer: {
     position: 'absolute',
-    bottom: 80, // Adjusted to account for bottom navigation bar
+    bottom: 90,
     left: 20,
     right: 20,
   },

@@ -212,6 +212,7 @@ const ContactManager = ({ contacts, onUpdateContacts }) => {
     return icons[group] || '👤';
   };
 
+  // Priority color mapping
   const getPriorityColor = (priority) => {
     const colors_map = {
       high: '#f44336',
@@ -252,7 +253,7 @@ const ContactManager = ({ contacts, onUpdateContacts }) => {
                 styles.filterText,
                 { color: filterGroup === group ? 'white' : colors.text }
               ]}>
-                {group.charAt(0).toUpperCase() + group.slice(1)}
+                {capitalizeFirstLetter(group)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -445,6 +446,7 @@ const ContactManager = ({ contacts, onUpdateContacts }) => {
   );
 };
 
+// Contact Card Component
 const ContactCard = ({ contact, onEdit, onDelete, getGroupIcon, getPriorityColor, colors }) => (
   <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
     <View style={styles.cardHeader}>
@@ -458,7 +460,9 @@ const ContactCard = ({ contact, onEdit, onDelete, getGroupIcon, getPriorityColor
         <Text style={[styles.cardRelationship, { color: colors.textSecondary }]}>{contact.relationship}</Text>
       </View>
       <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(contact.priority) }]}>
-        <Text style={styles.priorityText}>{contact.priority.toUpperCase()}</Text>
+        <Text style={styles.priorityText}>
+          {contact.priority && typeof contact.priority === 'string' ? contact.priority.toUpperCase() : 'MEDIUM'}
+        </Text>
       </View>
     </View>
     <View style={styles.cardActions}>

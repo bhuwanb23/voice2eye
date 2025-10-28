@@ -21,96 +21,103 @@ const EmergencySystemSettings = ({ settings, onSettingChange }) => {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Emergency System</Text>
-      
-      <View style={styles.settingItem}>
-        <View style={styles.settingContent}>
-          <Text style={[styles.settingTitle, { color: colors.text }]}>Auto-trigger Emergency</Text>
-          <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-            Automatically trigger emergency after repeated failed commands
-          </Text>
-        </View>
-        <Switch
-          value={settings.autoTriggerEmergency}
-          onValueChange={(value) => onSettingChange('autoTriggerEmergency', value)}
-          trackColor={{ false: colors.border, true: colors.primary }}
-          thumbColor={settings.autoTriggerEmergency ? '#FFFFFF' : colors.textSecondary}
-          accessible={true}
-          accessibilityLabel="Auto-trigger emergency setting"
-        />
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Emergency System Settings</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          Customize emergency behavior
+        </Text>
       </View>
       
-      <View style={styles.settingItem}>
-        <View style={styles.settingContent}>
-          <Text style={[styles.settingTitle, { color: colors.text }]}>Confirmation Timeout</Text>
-          <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-            Time to confirm emergency before auto-triggering
-          </Text>
+      <View style={styles.settingsContainer}>
+        <View style={[styles.settingItem, { borderBottomColor: colors.border }]}>
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingTitle, { color: colors.text }]}>Auto-trigger Emergency</Text>
+            <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+              Automatically trigger emergency after repeated failed commands
+            </Text>
+          </View>
+          <Switch
+            value={settings.autoTriggerEmergency}
+            onValueChange={(value) => onSettingChange('autoTriggerEmergency', value)}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={settings.autoTriggerEmergency ? '#FFFFFF' : colors.textSecondary}
+            accessible={true}
+            accessibilityLabel="Auto-trigger emergency setting"
+          />
         </View>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={settings.emergencyTimeout}
-            style={[styles.picker, { color: colors.text }]}
-            onValueChange={(value) => onSettingChange('emergencyTimeout', value)}
-            accessibilityLabel="Emergency confirmation timeout"
-          >
-            {timeoutOptions.map((option) => (
-              <Picker.Item key={option.value} label={option.label} value={option.value} />
-            ))}
-          </Picker>
+        
+        <View style={[styles.settingItem, { borderBottomColor: colors.border }]}>
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingTitle, { color: colors.text }]}>Confirmation Timeout</Text>
+            <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+              Time to confirm emergency before auto-triggering
+            </Text>
+          </View>
+          <View style={[styles.pickerContainer, { borderColor: colors.border }]}>
+            <Picker
+              selectedValue={settings.emergencyTimeout}
+              style={[styles.picker, { color: colors.text }]}
+              onValueChange={(value) => onSettingChange('emergencyTimeout', value)}
+              accessibilityLabel="Emergency confirmation timeout"
+            >
+              {timeoutOptions.map((option) => (
+                <Picker.Item key={option.value} label={option.label} value={option.value} />
+              ))}
+            </Picker>
+          </View>
         </View>
-      </View>
-      
-      <View style={styles.settingItem}>
-        <View style={styles.settingContent}>
-          <Text style={[styles.settingTitle, { color: colors.text }]}>Location Tracking</Text>
-          <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-            Continuously track location during emergency
-          </Text>
+        
+        <View style={[styles.settingItem, { borderBottomColor: colors.border }]}>
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingTitle, { color: colors.text }]}>Location Tracking</Text>
+            <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+              Continuously track location during emergency
+            </Text>
+          </View>
+          <Switch
+            value={settings.locationTracking}
+            onValueChange={(value) => onSettingChange('locationTracking', value)}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={settings.locationTracking ? '#FFFFFF' : colors.textSecondary}
+            accessible={true}
+            accessibilityLabel="Location tracking setting"
+          />
         </View>
-        <Switch
-          value={settings.locationTracking}
-          onValueChange={(value) => onSettingChange('locationTracking', value)}
-          trackColor={{ false: colors.border, true: colors.primary }}
-          thumbColor={settings.locationTracking ? '#FFFFFF' : colors.textSecondary}
-          accessible={true}
-          accessibilityLabel="Location tracking setting"
-        />
-      </View>
-      
-      <View style={styles.settingItem}>
-        <View style={styles.settingContent}>
-          <Text style={[styles.settingTitle, { color: colors.text }]}>Silent Mode</Text>
-          <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-            Trigger emergency silently without audio alerts
-          </Text>
+        
+        <View style={[styles.settingItem, { borderBottomColor: colors.border }]}>
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingTitle, { color: colors.text }]}>Silent Mode</Text>
+            <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+              Trigger emergency silently without audio alerts
+            </Text>
+          </View>
+          <Switch
+            value={settings.silentEmergency}
+            onValueChange={(value) => onSettingChange('silentEmergency', value)}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={settings.silentEmergency ? '#FFFFFF' : colors.textSecondary}
+            accessible={true}
+            accessibilityLabel="Silent emergency mode setting"
+          />
         </View>
-        <Switch
-          value={settings.silentEmergency}
-          onValueChange={(value) => onSettingChange('silentEmergency', value)}
-          trackColor={{ false: colors.border, true: colors.primary }}
-          thumbColor={settings.silentEmergency ? '#FFFFFF' : colors.textSecondary}
-          accessible={true}
-          accessibilityLabel="Silent emergency mode setting"
-        />
-      </View>
-      
-      <View style={styles.settingItem}>
-        <View style={styles.settingContent}>
-          <Text style={[styles.settingTitle, { color: colors.text }]}>Multiple Contact Attempts</Text>
-          <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-            Retry contacting emergency contacts if initial attempts fail
-          </Text>
+        
+        <View style={styles.settingItem}>
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingTitle, { color: colors.text }]}>Multiple Contact Attempts</Text>
+            <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+              Retry contacting emergency contacts if initial attempts fail
+            </Text>
+          </View>
+          <Switch
+            value={settings.multipleContactAttempts}
+            onValueChange={(value) => onSettingChange('multipleContactAttempts', value)}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={settings.multipleContactAttempts ? '#FFFFFF' : colors.textSecondary}
+            accessible={true}
+            accessibilityLabel="Multiple contact attempts setting"
+          />
         </View>
-        <Switch
-          value={settings.multipleContactAttempts}
-          onValueChange={(value) => onSettingChange('multipleContactAttempts', value)}
-          trackColor={{ false: colors.border, true: colors.primary }}
-          thumbColor={settings.multipleContactAttempts ? '#FFFFFF' : colors.textSecondary}
-          accessible={true}
-          accessibilityLabel="Multiple contact attempts setting"
-        />
       </View>
       
       <View style={styles.buttonContainer}>
@@ -137,30 +144,44 @@ const EmergencySystemSettings = ({ settings, onSettingChange }) => {
 
 const styles = StyleSheet.create({
   container: {
+    borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    borderRadius: 16,
-    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  header: {
+    marginBottom: 20,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  settingsContainer: {
+    marginBottom: 20,
   },
   settingItem: {
-    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 20,
     borderBottomWidth: 1,
   },
   settingContent: {
-    marginBottom: 12,
+    flex: 1,
+    marginRight: 16,
   },
   settingTitle: {
     fontSize: 16,
@@ -173,17 +194,16 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    minWidth: 140,
   },
   picker: {
-    height: 40,
+    height: 44,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 16,
   },
   actionButton: {
     flex: 1,

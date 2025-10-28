@@ -44,27 +44,39 @@ const EmergencyContactCard = ({
     }
   };
 
+  // Safely capitalize the first letter of a string
+  const capitalizeFirstLetter = (string) => {
+    if (!string || typeof string !== 'string') return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }, style]}>
       <View style={styles.header}>
-        <Text style={styles.icon}>{getGroupIcon(contact.group)}</Text>
+        <Text style={[styles.icon, { color: getPriorityColor(contact.priority) }]}>
+          {getGroupIcon(contact.group)}
+        </Text>
         <View style={styles.info}>
-          <Text style={[styles.name, { color: colors.text }]}>
-            {contact.name}
+          <View style={styles.nameContainer}>
+            <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+              {contact.name}
+            </Text>
             {contact.isPrimary && (
-              <Text style={styles.primaryBadge}> PRIMARY</Text>
+              <View style={[styles.primaryBadge, { backgroundColor: '#f44336' }]}>
+                <Text style={styles.primaryBadgeText}>PRIMARY</Text>
+              </View>
             )}
-          </Text>
-          <Text style={[styles.phone, { color: colors.textSecondary }]}>
+          </View>
+          <Text style={[styles.phone, { color: colors.textSecondary }]} numberOfLines={1}>
             {contact.phoneNumber}
           </Text>
-          <Text style={[styles.details, { color: colors.textSecondary }]}>
-            {contact.relationship} • {contact.group.charAt(0).toUpperCase() + contact.group.slice(1)}
+          <Text style={[styles.details, { color: colors.textSecondary }]} numberOfLines={1}>
+            {contact.relationship} • {capitalizeFirstLetter(contact.group)}
           </Text>
         </View>
         <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(contact.priority) }]}>
           <Text style={styles.priorityText}>
-            {contact.priority.toUpperCase()}
+            {contact.priority && typeof contact.priority === 'string' ? contact.priority.toUpperCase() : 'MEDIUM'}
           </Text>
         </View>
       </View>
@@ -93,39 +105,53 @@ const EmergencyContactCard = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 8,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 12,
   },
   icon: {
-    fontSize: 24,
+    fontSize: 28,
     marginRight: 12,
+    marginTop: 2,
   },
   info: {
     flex: 1,
   },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4,
+    flex: 1,
   },
   primaryBadge: {
-    fontSize: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  primaryBadgeText: {
+    color: 'white',
+    fontSize: 10,
     fontWeight: 'bold',
-    color: '#f44336',
   },
   phone: {
     fontSize: 16,
@@ -138,6 +164,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    alignSelf: 'flex-start',
   },
   priorityText: {
     color: 'white',
@@ -150,7 +177,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     marginLeft: 12,
-    minWidth: 80,
+    minWidth: 70,
   },
 });
 

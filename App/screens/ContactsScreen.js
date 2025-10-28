@@ -1,8 +1,8 @@
 /**
- * Emergency Contacts Screen
- * Manage emergency contacts with priority levels and groupings
+ * Emergency Contacts Screen - Ultimate App Experience
+ * Beautiful and attractive contact management with modern UI/UX
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,12 +12,18 @@ import {
   FlatList,
   RefreshControl,
   TextInput,
+  TouchableOpacity,
+  Animated,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import AccessibleButton from '../components/AccessibleButton';
 import StatusIndicator from '../components/StatusIndicator';
 import * as Speech from 'expo-speech';
+import * as Haptics from 'expo-haptics';
 
 const ContactsScreen = ({ navigation }) => {
   const { settings, getThemeColors } = useAccessibility();
@@ -28,6 +34,27 @@ const ContactsScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredContacts, setFilteredContacts] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState('all');
+  
+  // Animation references
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
+  // Initialize animations
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   // Sample emergency contacts data
   useEffect(() => {
@@ -36,7 +63,7 @@ const ContactsScreen = ({ navigation }) => {
 
   useEffect(() => {
     filterContacts();
-  }, [searchQuery, contacts]);
+  }, [searchQuery, contacts, selectedGroup]);
 
   const loadContacts = () => {
     // In Phase 2, this will connect to the backend API
@@ -100,17 +127,22 @@ const ContactsScreen = ({ navigation }) => {
   };
 
   const filterContacts = () => {
-    if (!searchQuery.trim()) {
-      setFilteredContacts(contacts);
-      return;
+    let filtered = contacts;
+    
+    // Filter by group
+    if (selectedGroup !== 'all') {
+      filtered = filtered.filter(contact => contact.group === selectedGroup);
     }
     
-    const filtered = contacts.filter(contact => 
-      contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.phoneNumber.includes(searchQuery) ||
-      contact.relationship.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.group.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Filter by search query
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(contact => 
+        contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.phoneNumber.includes(searchQuery) ||
+        contact.relationship.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.group.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
     
     setFilteredContacts(filtered);
   };
@@ -125,10 +157,16 @@ const ContactsScreen = ({ navigation }) => {
   };
 
   const handleAddContact = () => {
+    if (Platform.OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     navigation.navigate('ContactForm', { mode: 'add' });
   };
 
   const handleEditContact = (contact) => {
+    if (Platform.OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     navigation.navigate('ContactForm', { mode: 'edit', contact });
   };
 
@@ -259,69 +297,66 @@ const ContactsScreen = ({ navigation }) => {
     }
   };
 
+  // Safely capitalize the first letter of a string
+  const capitalizeFirstLetter = (string) => {
+    if (!string || typeof string !== 'string') return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
   const renderContactItem = ({ item }) => (
-    <View style={[styles.contactCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <Animated.View style={[
+      styles.contactCard, 
+      { backgroundColor: colors.surface, borderColor: colors.border },
+      { opacity: fadeAnim }
+    ]}>
       <View style={styles.contactHeader}>
-        <Text style={styles.contactIcon}>{getGroupIcon(item.group)}</Text>
+        <View style={styles.iconContainer}>
+          <Text style={styles.contactIcon}>{getGroupIcon(item.group)}</Text>
+          {item.isPrimary && (
+            <View style={styles.primaryDot} />
+          )}
+        </View>
         <View style={styles.contactInfo}>
-          <Text style={[styles.contactName, { color: colors.text }]}>
-            {item.name}
-            {item.isPrimary && (
-              <Text style={styles.primaryBadge}> PRIMARY</Text>
-            )}
-          </Text>
-          <Text style={[styles.contactPhone, { color: colors.textSecondary }]}>
+          <View style={styles.nameRow}>
+            <Text style={[styles.contactName, { color: colors.text }]} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(item.priority) }]}>
+              <Text style={styles.priorityText}>
+                {item.priority ? capitalizeFirstLetter(item.priority).charAt(0) : 'M'}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.contactPhone, { color: colors.textSecondary }]} numberOfLines={1}>
             {item.phoneNumber}
           </Text>
-          <Text style={[styles.contactRelationship, { color: colors.textSecondary }]}>
-            {item.relationship} • {item.group.charAt(0).toUpperCase() + item.group.slice(1)}
-          </Text>
-        </View>
-        <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(item.priority) }]}>
-          <Text style={styles.priorityText}>
-            {item.priority.toUpperCase()}
+          <Text style={[styles.contactRelationship, { color: colors.textSecondary }]} numberOfLines={1}>
+            {item.relationship}
           </Text>
         </View>
       </View>
       
       <View style={styles.contactActions}>
-        <AccessibleButton
-          title="Edit"
+        <TouchableOpacity 
+          style={[styles.miniActionButton, { backgroundColor: colors.primary + '20' }]}
           onPress={() => handleEditContact(item)}
-          variant="outline"
-          size="small"
-          accessibilityLabel={`Edit contact ${item.name}`}
-          style={styles.actionButton}
-        />
-        <AccessibleButton
-          title="Share"
+        >
+          <Text style={[styles.miniActionText, { color: colors.primary }]}>✏️</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.miniActionButton, { backgroundColor: colors.success + '20' }]}
           onPress={() => handleShareContact(item)}
-          variant="outline"
-          size="small"
-          accessibilityLabel={`Share contact ${item.name}`}
-          style={styles.actionButton}
-        />
-        <AccessibleButton
-          title="Delete"
+        >
+          <Text style={[styles.miniActionText, { color: colors.success }]}>📤</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.miniActionButton, { backgroundColor: colors.error + '20' }]}
           onPress={() => handleDeleteContact(item.id)}
-          variant="error"
-          size="small"
-          accessibilityLabel={`Delete contact ${item.name}`}
-          style={styles.actionButton}
-        />
+        >
+          <Text style={[styles.miniActionText, { color: colors.error }]}>🗑️</Text>
+        </TouchableOpacity>
       </View>
-      
-      {item.history && item.history.length > 0 && (
-        <View style={styles.historySection}>
-          <Text style={[styles.historyTitle, { color: colors.textSecondary }]}>
-            History ({item.history.length})
-          </Text>
-          <Text style={[styles.historyItem, { color: colors.textSecondary }]}>
-            {item.history[0].date}: {item.history[0].action}
-          </Text>
-        </View>
-      )}
-    </View>
+    </Animated.View>
   );
 
   const renderGroupHeader = (group) => {
@@ -357,53 +392,117 @@ const ContactsScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.primary }]}>
-        <Text style={[styles.title, { color: 'white' }]}>
-          Emergency Contacts
-        </Text>
-        <Text style={[styles.subtitle, { color: 'white' }]}>
-          Manage your emergency contact list
-        </Text>
-      </View>
-
-      {/* Search Bar */}
-      <View style={[styles.searchContainer, { backgroundColor: colors.surface }]}>
-        <TextInput
-          style={[styles.searchInput, { 
-            backgroundColor: colors.background,
-            color: colors.text,
-            borderColor: colors.border,
-          }]}
-          placeholder="Search contacts..."
-          placeholderTextColor={colors.textSecondary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          accessibilityLabel="Search contacts"
-          accessibilityHint="Enter name, phone number, or relationship to search contacts"
-        />
-      </View>
-
-      {/* Status Indicator */}
-      <StatusIndicator
-        status={loading ? 'processing' : 'idle'}
-        message={loading ? 'Loading contacts...' : `${filteredContacts.length} contacts found`}
-        announceVoice={false}
+    <>
+      <StatusBar 
+        barStyle="light-content" 
+        backgroundColor={colors.primary} 
       />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Modern Hero Header with Gradient */}
+        <LinearGradient
+          colors={[colors.primary, colors.primary + 'DD', colors.primary + '99']}
+          style={styles.heroHeader}
+        >
+          <Animated.View 
+            style={[
+              styles.heroContent,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <Text style={styles.heroTitle}>👥 Emergency Contacts</Text>
+            <Text style={styles.heroSubtitle}>
+              Manage your emergency contact network
+            </Text>
+            
+            {/* Quick Stats */}
+            <View style={styles.statsContainer}>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>{contacts.length}</Text>
+                <Text style={styles.statLabel}>Total</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>
+                  {contacts.filter(c => c.priority === 'high').length}
+                </Text>
+                <Text style={styles.statLabel}>High Priority</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>
+                  {contacts.filter(c => c.isPrimary).length}
+                </Text>
+                <Text style={styles.statLabel}>Primary</Text>
+              </View>
+            </View>
+          </Animated.View>
+        </LinearGradient>
 
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
-          />
-        }
-        showsVerticalScrollIndicator={false}
-      >
+        {/* Compact Search and Filter Section */}
+        <View style={[styles.searchFilterContainer, { backgroundColor: colors.surface }]}>
+          <View style={styles.searchWrapper}>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <TextInput
+              style={[styles.modernSearchInput, { 
+                backgroundColor: colors.background,
+                color: colors.text,
+                borderColor: colors.border,
+              }]}
+              placeholder="Search contacts..."
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              accessibilityLabel="Search contacts"
+            />
+          </View>
+          
+          {/* Compact Filter Tabs */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.filterTabs}
+            contentContainerStyle={styles.filterTabsContent}
+          >
+            {[
+              { key: 'all', label: 'All', icon: '📋' },
+              { key: 'emergency', label: 'Emergency', icon: '🚨' },
+              { key: 'family', label: 'Family', icon: '👨‍👩‍👧‍👦' },
+              { key: 'medical', label: 'Medical', icon: '🏥' },
+              { key: 'friends', label: 'Friends', icon: '👥' }
+            ].map((filter) => (
+              <TouchableOpacity
+                key={filter.key}
+                style={[
+                  styles.filterTab,
+                  selectedGroup === filter.key && [styles.activeFilterTab, { backgroundColor: colors.primary }]
+                ]}
+                onPress={() => setSelectedGroup(filter.key)}
+              >
+                <Text style={styles.filterIcon}>{filter.icon}</Text>
+                <Text style={[
+                  styles.filterLabel,
+                  { color: selectedGroup === filter.key ? 'white' : colors.textSecondary }
+                ]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <ScrollView
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        >
         {/* Import/Export Controls */}
         <View style={[styles.importExportContainer, { backgroundColor: colors.surface }]}>
           <AccessibleButton
@@ -455,18 +554,23 @@ const ContactsScreen = ({ navigation }) => {
         )}
       </ScrollView>
 
-      {/* Add Contact Button */}
-      <View style={styles.fabContainer}>
-        <AccessibleButton
-          title="+"
+      {/* Floating Action Button */}
+      <Animated.View style={[styles.fabContainer, { opacity: fadeAnim }]}>
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: colors.primary }]}
           onPress={handleAddContact}
-          variant="primary"
-          size="extra-large"
-          accessibilityLabel="Add new emergency contact"
-          style={styles.fab}
-        />
-      </View>
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={[colors.primary, colors.primary + 'DD']}
+            style={styles.fabGradient}
+          >
+            <Text style={styles.fabText}>+</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
     </SafeAreaView>
+    </>
   );
 };
 
@@ -474,21 +578,114 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: 20,
+  heroHeader: {
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  heroContent: {
+    padding: 16,
+    alignItems: 'center',
+    width: '100%',
+  },
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    color: 'white',
+    textAlign: 'center',
+    opacity: 0.9,
+    marginBottom: 16,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 8,
+  },
+  statCard: {
+    padding: 12,
+    borderRadius: 10,
+    minWidth: 70,
     alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
+  statNumber: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 5,
+    color: 'white',
   },
-  subtitle: {
+  statLabel: {
+    fontSize: 11,
+    marginTop: 2,
+    color: 'white',
+    opacity: 0.8,
+  },
+  searchFilterContainer: {
+    padding: 12,
+    marginTop: -8,
+    marginHorizontal: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  searchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  searchIcon: {
     fontSize: 16,
-    opacity: 0.9,
+    marginRight: 10,
   },
-  searchContainer: {
-    padding: 15,
+  modernSearchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    fontSize: 15,
+  },
+  filterTabs: {
+    marginBottom: 4,
+  },
+  filterTabsContent: {
+    paddingHorizontal: 4,
+  },
+  filterTab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    marginRight: 6,
+    alignItems: 'center',
+    flexDirection: 'row',
+    minHeight: 32,
+  },
+  activeFilterTab: {
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  filterIcon: {
+    fontSize: 12,
+    marginRight: 4,
+  },
+  filterLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  modernStatusIndicator: {
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
   searchInput: {
     borderWidth: 1,
@@ -512,73 +709,94 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   groupHeader: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
-    padding: 20,
-    paddingBottom: 10,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   contactCard: {
-    marginHorizontal: 20,
-    marginVertical: 8,
+    marginVertical: 6,
+    marginHorizontal: 4,
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
   contactHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 12,
+  },
+  iconContainer: {
+    position: 'relative',
+    marginRight: 12,
+    alignItems: 'center',
   },
   contactIcon: {
     fontSize: 24,
-    marginRight: 12,
+  },
+  primaryDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ff4444',
   },
   contactInfo: {
     flex: 1,
   },
-  contactName: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 4,
   },
-  primaryBadge: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#f44336',
-  },
-  contactPhone: {
+  contactName: {
     fontSize: 16,
-    marginBottom: 2,
+    fontWeight: 'bold',
+    flex: 1,
+    marginRight: 8,
   },
-  contactRelationship: {
-    fontSize: 14,
-  },
-  priorityIndicator: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  priorityBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    minWidth: 20,
+    alignItems: 'center',
   },
   priorityText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
+  },
+  contactPhone: {
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  contactRelationship: {
+    fontSize: 12,
   },
   contactActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 12,
+    gap: 8,
   },
-  actionButton: {
-    marginLeft: 12,
-    minWidth: 80,
+  miniActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniActionText: {
+    fontSize: 14,
   },
   historySection: {
     borderTopWidth: 1,
@@ -609,15 +827,33 @@ const styles = StyleSheet.create({
   },
   fabContainer: {
     position: 'absolute',
-    right: 20,
-    bottom: 80, // Adjusted to account for bottom navigation bar
+    right: 16,
+    bottom: 90,
+    zIndex: 1000,
   },
   fab: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  fabGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
 

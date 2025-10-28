@@ -1,8 +1,8 @@
 /**
- * Beautiful Modern Settings Screen
- * Redesigned with stunning UI, animations, and modern components
+ * Settings Screen - Ultimate App Experience
+ * Next-level settings interface with modern UI/UX and mobile optimization
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,16 @@ import {
   Animated,
   ActivityIndicator,
   TouchableOpacity,
+  TextInput,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import AccessibleButton from '../components/AccessibleButton';
 import * as Speech from 'expo-speech';
+import * as Haptics from 'expo-haptics';
 import apiService from '../api/services/apiService';
 
 const { width, height } = Dimensions.get('window');
@@ -107,8 +112,12 @@ const SettingsScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [backendSettings, setBackendSettings] = useState(null);
-  const fadeAnim = useState(new Animated.Value(0))[0];
-  const slideAnim = useState(new Animated.Value(50))[0];
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+  
+  // Animation references
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
 
   // Load backend settings on mount
   useEffect(() => {
@@ -146,7 +155,14 @@ const SettingsScreen = ({ navigation }) => {
 
   const handleSettingChange = (key, value) => {
     console.log(`Setting changed: ${key} = ${value}`);
-    // For now, just log the change
+    
+    // Add haptic feedback
+    if (Platform.OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    
+    // Here you would normally update the actual settings
+    // updateSetting(key, value);
   };
 
   const handleResetSettings = () => {
@@ -161,249 +177,285 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        
-        {/* Beautiful Header with Gradient */}
-        <Animated.View
-          style={[
-            styles.headerContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
+    <>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Compact Modern Header */}
+        <LinearGradient
+          colors={[colors.primary, colors.primary + 'DD', colors.primary + '99']}
+          style={styles.compactHeader}
         >
-          <View style={[styles.headerGradient, { backgroundColor: colors?.primary || '#4A90E2' }]}>
-            <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>⚙️ Settings</Text>
-              <Text style={styles.headerSubtitle}>Customize your VOICE2EYE experience</Text>
-            </View>
-            <View style={styles.headerDecoration}>
-              <View style={[styles.decorationCircle, { backgroundColor: 'rgba(255,255,255,0.1)' }]} />
-              <View style={[styles.decorationCircle, { backgroundColor: 'rgba(255,255,255,0.05)' }]} />
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Loading Indicator */}
-        {isLoading && (
-          <View style={[styles.loadingContainer, { backgroundColor: colors?.background || '#FFFFFF' }]}>
-            <ActivityIndicator size="large" color={colors?.primary || '#4A90E2'} />
-            <Text style={[styles.loadingText, { color: colors?.textSecondary || '#6C757D', marginTop: 16 }]}>
-              Loading settings...
-            </Text>
-          </View>
-        )}
-
-        {/* Error Banner */}
-        {apiError && (
-          <Animated.View
+          <Animated.View 
             style={[
-              styles.errorBanner,
-              { backgroundColor: colors?.warning || '#FFC107' },
+              styles.headerContent,
               {
                 opacity: fadeAnim,
-                transform: [{ scale: fadeAnim }],
-              },
+                transform: [{ translateY: slideAnim }]
+              }
             ]}
           >
-            <Text style={[styles.errorText, { color: 'white' }]}>
-              ⚠️ {apiError}
-            </Text>
+            <Text style={styles.headerTitle}>⚙️ Settings</Text>
+            <Text style={styles.headerSubtitle}>Customize your experience</Text>
+            
+            {/* Quick Stats */}
+            <View style={styles.quickStats}>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>12</Text>
+                <Text style={styles.statLabel}>Active</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>3</Text>
+                <Text style={styles.statLabel}>Categories</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Text style={styles.statNumber}>{backendSettings ? 'ON' : 'OFF'}</Text>
+                <Text style={styles.statLabel}>Backend</Text>
+              </View>
+            </View>
           </Animated.View>
-        )}
+        </LinearGradient>
 
-        {/* Backend Status Card */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
+        {/* Search and Filter Section */}
+        <View style={[styles.searchContainer, { backgroundColor: colors.surface }]}>
+          <View style={styles.searchWrapper}>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <TextInput
+              style={[styles.searchInput, { 
+                backgroundColor: colors.background,
+                color: colors.text,
+                borderColor: colors.border,
+              }]}
+              placeholder="Search settings..."
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+          
+          {/* Category Filter */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoryTabs}
+          >
+            {[
+              { key: 'all', label: 'All', icon: '📋' },
+              { key: 'accessibility', label: 'Accessibility', icon: '♿' },
+              { key: 'privacy', label: 'Privacy', icon: '🔒' },
+              { key: 'emergency', label: 'Emergency', icon: '🚨' },
+              { key: 'audio', label: 'Audio', icon: '🔊' }
+            ].map((category) => (
+              <TouchableOpacity
+                key={category.key}
+                style={[
+                  styles.categoryTab,
+                  activeCategory === category.key && [styles.activeCategoryTab, { backgroundColor: colors.primary }]
+                ]}
+                onPress={() => setActiveCategory(category.key)}
+              >
+                <Text style={styles.categoryIcon}>{category.icon}</Text>
+                <Text style={[
+                  styles.categoryLabel,
+                  { color: activeCategory === category.key ? 'white' : colors.textSecondary }
+                ]}>
+                  {category.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <View style={[styles.statusCard, { backgroundColor: colors?.surface || '#F8F9FA', borderColor: colors?.border || '#DEE2E6' }]}>
-            <View style={styles.statusHeader}>
-              <Text style={[styles.statusTitle, { color: colors?.text || '#212529' }]}>🔗 Backend Status</Text>
-              <View style={[styles.statusIndicator, { backgroundColor: backendSettings ? colors?.success || '#28A745' : colors?.error || '#DC3545' }]} />
-            </View>
-            {backendSettings ? (
-              <View style={styles.statusContent}>
-                <StatusItem label="Audio Confidence" value={`${backendSettings.audio?.confidence_threshold || 'N/A'}`} colors={colors} />
-                <StatusItem label="Emergency Timeout" value={`${backendSettings.emergency?.confirmation_timeout || 'N/A'}s`} colors={colors} />
-                <StatusItem label="Gesture Hold Time" value={`${backendSettings.gesture?.hold_time || 'N/A'}s`} colors={colors} />
-                <StatusItem label="Sample Rate" value={`${backendSettings.audio?.sample_rate || 'N/A'}Hz`} colors={colors} />
-              </View>
-            ) : (
-              <Text style={[styles.statusText, { color: colors?.textSecondary || '#6C757D' }]}>
-                Backend data not loaded yet...
+          {/* Loading Indicator */}
+          {isLoading && (
+            <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.loadingText, { color: colors.textSecondary, marginTop: 16 }]}>
+                Loading settings...
               </Text>
-            )}
-          </View>
-        </Animated.View>
-
-        {/* Settings Categories */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <Text style={[styles.sectionTitle, { color: colors?.text || '#212529' }]}>🎛️ Preferences</Text>
-          
-          <View style={styles.settingsGrid}>
-            <SettingCard
-              title="Voice Navigation"
-              description="Enable voice feedback for interactions"
-              icon="🎤"
-              value={testSettings.voiceNavigation}
-              onValueChange={(value) => handleSettingChange('voiceNavigation', value)}
-              colors={colors}
-            />
-            
-            <SettingCard
-              title="Haptic Feedback"
-              description="Vibrate on interactions"
-              icon="📳"
-              value={testSettings.hapticFeedback}
-              onValueChange={(value) => handleSettingChange('hapticFeedback', value)}
-              colors={colors}
-            />
-            
-            <SettingCard
-              title="Usage Analytics"
-              description="Help improve the app"
-              icon="📊"
-              value={testSettings.usageAnalytics}
-              onValueChange={(value) => handleSettingChange('usageAnalytics', value)}
-              colors={colors}
-            />
-            
-            <SettingCard
-              title="Performance Tracking"
-              description="Monitor app performance"
-              icon="⚡"
-              value={testSettings.performanceTracking}
-              onValueChange={(value) => handleSettingChange('performanceTracking', value)}
-              colors={colors}
-            />
-          </View>
-        </Animated.View>
-
-        {/* Advanced Settings */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <Text style={[styles.sectionTitle, { color: colors?.text || '#212529' }]}>🔧 Advanced</Text>
-          
-          <View style={[styles.advancedCard, { backgroundColor: colors?.surface || '#F8F9FA', borderColor: colors?.border || '#DEE2E6' }]}>
-            <AdvancedSettingItem
-              title="Screen Magnification"
-              description="Zoom in on content"
-              value={testSettings.screenMagnification}
-              onValueChange={(value) => handleSettingChange('screenMagnification', value)}
-              colors={colors}
-            />
-            
-            <AdvancedSettingItem
-              title="Color Inversion"
-              description="Invert colors for better visibility"
-              value={testSettings.colorInversion}
-              onValueChange={(value) => handleSettingChange('colorInversion', value)}
-              colors={colors}
-            />
-            
-            <AdvancedSettingItem
-              title="High Contrast"
-              description="Increase contrast for accessibility"
-              value={testSettings.highContrast}
-              onValueChange={(value) => handleSettingChange('highContrast', value)}
-              colors={colors}
-            />
-          </View>
-        </Animated.View>
-
-        {/* Emergency Settings */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <Text style={[styles.sectionTitle, { color: colors?.text || '#212529' }]}>🚨 Emergency</Text>
-          
-          <View style={[styles.emergencyCard, { backgroundColor: colors?.surface || '#F8F9FA', borderColor: colors?.border || '#DEE2E6' }]}>
-            <View style={styles.emergencyHeader}>
-              <Text style={[styles.emergencyTitle, { color: colors?.text || '#212529' }]}>Emergency Mode</Text>
-              <Switch
-                value={testSettings.emergencyMode}
-                onValueChange={(value) => handleSettingChange('emergencyMode', value)}
-                trackColor={{ false: colors?.border || '#DEE2E6', true: colors?.error || '#DC3545' }}
-                thumbColor={testSettings.emergencyMode ? '#FFFFFF' : colors?.textSecondary || '#6C757D'}
-              />
             </View>
-            <Text style={[styles.emergencyDescription, { color: colors?.textSecondary || '#6C757D' }]}>
-              Enable emergency mode for quick access to emergency features
-            </Text>
-            <View style={styles.emergencyStats}>
-              <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: colors?.primary || '#4A90E2' }]}>{testSettings.emergencyContacts}</Text>
-                <Text style={[styles.statLabel, { color: colors?.textSecondary || '#6C757D' }]}>Contacts</Text>
+          )}
+
+          {/* Error Banner */}
+          {apiError && (
+            <Animated.View
+              style={[
+                styles.errorBanner,
+                { backgroundColor: colors.warning },
+                {
+                  opacity: fadeAnim,
+                  transform: [{ scale: fadeAnim }],
+                },
+              ]}
+            >
+              <Text style={[styles.errorText, { color: 'white' }]}>
+                ⚠️ {apiError}
+              </Text>
+            </Animated.View>
+          )}
+
+          {/* Compact Settings Sections */}
+          <View style={styles.settingsContainer}>
+            
+            {/* Accessibility Section */}
+            <View style={[styles.settingSection, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>♿ Accessibility</Text>
+              
+              <View style={styles.compactSettingItem}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Voice Navigation</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Audio feedback</Text>
+                </View>
+                <Switch
+                  value={testSettings.voiceNavigation}
+                  onValueChange={(value) => handleSettingChange('voiceNavigation', value)}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={testSettings.voiceNavigation ? '#FFFFFF' : colors.textSecondary}
+                />
               </View>
-              <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: colors?.success || '#28A745' }]}>Active</Text>
-                <Text style={[styles.statLabel, { color: colors?.textSecondary || '#6C757D' }]}>Status</Text>
+
+              <View style={styles.compactSettingItem}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>High Contrast</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Better visibility</Text>
+                </View>
+                <Switch
+                  value={testSettings.highContrast}
+                  onValueChange={(value) => handleSettingChange('highContrast', value)}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={testSettings.highContrast ? '#FFFFFF' : colors.textSecondary}
+                />
+              </View>
+
+              <View style={styles.compactSettingItem}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Haptic Feedback</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Vibration on touch</Text>
+                </View>
+                <Switch
+                  value={testSettings.hapticFeedback}
+                  onValueChange={(value) => handleSettingChange('hapticFeedback', value)}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={testSettings.hapticFeedback ? '#FFFFFF' : colors.textSecondary}
+                />
               </View>
             </View>
-          </View>
-        </Animated.View>
 
-        {/* Action Buttons */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.resetButton, { backgroundColor: colors?.error || '#DC3545' }]}
-              onPress={handleResetSettings}
-            >
-              <Text style={[styles.actionButtonText, { color: 'white' }]}>🔄 Reset Settings</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.actionButton, styles.saveButton, { backgroundColor: colors?.primary || '#4A90E2' }]}
-              onPress={() => console.log('Settings saved')}
-            >
-              <Text style={[styles.actionButtonText, { color: 'white' }]}>💾 Save Changes</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
+            {/* Privacy Section */}
+            <View style={[styles.settingSection, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>🔒 Privacy</Text>
+              
+              <View style={styles.compactSettingItem}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Usage Analytics</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Help improve app</Text>
+                </View>
+                <Switch
+                  value={testSettings.usageAnalytics}
+                  onValueChange={(value) => handleSettingChange('usageAnalytics', value)}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={testSettings.usageAnalytics ? '#FFFFFF' : colors.textSecondary}
+                />
+              </View>
 
-        {/* Bottom Spacing */}
-        <View style={styles.bottomSpacing} />
-        
-      </ScrollView>
-    </SafeAreaView>
+              <View style={styles.compactSettingItem}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Performance Tracking</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Monitor performance</Text>
+                </View>
+                <Switch
+                  value={testSettings.performanceTracking}
+                  onValueChange={(value) => handleSettingChange('performanceTracking', value)}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={testSettings.performanceTracking ? '#FFFFFF' : colors.textSecondary}
+                />
+              </View>
+            </View>
+
+            {/* Emergency Section */}
+            <View style={[styles.settingSection, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>🚨 Emergency</Text>
+              
+              <View style={styles.compactSettingItem}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Emergency Mode</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Quick emergency access</Text>
+                </View>
+                <Switch
+                  value={testSettings.emergencyMode}
+                  onValueChange={(value) => handleSettingChange('emergencyMode', value)}
+                  trackColor={{ false: colors.border, true: colors.error }}
+                  thumbColor={testSettings.emergencyMode ? '#FFFFFF' : colors.textSecondary}
+                />
+              </View>
+
+              <View style={styles.emergencyStats}>
+                <View style={styles.emergencyStat}>
+                  <Text style={[styles.statValue, { color: colors.primary }]}>{testSettings.emergencyContacts}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Contacts</Text>
+                </View>
+                <View style={styles.emergencyStat}>
+                  <Text style={[styles.statValue, { color: colors.success }]}>Active</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Status</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Audio Section */}
+            <View style={[styles.settingSection, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>🔊 Audio</Text>
+              
+              <View style={styles.compactSettingItem}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Voice Commands</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Voice control</Text>
+                </View>
+                <Switch
+                  value={testSettings.voiceCommands}
+                  onValueChange={(value) => handleSettingChange('voiceCommands', value)}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={testSettings.voiceCommands ? '#FFFFFF' : colors.textSecondary}
+                />
+              </View>
+
+              <View style={styles.compactSettingItem}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Audio Only Mode</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Audio interface only</Text>
+                </View>
+                <Switch
+                  value={testSettings.audioOnlyMode}
+                  onValueChange={(value) => handleSettingChange('audioOnlyMode', value)}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={testSettings.audioOnlyMode ? '#FFFFFF' : colors.textSecondary}
+                />
+              </View>
+            </View>
+
+            {/* Quick Actions */}
+            <View style={styles.quickActions}>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: colors.error }]}
+                onPress={handleResetSettings}
+              >
+                <Text style={styles.actionButtonText}>🔄 Reset Settings</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: colors.primary }]}
+                onPress={() => console.log('Settings saved')}
+              >
+                <Text style={styles.actionButtonText}>💾 Save Changes</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -411,11 +463,114 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  compactHeader: {
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  headerContent: {
+    padding: 16,
+    alignItems: 'center',
+    width: '100%',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'white',
+    textAlign: 'center',
+    opacity: 0.9,
+    marginBottom: 16,
+  },
+  quickStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 8,
+  },
+  statCard: {
+    padding: 12,
+    borderRadius: 10,
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  statLabel: {
+    fontSize: 10,
+    marginTop: 2,
+    color: 'white',
+    opacity: 0.8,
+  },
+  searchContainer: {
+    padding: 12,
+    marginTop: -8,
+    marginHorizontal: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  searchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  searchIcon: {
+    fontSize: 16,
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    fontSize: 15,
+  },
+  categoryTabs: {
+    marginBottom: 4,
+  },
+  categoryTab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    marginRight: 6,
+    alignItems: 'center',
+    flexDirection: 'row',
+    minHeight: 32,
+  },
+  activeCategoryTab: {
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  categoryIcon: {
+    fontSize: 12,
+    marginRight: 4,
+  },
+  categoryLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
   scrollView: {
     flex: 1,
   },
-  
-  // Loading & Error States
+  scrollContent: {
+    paddingBottom: 100,
+  },
   loadingContainer: {
     padding: 20,
     alignItems: 'center',
@@ -426,7 +581,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   errorBanner: {
-    margin: 16,
+    margin: 12,
     padding: 12,
     borderRadius: 12,
     shadowColor: '#000',
@@ -440,242 +595,70 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
-  
-  // Beautiful Header
-  headerContainer: {
-    marginBottom: 24,
+  settingsContainer: {
+    paddingHorizontal: 12,
+    paddingTop: 8,
   },
-  headerGradient: {
-    marginHorizontal: 16,
-    borderRadius: 20,
-    padding: 24,
-    position: 'relative',
-    overflow: 'hidden',
+  settingSection: {
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  headerContent: {
-    alignItems: 'center',
-    zIndex: 2,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: 'white',
-    marginBottom: 8,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  headerDecoration: {
-    position: 'absolute',
-    top: -20,
-    right: -20,
-    zIndex: 1,
-  },
-  decorationCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 10,
-  },
-  
-  // Sections
-  section: {
-    marginBottom: 24,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 16,
-    marginHorizontal: 16,
-  },
-  
-  // Status Card
-  statusCard: {
-    marginHorizontal: 16,
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  statusHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  statusIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  statusContent: {
-    gap: 12,
-  },
-  statusItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  statusValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  statusText: {
-    fontSize: 14,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  
-  // Settings Grid
-  settingsGrid: {
-    marginHorizontal: 16,
-    gap: 12,
-  },
-  settingCard: {
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  settingCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingCardIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  settingCardContent: {
-    flex: 1,
-  },
-  settingCardTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontWeight: 'bold',
+    marginBottom: 12,
   },
-  settingCardDescription: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  
-  // Advanced Settings
-  advancedCard: {
-    marginHorizontal: 16,
-    padding: 20,
-    borderRadius: 16,
-    backgroundColor: '#F8F9FA',
-    borderWidth: 1,
-    borderColor: '#E9ECEF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  advancedSettingItem: {
+  compactSettingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
-  advancedSettingContent: {
+  settingInfo: {
     flex: 1,
   },
-  advancedSettingTitle: {
-    fontSize: 15,
+  settingTitle: {
+    fontSize: 14,
     fontWeight: '600',
     marginBottom: 2,
   },
-  advancedSettingDescription: {
+  settingDesc: {
     fontSize: 12,
-    lineHeight: 16,
-  },
-  
-  // Emergency Card
-  emergencyCard: {
-    marginHorizontal: 16,
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  emergencyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  emergencyTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  emergencyDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 16,
+    opacity: 0.7,
   },
   emergencyStats: {
     flexDirection: 'row',
-    gap: 24,
+    justifyContent: 'space-around',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
   },
-  statItem: {
+  emergencyStat: {
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2,
   },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  
-  // Action Buttons
-  actionButtons: {
+  quickActions: {
     flexDirection: 'row',
-    marginHorizontal: 16,
     gap: 12,
+    marginTop: 8,
   },
   actionButton: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderRadius: 12,
     alignItems: 'center',
     shadowColor: '#000',
@@ -684,20 +667,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  resetButton: {
-    // backgroundColor set dynamically
-  },
-  saveButton: {
-    // backgroundColor set dynamically
-  },
   actionButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-  },
-  
-  // Bottom Spacing
-  bottomSpacing: {
-    height: 40,
+    color: 'white',
   },
 });
 

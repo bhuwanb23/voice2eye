@@ -39,7 +39,9 @@ const EmergencyHistoryTimeline = ({ history = [] }) => {
   if (!history || history.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.title, { color: colors.text }]}>Emergency History</Text>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>Emergency History</Text>
+        </View>
         <View style={styles.emptyState}>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             No emergency alerts triggered yet
@@ -56,7 +58,12 @@ const EmergencyHistoryTimeline = ({ history = [] }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Emergency History</Text>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Emergency History</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          {history.length} alert{history.length !== 1 ? 's' : ''}
+        </Text>
+      </View>
       {sortedHistory.map((alert, index) => (
         <View 
           key={alert.alert_id || alert.id || index} 
@@ -69,11 +76,11 @@ const EmergencyHistoryTimeline = ({ history = [] }) => {
               {getTriggerIcon(alert.trigger_type)}
             </Text>
             <View style={styles.timelineInfo}>
-              <Text style={[styles.triggerType, { color: colors.text }]}>
+              <Text style={[styles.triggerType, { color: colors.text }]} numberOfLines={1}>
                 {alert.trigger_type === 'voice' ? 'Voice Trigger' : 
                  alert.trigger_type === 'gesture' ? 'Gesture Trigger' : 'Manual Trigger'}
               </Text>
-              <Text style={[styles.timestamp, { color: colors.textSecondary }]}>
+              <Text style={[styles.timestamp, { color: colors.textSecondary }]} numberOfLines={1}>
                 {alert.timestamp || alert.created_at}
               </Text>
             </View>
@@ -87,7 +94,7 @@ const EmergencyHistoryTimeline = ({ history = [] }) => {
           {alert.location && (
             <View style={styles.locationContainer}>
               <Text style={[styles.locationLabel, { color: colors.textSecondary }]}>Location:</Text>
-              <Text style={[styles.locationText, { color: colors.text }]}>
+              <Text style={[styles.locationText, { color: colors.text }]} numberOfLines={2}>
                 {typeof alert.location === 'string' ? alert.location : 
                  `${alert.location.latitude}, ${alert.location.longitude}`}
               </Text>
@@ -109,25 +116,36 @@ const EmergencyHistoryTimeline = ({ history = [] }) => {
 
 const styles = StyleSheet.create({
   container: {
+    borderRadius: 16,
     padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   emptyState: {
-    padding: 20,
+    paddingVertical: 30,
     alignItems: 'center',
   },
   emptyText: {
@@ -135,19 +153,20 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   timelineItem: {
-    borderLeftWidth: 3,
+    borderLeftWidth: 4,
     paddingLeft: 16,
     paddingBottom: 16,
     marginBottom: 16,
   },
   timelineHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
   triggerIcon: {
-    fontSize: 20,
+    fontSize: 24,
     marginRight: 12,
+    marginTop: 2,
   },
   timelineInfo: {
     flex: 1,
@@ -161,9 +180,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 12,
+    alignSelf: 'flex-start',
   },
   statusText: {
     color: 'white',

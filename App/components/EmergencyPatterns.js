@@ -3,7 +3,7 @@
  * Compact display with beautiful visualizations
  */
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useAccessibility } from './AccessibilityProvider';
 
 const EmergencyPatterns = ({ patterns }) => {
@@ -43,29 +43,24 @@ const EmergencyPatterns = ({ patterns }) => {
     totalEmergencies: 20
   };
 
-  const maxCount = Math.max(...patternData.timeOfDay.map(t => t.count));
-
   return (
-    <Animated.View 
-      style={[
-        styles.container, 
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
-      ]}
-    >
+    <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Patterns</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Emergency Patterns</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          Analytics & Insights
+        </Text>
       </View>
 
-      {/* Compact Summary */}
-      <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
-        <View style={styles.summaryItem}>
-          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Total</Text>
+      {/* Summary Cards */}
+      <View style={styles.summaryContainer}>
+        <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Total Alerts</Text>
           <Text style={[styles.summaryValue, { color: colors.primary }]}>
             {patternData.totalEmergencies}
           </Text>
         </View>
-        <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
-        <View style={styles.summaryItem}>
+        <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Avg/Day</Text>
           <Text style={[styles.summaryValue, { color: colors.success }]}>
             {Math.round(patternData.totalEmergencies / 7)}
@@ -73,8 +68,8 @@ const EmergencyPatterns = ({ patterns }) => {
         </View>
       </View>
 
-      {/* Compact Time Distribution */}
-      <View style={[styles.chartCard, { backgroundColor: colors.surface }]}>
+      {/* Time Distribution */}
+      <View style={[styles.chartContainer, { backgroundColor: colors.surface }]}>
         <Text style={[styles.chartTitle, { color: colors.text }]}>Time Distribution</Text>
         {patternData.timeOfDay.map((item, index) => (
           <View key={index} style={styles.chartRow}>
@@ -95,140 +90,145 @@ const EmergencyPatterns = ({ patterns }) => {
         ))}
       </View>
 
-      {/* Compact Trigger Types */}
-      <View style={styles.triggerGrid}>
-        {patternData.triggerType.map((trigger, index) => (
-          <View 
-            key={index} 
-            style={[styles.triggerCard, { backgroundColor: colors.surface }]}
-          >
-            <View style={[styles.triggerDot, { backgroundColor: trigger.color }]} />
-            <Text style={[styles.triggerLabel, { color: colors.text }]}>{trigger.type}</Text>
-            <Text style={[styles.triggerValue, { color: colors.primary }]}>{trigger.count}</Text>
-          </View>
-        ))}
+      {/* Trigger Types */}
+      <View style={[styles.triggerContainer, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.chartTitle, { color: colors.text }]}>Trigger Types</Text>
+        <View style={styles.triggerGrid}>
+          {patternData.triggerType.map((trigger, index) => (
+            <View 
+              key={index} 
+              style={styles.triggerItem}
+            >
+              <View style={[styles.triggerDot, { backgroundColor: trigger.color }]} />
+              <Text style={[styles.triggerLabel, { color: colors.text }]}>{trigger.type}</Text>
+              <Text style={[styles.triggerValue, { color: colors.primary }]}>{trigger.count}</Text>
+            </View>
+          ))}
+        </View>
       </View>
-    </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   header: {
-    marginBottom: 10,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  subtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  summaryContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    gap: 16,
   },
   summaryCard: {
-    flexDirection: 'row',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  summaryItem: {
     flex: 1,
+    padding: 20,
+    borderRadius: 16,
     alignItems: 'center',
-  },
-  summaryDivider: {
-    width: 1,
-    marginHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   summaryLabel: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   summaryValue: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: '700',
   },
-  chartCard: {
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 10,
+  chartContainer: {
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   chartTitle: {
-    fontSize: 11,
+    fontSize: 18,
     fontWeight: '600',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    marginBottom: 16,
   },
   chartRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 16,
   },
   chartLabel: {
-    fontSize: 10,
-    width: 50,
+    fontSize: 14,
+    width: 60,
     fontWeight: '500',
   },
   barContainer: {
     flex: 1,
-    height: 20,
-    borderRadius: 10,
-    marginHorizontal: 8,
+    height: 28,
+    borderRadius: 14,
+    marginHorizontal: 16,
     overflow: 'hidden',
   },
   bar: {
     height: '100%',
-    borderRadius: 10,
+    borderRadius: 14,
   },
   chartValue: {
-    fontSize: 11,
+    fontSize: 16,
     fontWeight: '600',
-    width: 25,
+    width: 30,
     textAlign: 'right',
+  },
+  triggerContainer: {
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   triggerGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  triggerCard: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 10,
+  triggerItem: {
     alignItems: 'center',
-    marginHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
+    flex: 1,
   },
   triggerDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginBottom: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginBottom: 12,
   },
   triggerLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    marginBottom: 2,
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 4,
     textTransform: 'capitalize',
   },
   triggerValue: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: '700',
   },
 });

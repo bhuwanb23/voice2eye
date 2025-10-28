@@ -35,7 +35,12 @@ const EmergencyMessageCustomizer = ({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Emergency Message</Text>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Emergency Message</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          Customize your emergency alert
+        </Text>
+      </View>
       
       {isEditing ? (
         <View style={styles.editingContainer}>
@@ -48,7 +53,7 @@ const EmergencyMessageCustomizer = ({
             value={customMessage}
             onChangeText={setCustomMessage}
             multiline
-            numberOfLines={4}
+            numberOfLines={5}
             textAlignVertical="top"
             accessibilityLabel="Custom emergency message"
             accessibilityHint="Enter your custom emergency message"
@@ -117,7 +122,7 @@ const EmergencyMessageCustomizer = ({
       ) : (
         <View style={styles.previewContainer}>
           <View style={[styles.messagePreview, { backgroundColor: colors.background }]}>
-            <Text style={[styles.messageText, { color: colors.text }]}>
+            <Text style={[styles.messageText, { color: colors.text }]} numberOfLines={6}>
               {customMessage}
             </Text>
           </View>
@@ -142,76 +147,84 @@ const EmergencyMessageCustomizer = ({
 
 const styles = StyleSheet.create({
   container: {
+    borderRadius: 16,
     padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  header: {
+    marginBottom: 20,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   editingContainer: {
     
   },
   textInput: {
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
-    marginBottom: 16,
-    minHeight: 100,
+    marginBottom: 20,
+    minHeight: 120,
   },
   placeholderTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   placeholderContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
+    marginBottom: 20,
+    gap: 12,
   },
   placeholderButton: {
-    marginRight: 8,
-    marginBottom: 8,
-    minWidth: 80,
+    minWidth: 90,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 12,
   },
   actionButton: {
     flex: 1,
-    marginHorizontal: 4,
   },
   previewContainer: {
     
   },
   messagePreview: {
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-    minHeight: 100,
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    minHeight: 120,
   },
   messageText: {
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   customizeButton: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   note: {
     fontSize: 12,
     fontStyle: 'italic',
+    textAlign: 'center',
   },
 });
 
