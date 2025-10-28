@@ -33,10 +33,26 @@ class ApiService {
       console.log(`API Request: ${options.method || 'GET'} ${url}`);
       
       const response = await fetch(url, config);
-      const data = await response.json();
-
+      
+      // Handle empty responses
+      const text = await response.text();
+      
+      // Parse JSON or handle empty responses
+      let data;
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.warn('Failed to parse JSON response:', text);
+          data = {};
+        }
+      } else {
+        data = {};
+      }
+      
       if (!response.ok) {
-        throw new Error(data.detail || `API Error: ${response.status}`);
+        const errorMessage = data.detail || data.message || `API Error: ${response.status} ${response.statusText}`;
+        throw new Error(errorMessage);
       }
 
       return data;
@@ -58,6 +74,7 @@ class ApiService {
   }
 
   async updateSetting(key, value) {
+    // Send individual setting update as expected by the backend
     return this.fetch('/settings/', {
       method: 'PUT',
       body: JSON.stringify({ key, value }),
@@ -70,6 +87,17 @@ class ApiService {
   }
 
   async addEmergencyContact(contact) {
+    // Validate contact before sending
+    if (!contact.name || !contact.phone) {
+      throw new Error('Contact must have name and phone number');
+    }
+    
+    // Check for duplicate phone numbers
+    const existingContacts = await this.getEmergencyContacts(false);
+    if (existingContacts.contacts && existingContacts.contacts.some(c => c.phone === contact.phone)) {
+      throw new Error('A contact with this phone number already exists');
+    }
+    
     return this.fetch('/settings/contacts', {
       method: 'POST',
       body: JSON.stringify(contact),

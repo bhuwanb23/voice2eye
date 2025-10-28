@@ -86,34 +86,16 @@ const SettingsScreen = ({ navigation }) => {
     border: '#DEE2E6',
   };
   
-  // Simple hardcoded settings for testing
-  const testSettings = {
-    usageAnalytics: true,
-    performanceTracking: true,
-    featureSuggestions: false,
-    screenMagnification: false,
-    colorInversion: false,
-    voiceNavigation: true,
-    emergencyMode: false,
-    emergencyContacts: 3,
-    voiceCommands: true,
-    hapticFeedback: true,
-    highContrast: false,
-    textScale: 1.0,
-    largeText: false,
-    buttonSize: 'medium',
-    audioOnlyMode: false,
-    speechRate: 1.0,
-    speechPitch: 1.0,
-    gestureNavigation: false,
-    screenReader: false,
-  };
-  
+  // State for settings
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [apiError, setApiError] = useState(null);
-  const [backendSettings, setBackendSettings] = useState(null);
+  const [backendSettings, setBackendSettings] = useState({});
+  const [localSettings, setLocalSettings] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [savingKey, setSavingKey] = useState(null); // Track which setting is being saved
   
   // Animation references
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -142,18 +124,34 @@ const SettingsScreen = ({ navigation }) => {
     setIsLoading(true);
     try {
       const data = await apiService.getSettings();
-      setBackendSettings(data.settings);
+      setBackendSettings(data.settings || {});
+      setLocalSettings(data.settings || {});
       setApiError(null);
       console.log('✅ Backend settings loaded:', data.settings);
     } catch (error) {
       console.warn('❌ Failed to load backend settings:', error.message);
       setApiError('Backend not available - using local settings');
+      // Initialize with default settings
+      const defaultSettings = {
+        voiceNavigation: true,
+        highContrast: false,
+        hapticFeedback: true,
+        usageAnalytics: true,
+        performanceTracking: true,
+        emergencyMode: false,
+        voiceCommands: true,
+        audioOnlyMode: false,
+        speechRate: 1.0,
+        speechPitch: 1.0,
+      };
+      setBackendSettings(defaultSettings);
+      setLocalSettings(defaultSettings);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSettingChange = (key, value) => {
+  const handleSettingChange = async (key, value) => {
     console.log(`Setting changed: ${key} = ${value}`);
     
     // Add haptic feedback
@@ -161,8 +159,52 @@ const SettingsScreen = ({ navigation }) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     
-    // Here you would normally update the actual settings
-    // updateSetting(key, value);
+    // Update local settings immediately for UI feedback
+    const updatedSettings = {
+      ...localSettings,
+      [key]: value
+    };
+    setLocalSettings(updatedSettings);
+    setHasUnsavedChanges(true);
+    setSavingKey(key);
+    setIsSaving(true);
+    
+    // Save to backend immediately
+    try {
+      await apiService.updateSetting(key, value);
+      // Update backend settings to reflect what was saved
+      setBackendSettings(prev => ({
+        ...prev,
+        [key]: value
+      }));
+      setHasUnsavedChanges(false);
+      console.log(`✅ Setting ${key} saved to backend`);
+      
+      // Provide user feedback
+      if (localSettings.voiceNavigation) {
+        Speech.speak(`${key.replace(/([A-Z])/g, ' $1')} updated`, {
+          rate: localSettings.speechRate,
+          pitch: localSettings.speechPitch,
+        });
+      }
+    } catch (error) {
+      console.error(`❌ Failed to save setting ${key}:`, error.message);
+      setApiError(`Failed to save ${key}: ${error.message}`);
+      
+      // Provide user feedback
+      if (localSettings.voiceNavigation) {
+        Speech.speak(`Failed to update ${key.replace(/([A-Z])/g, ' $1')}`, {
+          rate: localSettings.speechRate,
+          pitch: localSettings.speechPitch,
+        });
+      }
+    } finally {
+      setIsSaving(false);
+      setSavingKey(null);
+    }
+    
+    // For immediate UI feedback, also update accessibility context
+    updateSetting(key, value);
   };
 
   const handleResetSettings = () => {
@@ -171,7 +213,27 @@ const SettingsScreen = ({ navigation }) => {
       'Are you sure you want to reset all settings to default values?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Reset', onPress: () => { console.log('Settings reset requested'); }, style: 'destructive' }
+        { 
+          text: 'Reset', 
+          onPress: () => { 
+            const defaultSettings = {
+              voiceNavigation: true,
+              highContrast: false,
+              hapticFeedback: true,
+              usageAnalytics: true,
+              performanceTracking: true,
+              emergencyMode: false,
+              voiceCommands: true,
+              audioOnlyMode: false,
+              speechRate: 1.0,
+              speechPitch: 1.0,
+            };
+            setLocalSettings(defaultSettings);
+            setHasUnsavedChanges(true);
+            console.log('Settings reset to defaults');
+          }, 
+          style: 'destructive' 
+        }
       ]
     );
   };
@@ -200,7 +262,7 @@ const SettingsScreen = ({ navigation }) => {
             {/* Quick Stats */}
             <View style={styles.quickStats}>
               <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                <Text style={styles.statNumber}>12</Text>
+                <Text style={styles.statNumber}>{Object.keys(localSettings).filter(key => localSettings[key]).length}</Text>
                 <Text style={styles.statLabel}>Active</Text>
               </View>
               <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
@@ -208,8 +270,8 @@ const SettingsScreen = ({ navigation }) => {
                 <Text style={styles.statLabel}>Categories</Text>
               </View>
               <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                <Text style={styles.statNumber}>{backendSettings ? 'ON' : 'OFF'}</Text>
-                <Text style={styles.statLabel}>Backend</Text>
+                <Text style={styles.statNumber}>{hasUnsavedChanges ? 'UNSAVED' : 'SYNCED'}</Text>
+                <Text style={styles.statLabel}>Status</Text>
               </View>
             </View>
           </Animated.View>
@@ -311,10 +373,10 @@ const SettingsScreen = ({ navigation }) => {
                   <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Audio feedback</Text>
                 </View>
                 <Switch
-                  value={testSettings.voiceNavigation}
+                  value={localSettings.voiceNavigation ?? true}
                   onValueChange={(value) => handleSettingChange('voiceNavigation', value)}
                   trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={testSettings.voiceNavigation ? '#FFFFFF' : colors.textSecondary}
+                  thumbColor={localSettings.voiceNavigation ? '#FFFFFF' : colors.textSecondary}
                 />
               </View>
 
@@ -324,10 +386,10 @@ const SettingsScreen = ({ navigation }) => {
                   <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Better visibility</Text>
                 </View>
                 <Switch
-                  value={testSettings.highContrast}
+                  value={localSettings.highContrast ?? false}
                   onValueChange={(value) => handleSettingChange('highContrast', value)}
                   trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={testSettings.highContrast ? '#FFFFFF' : colors.textSecondary}
+                  thumbColor={localSettings.highContrast ? '#FFFFFF' : colors.textSecondary}
                 />
               </View>
 
@@ -337,10 +399,10 @@ const SettingsScreen = ({ navigation }) => {
                   <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Vibration on touch</Text>
                 </View>
                 <Switch
-                  value={testSettings.hapticFeedback}
+                  value={localSettings.hapticFeedback ?? true}
                   onValueChange={(value) => handleSettingChange('hapticFeedback', value)}
                   trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={testSettings.hapticFeedback ? '#FFFFFF' : colors.textSecondary}
+                  thumbColor={localSettings.hapticFeedback ? '#FFFFFF' : colors.textSecondary}
                 />
               </View>
             </View>
@@ -355,10 +417,10 @@ const SettingsScreen = ({ navigation }) => {
                   <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Help improve app</Text>
                 </View>
                 <Switch
-                  value={testSettings.usageAnalytics}
+                  value={localSettings.usageAnalytics ?? true}
                   onValueChange={(value) => handleSettingChange('usageAnalytics', value)}
                   trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={testSettings.usageAnalytics ? '#FFFFFF' : colors.textSecondary}
+                  thumbColor={localSettings.usageAnalytics ? '#FFFFFF' : colors.textSecondary}
                 />
               </View>
 
@@ -368,10 +430,10 @@ const SettingsScreen = ({ navigation }) => {
                   <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Monitor performance</Text>
                 </View>
                 <Switch
-                  value={testSettings.performanceTracking}
+                  value={localSettings.performanceTracking ?? true}
                   onValueChange={(value) => handleSettingChange('performanceTracking', value)}
                   trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={testSettings.performanceTracking ? '#FFFFFF' : colors.textSecondary}
+                  thumbColor={localSettings.performanceTracking ? '#FFFFFF' : colors.textSecondary}
                 />
               </View>
             </View>
@@ -386,16 +448,16 @@ const SettingsScreen = ({ navigation }) => {
                   <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Quick emergency access</Text>
                 </View>
                 <Switch
-                  value={testSettings.emergencyMode}
+                  value={localSettings.emergencyMode ?? false}
                   onValueChange={(value) => handleSettingChange('emergencyMode', value)}
                   trackColor={{ false: colors.border, true: colors.error }}
-                  thumbColor={testSettings.emergencyMode ? '#FFFFFF' : colors.textSecondary}
+                  thumbColor={localSettings.emergencyMode ? '#FFFFFF' : colors.textSecondary}
                 />
               </View>
 
               <View style={styles.emergencyStats}>
                 <View style={styles.emergencyStat}>
-                  <Text style={[styles.statValue, { color: colors.primary }]}>{testSettings.emergencyContacts}</Text>
+                  <Text style={[styles.statValue, { color: colors.primary }]}>3</Text>
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Contacts</Text>
                 </View>
                 <View style={styles.emergencyStat}>
@@ -415,10 +477,10 @@ const SettingsScreen = ({ navigation }) => {
                   <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Voice control</Text>
                 </View>
                 <Switch
-                  value={testSettings.voiceCommands}
+                  value={localSettings.voiceCommands ?? true}
                   onValueChange={(value) => handleSettingChange('voiceCommands', value)}
                   trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={testSettings.voiceCommands ? '#FFFFFF' : colors.textSecondary}
+                  thumbColor={localSettings.voiceCommands ? '#FFFFFF' : colors.textSecondary}
                 />
               </View>
 
@@ -428,10 +490,10 @@ const SettingsScreen = ({ navigation }) => {
                   <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Audio interface only</Text>
                 </View>
                 <Switch
-                  value={testSettings.audioOnlyMode}
+                  value={localSettings.audioOnlyMode ?? false}
                   onValueChange={(value) => handleSettingChange('audioOnlyMode', value)}
                   trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={testSettings.audioOnlyMode ? '#FFFFFF' : colors.textSecondary}
+                  thumbColor={localSettings.audioOnlyMode ? '#FFFFFF' : colors.textSecondary}
                 />
               </View>
             </View>
@@ -444,16 +506,21 @@ const SettingsScreen = ({ navigation }) => {
               >
                 <Text style={styles.actionButtonText}>🔄 Reset Settings</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.primary }]}
-                onPress={() => console.log('Settings saved')}
-              >
-                <Text style={styles.actionButtonText}>💾 Save Changes</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
+
+        {/* Centered Saving Overlay */}
+        {isSaving && savingKey && (
+          <View style={styles.savingOverlay}>
+            <View style={[styles.savingModal, { backgroundColor: colors.surface }]}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.savingText, { color: colors.text, marginTop: 12 }]}>
+                Saving {savingKey.replace(/([A-Z])/g, ' $1')}...
+              </Text>
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     </>
   );
@@ -671,6 +738,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: 'white',
+  },
+  // Centered saving overlay
+  savingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  savingModal: {
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  savingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
 
