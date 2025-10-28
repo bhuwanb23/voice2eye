@@ -26,24 +26,24 @@ const { width, height } = Dimensions.get('window');
 // Beautiful UI Components
 const StatusItem = ({ label, value, colors }) => (
   <View style={styles.statusItem}>
-    <Text style={[styles.statusLabel, { color: colors.textSecondary }]}>{label}</Text>
-    <Text style={[styles.statusValue, { color: colors.text }]}>{value}</Text>
+    <Text style={[styles.statusLabel, { color: colors?.textSecondary || '#6C757D' }]}>{label}</Text>
+    <Text style={[styles.statusValue, { color: colors?.text || '#212529' }]}>{value}</Text>
   </View>
 );
 
 const SettingCard = ({ title, description, icon, value, onValueChange, colors }) => (
-  <View style={[styles.settingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+  <View style={[styles.settingCard, { backgroundColor: colors?.surface || '#F8F9FA', borderColor: colors?.border || '#DEE2E6' }]}>
     <View style={styles.settingCardHeader}>
       <Text style={styles.settingCardIcon}>{icon}</Text>
       <View style={styles.settingCardContent}>
-        <Text style={[styles.settingCardTitle, { color: colors.text }]}>{title}</Text>
-        <Text style={[styles.settingCardDescription, { color: colors.textSecondary }]}>{description}</Text>
+        <Text style={[styles.settingCardTitle, { color: colors?.text || '#212529' }]}>{title}</Text>
+        <Text style={[styles.settingCardDescription, { color: colors?.textSecondary || '#6C757D' }]}>{description}</Text>
       </View>
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: colors.border, true: colors.primary }}
-        thumbColor={value ? '#FFFFFF' : colors.textSecondary}
+        trackColor={{ false: colors?.border || '#DEE2E6', true: colors?.primary || '#4A90E2' }}
+        thumbColor={value ? '#FFFFFF' : colors?.textSecondary || '#6C757D'}
       />
     </View>
   </View>
@@ -52,21 +52,34 @@ const SettingCard = ({ title, description, icon, value, onValueChange, colors })
 const AdvancedSettingItem = ({ title, description, value, onValueChange, colors }) => (
   <View style={styles.advancedSettingItem}>
     <View style={styles.advancedSettingContent}>
-      <Text style={[styles.advancedSettingTitle, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.advancedSettingDescription, { color: colors.textSecondary }]}>{description}</Text>
+      <Text style={[styles.advancedSettingTitle, { color: colors?.text || '#212529' }]}>{title}</Text>
+      <Text style={[styles.advancedSettingDescription, { color: colors?.textSecondary || '#6C757D' }]}>{description}</Text>
     </View>
     <Switch
       value={value}
       onValueChange={onValueChange}
-      trackColor={{ false: colors.border, true: colors.primary }}
-      thumbColor={value ? '#FFFFFF' : colors.textSecondary}
+      trackColor={{ false: colors?.border || '#DEE2E6', true: colors?.primary || '#4A90E2' }}
+      thumbColor={value ? '#FFFFFF' : colors?.textSecondary || '#6C757D'}
     />
   </View>
 );
 
 const SettingsScreen = ({ navigation }) => {
   const { settings, updateSetting, getThemeColors, resetToDefaults } = useAccessibility();
-  const colors = getThemeColors();
+  const colors = getThemeColors() || {
+    // Fallback colors in case getThemeColors returns undefined
+    primary: '#4A90E2',
+    secondary: '#2E7D32',
+    background: '#FFFFFF',
+    surface: '#F8F9FA',
+    text: '#212529',
+    textSecondary: '#6C757D',
+    accent: '#FF6B6B',
+    error: '#DC3545',
+    success: '#28A745',
+    warning: '#FFC107',
+    border: '#DEE2E6',
+  };
   
   // Simple hardcoded settings for testing
   const testSettings = {
@@ -161,7 +174,7 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <View style={[styles.headerGradient, { backgroundColor: colors.primary }]}>
+          <View style={[styles.headerGradient, { backgroundColor: colors?.primary || '#4A90E2' }]}>
             <View style={styles.headerContent}>
               <Text style={styles.headerTitle}>⚙️ Settings</Text>
               <Text style={styles.headerSubtitle}>Customize your VOICE2EYE experience</Text>
@@ -175,9 +188,9 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* Loading Indicator */}
         {isLoading && (
-          <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.textSecondary, marginTop: 16 }]}>
+          <View style={[styles.loadingContainer, { backgroundColor: colors?.background || '#FFFFFF' }]}>
+            <ActivityIndicator size="large" color={colors?.primary || '#4A90E2'} />
+            <Text style={[styles.loadingText, { color: colors?.textSecondary || '#6C757D', marginTop: 16 }]}>
               Loading settings...
             </Text>
           </View>
@@ -188,7 +201,7 @@ const SettingsScreen = ({ navigation }) => {
           <Animated.View
             style={[
               styles.errorBanner,
-              { backgroundColor: colors.warning },
+              { backgroundColor: colors?.warning || '#FFC107' },
               {
                 opacity: fadeAnim,
                 transform: [{ scale: fadeAnim }],
@@ -211,20 +224,20 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <View style={[styles.statusCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.statusCard, { backgroundColor: colors?.surface || '#F8F9FA', borderColor: colors?.border || '#DEE2E6' }]}>
             <View style={styles.statusHeader}>
-              <Text style={[styles.statusTitle, { color: colors.text }]}>🔗 Backend Status</Text>
-              <View style={[styles.statusIndicator, { backgroundColor: backendSettings ? colors.success : colors.error }]} />
+              <Text style={[styles.statusTitle, { color: colors?.text || '#212529' }]}>🔗 Backend Status</Text>
+              <View style={[styles.statusIndicator, { backgroundColor: backendSettings ? colors?.success || '#28A745' : colors?.error || '#DC3545' }]} />
             </View>
             {backendSettings ? (
               <View style={styles.statusContent}>
-                <StatusItem label="Audio Confidence" value={`${backendSettings.audio?.confidence_threshold || 'N/A'}`} />
-                <StatusItem label="Emergency Timeout" value={`${backendSettings.emergency?.confirmation_timeout || 'N/A'}s`} />
-                <StatusItem label="Gesture Hold Time" value={`${backendSettings.gesture?.hold_time || 'N/A'}s`} />
-                <StatusItem label="Sample Rate" value={`${backendSettings.audio?.sample_rate || 'N/A'}Hz`} />
+                <StatusItem label="Audio Confidence" value={`${backendSettings.audio?.confidence_threshold || 'N/A'}`} colors={colors} />
+                <StatusItem label="Emergency Timeout" value={`${backendSettings.emergency?.confirmation_timeout || 'N/A'}s`} colors={colors} />
+                <StatusItem label="Gesture Hold Time" value={`${backendSettings.gesture?.hold_time || 'N/A'}s`} colors={colors} />
+                <StatusItem label="Sample Rate" value={`${backendSettings.audio?.sample_rate || 'N/A'}Hz`} colors={colors} />
               </View>
             ) : (
-              <Text style={[styles.statusText, { color: colors.textSecondary }]}>
+              <Text style={[styles.statusText, { color: colors?.textSecondary || '#6C757D' }]}>
                 Backend data not loaded yet...
               </Text>
             )}
@@ -241,7 +254,7 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>🎛️ Preferences</Text>
+          <Text style={[styles.sectionTitle, { color: colors?.text || '#212529' }]}>🎛️ Preferences</Text>
           
           <View style={styles.settingsGrid}>
             <SettingCard
@@ -292,9 +305,9 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>🔧 Advanced</Text>
+          <Text style={[styles.sectionTitle, { color: colors?.text || '#212529' }]}>🔧 Advanced</Text>
           
-          <View style={styles.advancedCard}>
+          <View style={[styles.advancedCard, { backgroundColor: colors?.surface || '#F8F9FA', borderColor: colors?.border || '#DEE2E6' }]}>
             <AdvancedSettingItem
               title="Screen Magnification"
               description="Zoom in on content"
@@ -331,29 +344,29 @@ const SettingsScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>🚨 Emergency</Text>
+          <Text style={[styles.sectionTitle, { color: colors?.text || '#212529' }]}>🚨 Emergency</Text>
           
-          <View style={[styles.emergencyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.emergencyCard, { backgroundColor: colors?.surface || '#F8F9FA', borderColor: colors?.border || '#DEE2E6' }]}>
             <View style={styles.emergencyHeader}>
-              <Text style={[styles.emergencyTitle, { color: colors.text }]}>Emergency Mode</Text>
+              <Text style={[styles.emergencyTitle, { color: colors?.text || '#212529' }]}>Emergency Mode</Text>
               <Switch
                 value={testSettings.emergencyMode}
                 onValueChange={(value) => handleSettingChange('emergencyMode', value)}
-                trackColor={{ false: colors.border, true: colors.error }}
-                thumbColor={testSettings.emergencyMode ? '#FFFFFF' : colors.textSecondary}
+                trackColor={{ false: colors?.border || '#DEE2E6', true: colors?.error || '#DC3545' }}
+                thumbColor={testSettings.emergencyMode ? '#FFFFFF' : colors?.textSecondary || '#6C757D'}
               />
             </View>
-            <Text style={[styles.emergencyDescription, { color: colors.textSecondary }]}>
+            <Text style={[styles.emergencyDescription, { color: colors?.textSecondary || '#6C757D' }]}>
               Enable emergency mode for quick access to emergency features
             </Text>
             <View style={styles.emergencyStats}>
               <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: colors.primary }]}>{testSettings.emergencyContacts}</Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Contacts</Text>
+                <Text style={[styles.statValue, { color: colors?.primary || '#4A90E2' }]}>{testSettings.emergencyContacts}</Text>
+                <Text style={[styles.statLabel, { color: colors?.textSecondary || '#6C757D' }]}>Contacts</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: colors.success }]}>Active</Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Status</Text>
+                <Text style={[styles.statValue, { color: colors?.success || '#28A745' }]}>Active</Text>
+                <Text style={[styles.statLabel, { color: colors?.textSecondary || '#6C757D' }]}>Status</Text>
               </View>
             </View>
           </View>
@@ -371,14 +384,14 @@ const SettingsScreen = ({ navigation }) => {
         >
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={[styles.actionButton, styles.resetButton, { backgroundColor: colors.error }]}
+              style={[styles.actionButton, styles.resetButton, { backgroundColor: colors?.error || '#DC3545' }]}
               onPress={handleResetSettings}
             >
               <Text style={[styles.actionButtonText, { color: 'white' }]}>🔄 Reset Settings</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.actionButton, styles.saveButton, { backgroundColor: colors.primary }]}
+              style={[styles.actionButton, styles.saveButton, { backgroundColor: colors?.primary || '#4A90E2' }]}
               onPress={() => console.log('Settings saved')}
             >
               <Text style={[styles.actionButtonText, { color: 'white' }]}>💾 Save Changes</Text>
