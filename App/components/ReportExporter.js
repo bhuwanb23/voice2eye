@@ -3,10 +3,11 @@
  * Compact report export with time filtering
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import { useAccessibility } from './AccessibilityProvider';
+import apiService from '../api/services/apiService';
 
 const ReportExporter = ({ data }) => {
   const { getThemeColors } = useAccessibility();
@@ -43,15 +44,38 @@ const ReportExporter = ({ data }) => {
   const exportData = async (format) => {
     setExporting(true);
     try {
-      const reportData = {
-        period: selectedPeriod,
-        data: data || {},
-        generatedAt: new Date().toISOString(),
-      };
+      // Calculate date range based on selected period
+      const endDate = new Date();
+      const startDate = new Date();
+      const selectedPeriodData = timePeriods.find(p => p.id === selectedPeriod);
+      
+      if (selectedPeriodData) {
+        startDate.setDate(startDate.getDate() - selectedPeriodData.days);
+      }
 
-      const content = format === 'json' 
-        ? JSON.stringify(reportData, null, 2)
-        : generateCSV(reportData);
+      // Generate report using API
+      const reportData = await apiService.generateReport(
+        startDate.toISOString(),
+        endDate.toISOString(),
+        format
+      );
+
+      // If API returns file content, use it; otherwise generate from local data
+      let content;
+      if (reportData && typeof reportData === 'string') {
+        content = reportData;
+      } else {
+        const localReportData = {
+          period: selectedPeriod,
+          data: data || {},
+          generatedAt: new Date().toISOString(),
+          apiData: reportData
+        };
+
+        content = format === 'json' 
+          ? JSON.stringify(localReportData, null, 2)
+          : generateCSV(localReportData);
+      }
 
       const filename = `voice2eye_report_${selectedPeriod}_${Date.now()}.${format}`;
       const fileUri = FileSystem.documentDirectory + filename;
@@ -65,6 +89,7 @@ const ReportExporter = ({ data }) => {
       }
     } catch (error) {
       console.error('Export error:', error);
+      Alert.alert('Export Error', 'Failed to generate report: ' + error.message);
     } finally {
       setExporting(false);
     }
@@ -77,7 +102,8 @@ const ReportExporter = ({ data }) => {
            `Gestures,${data.data.gestures || 0}\n` +
            `Emergencies,${data.data.emergencies || 0}\n` +
            `Avg Accuracy,${data.data.avgAccuracy || 0}\n` +
-           `Avg Response Time,${data.data.avgResponseTime || 0}`;
+           `Avg Response Time,${data.data.avgResponseTime || 0}\n` +
+           `API Data Available,${data.apiData ? 'Yes' : 'No'}`;
   };
 
   return (
@@ -137,6 +163,11 @@ const ReportExporter = ({ data }) => {
           </Text>
         </TouchableOpacity>
       </View>
+      
+      {/* Info text */}
+      <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+        Reports will include analytics data for the selected period
+      </Text>
     </Animated.View>
   );
 };
@@ -191,6 +222,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#fff',
+  },
+  infoText: {
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 });
 

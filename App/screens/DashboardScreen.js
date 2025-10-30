@@ -20,7 +20,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import StatusIndicator from '../components/StatusIndicator';
-import DashboardHeader from '../components/DashboardHeader';
 import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import QuickActions from '../components/QuickActions';
 import NavigationMenu from '../components/NavigationMenu';
@@ -35,14 +34,14 @@ const { width, height } = Dimensions.get('window');
 const DashboardScreen = ({ navigation }) => {
   const { settings, getThemeColors } = useAccessibility();
   const colors = getThemeColors();
-  
+
   const [currentStatus, setCurrentStatus] = useState('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const [lastCommand, setLastCommand] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
-  
+
   // New states for enhanced features
   const [usageStats, setUsageStats] = useState({
     totalEvents: 0,
@@ -51,17 +50,17 @@ const DashboardScreen = ({ navigation }) => {
     emergencyEvents: 0,
     averageSessionDuration: 0
   });
-  
+
   const [serviceStatus, setServiceStatus] = useState({
     speech: 'ready',
     gesture: 'ready',
     emergency: 'ready',
     camera: 'ready'
   });
-  
+
   const [emergencyHistory, setEmergencyHistory] = useState([]);
   const [personalizedMessage, setPersonalizedMessage] = useState('');
-  
+
   // API-loaded data for analytics components
   const [metrics, setMetrics] = useState({
     latency: 150,
@@ -69,7 +68,7 @@ const DashboardScreen = ({ navigation }) => {
     uptime: 99.8,
     cpuUsage: 45
   });
-  
+
   const [patterns, setPatterns] = useState({
     timeOfDay: [
       { hour: '00-06', count: 2, percentage: 10 },
@@ -94,7 +93,7 @@ const DashboardScreen = ({ navigation }) => {
     avgResponseTime: 5.2,
     totalEmergencies: 22
   });
-  
+
   const [exportData, setExportData] = useState({
     voiceCommands: 145,
     gestures: 89,
@@ -138,7 +137,7 @@ const DashboardScreen = ({ navigation }) => {
       if (perfData && perfData.metrics) {
         const latencyMetric = perfData.metrics.find(m => m.name === 'speech_recognition_latency');
         const gestureMetric = perfData.metrics.find(m => m.name === 'gesture_detection_latency');
-        
+
         setMetrics({
           latency: latencyMetric?.value || 150,
           accuracy: 94.5, // Not in API response
@@ -152,7 +151,7 @@ const DashboardScreen = ({ navigation }) => {
       if (emergencyData) {
         const timePatterns = emergencyData.hourly_patterns || {};
         const triggerTypes = emergencyData.trigger_types || {};
-        
+
         setPatterns(prev => ({
           ...prev,
           timeOfDay: Object.keys(timePatterns).map((hour, idx) => ({
@@ -182,7 +181,7 @@ const DashboardScreen = ({ navigation }) => {
       setIsLoading(false);
     }
   };
-  
+
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -212,44 +211,13 @@ const DashboardScreen = ({ navigation }) => {
     if (settings.voiceNavigation) {
       announceScreenEntry();
     }
-    
-    // Load mock data for enhanced features
-    loadDashboardData();
   }, []);
 
-  const loadDashboardData = () => {
-    // Simulate loading analytics/statistics data
-    setTimeout(() => {
-      setUsageStats({
-        totalEvents: 127,
-        voiceCommands: 89,
-        gestureDetections: 36,
-        emergencyEvents: 2,
-        averageSessionDuration: 145.6
-      });
-      
-      // Simulate emergency history
-      setEmergencyHistory([
-        { id: '1', type: 'voice', time: '2023-10-15 14:30', status: 'confirmed' },
-        { id: '2', type: 'gesture', time: '2023-10-10 09:15', status: 'cancelled' }
-      ]);
-      
-      // Set personalized welcome message
-      const hours = new Date().getHours();
-      let greeting = 'Welcome';
-      if (hours < 12) greeting = 'Good morning';
-      else if (hours < 18) greeting = 'Good afternoon';
-      else greeting = 'Good evening';
-      
-      setPersonalizedMessage(`${greeting}! Ready to assist you.`);
-    }, 500);
-  };
-
   const announceScreenEntry = () => {
-    const message = isEmergencyMode 
+    const message = isEmergencyMode
       ? "Emergency mode active. Main dashboard. Use voice commands or gestures to navigate."
       : personalizedMessage || "Main dashboard. Voice recognition and gesture detection ready.";
-    
+
     Speech.speak(message, {
       rate: settings.speechRate,
       pitch: settings.speechPitch,
@@ -270,7 +238,7 @@ const DashboardScreen = ({ navigation }) => {
 
   const processVoiceCommand = (command) => {
     const lowerCommand = command.toLowerCase();
-    
+
     if (lowerCommand.includes('emergency') || lowerCommand.includes('help')) {
       triggerEmergency();
     } else if (lowerCommand.includes('settings')) {
@@ -291,7 +259,7 @@ const DashboardScreen = ({ navigation }) => {
         pitch: settings.speechPitch,
       });
     }
-    
+
     setCurrentStatus('idle');
   };
 
@@ -303,7 +271,7 @@ const DashboardScreen = ({ navigation }) => {
   const startVoiceRecognition = () => {
     setCurrentStatus('listening');
     setStatusMessage('Listening for voice commands...');
-    
+
     // Simulate voice recognition
     setTimeout(() => {
       const mockCommands = [
@@ -322,14 +290,14 @@ const DashboardScreen = ({ navigation }) => {
   const startGestureDetection = () => {
     setCurrentStatus('processing');
     setStatusMessage('Detecting gestures...');
-    
+
     // Simulate gesture detection
     setTimeout(() => {
       const gestures = ['Open hand', 'Fist', 'Two fingers', 'Thumbs up', 'Pointing'];
       const randomGesture = gestures[Math.floor(Math.random() * gestures.length)];
       setStatusMessage(`Gesture detected: ${randomGesture}`);
       setCurrentStatus('idle');
-      
+
       Speech.speak(`Gesture detected: ${randomGesture}`, {
         rate: settings.speechRate,
         pitch: settings.speechPitch,
@@ -426,7 +394,7 @@ const DashboardScreen = ({ navigation }) => {
           colors={[colors.primary, colors.primary + 'DD', colors.primary + '99']}
           style={styles.compactHeader}
         >
-          <Animated.View 
+          <Animated.View
             style={[
               styles.headerContent,
               {
@@ -439,7 +407,7 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.headerSubtitle}>
               {personalizedMessage || 'Voice & Gesture Control Center'}
             </Text>
-            
+
             {/* Quick Stats */}
             <View style={styles.quickStats}>
               <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
@@ -500,8 +468,8 @@ const DashboardScreen = ({ navigation }) => {
               },
             ]}
           >
-            <AnalyticsDashboard 
-              usageStats={usageStats} 
+            <AnalyticsDashboard
+              usageStats={usageStats}
               serviceStatus={serviceStatus}
               metrics={metrics}
               patterns={patterns}
@@ -509,53 +477,53 @@ const DashboardScreen = ({ navigation }) => {
             />
           </Animated.View>
 
-        {/* Quick Actions */}
-        <Animated.View
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <QuickActions actions={quickActions} />
-        </Animated.View>
+          {/* Quick Actions */}
+          <Animated.View
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <QuickActions actions={quickActions} />
+          </Animated.View>
 
-        {/* Navigation Menu */}
-        <Animated.View
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <NavigationMenu items={navigationItems} />
-        </Animated.View>
+          {/* Navigation Menu */}
+          <Animated.View
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <NavigationMenu items={navigationItems} />
+          </Animated.View>
 
-        {/* Voice Commands Guide */}
-        <Animated.View
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <VoiceCommandsGuide />
-        </Animated.View>
+          {/* Voice Commands Guide */}
+          <Animated.View
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <VoiceCommandsGuide />
+          </Animated.View>
 
-        {/* Last Command Display */}
-        <Animated.View
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <LastCommandDisplay lastCommand={lastCommand} />
-        </Animated.View>
+          {/* Last Command Display */}
+          <Animated.View
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <LastCommandDisplay lastCommand={lastCommand} />
+          </Animated.View>
         </ScrollView>
       </SafeAreaView>
     </>

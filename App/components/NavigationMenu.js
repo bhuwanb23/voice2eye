@@ -1,10 +1,13 @@
 /**
- * Enhanced Navigation Menu Component
- * Compact design with smooth animations and visual effects
+ * Modern Navigation Menu Component
+ * Beautiful, cohesive design with consistent styling and animations
  */
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
+
+const { width } = Dimensions.get('window');
 
 const NavigationMenu = ({ items }) => {
   const { getThemeColors } = useAccessibility();
@@ -35,11 +38,13 @@ const NavigationMenu = ({ items }) => {
         { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
       ]}
     >
-      <Text style={[styles.title, { color: colors.text }]}>Navigation</Text>
-      <View style={styles.grid}>
-        {items.map((item, index) => (
-          <NavCard key={index} item={item} colors={colors} delay={index * 80} />
-        ))}
+      <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>🧭 Navigation</Text>
+        <View style={styles.navGrid}>
+          {items.map((item, index) => (
+            <NavCard key={index} item={item} colors={colors} delay={index * 120} />
+          ))}
+        </View>
       </View>
     </Animated.View>
   );
@@ -88,27 +93,30 @@ const NavCard = ({ item, colors, delay }) => {
       onPressOut={handlePressOut}
       activeOpacity={0.9}
       accessibilityLabel={item.accessibilityLabel}
+      style={styles.navButton}
     >
       <Animated.View
         style={[
-          styles.card,
+          styles.navCard,
           {
-            backgroundColor: colors.surface,
-            borderLeftWidth: 3,
-            borderLeftColor: item.color,
+            backgroundColor: colors.background,
+            borderColor: `${item.color}30`,
             transform: [{ scale: scaleAnim }],
             opacity: cardFade,
           },
         ]}
       >
-        <View style={[styles.iconContainer, { backgroundColor: `${item.color}20` }]}>
-          <Text style={[styles.icon, { color: item.color }]}>{item.icon}</Text>
+        <View style={[styles.navIconContainer, { backgroundColor: `${item.color}15` }]}>
+          <Text style={[styles.navIcon, { color: item.color }]}>{item.icon}</Text>
         </View>
-        <View style={styles.textContainer}>
-          <Text style={[styles.itemTitle, { color: colors.text }]}>{item.title}</Text>
-          <Text style={[styles.itemSubtitle, { color: colors.textSecondary }]}>
+        <View style={styles.navTextContainer}>
+          <Text style={[styles.navTitle, { color: colors.text }]}>{item.title}</Text>
+          <Text style={[styles.navSubtitle, { color: colors.textSecondary }]}>
             {item.subtitle}
           </Text>
+        </View>
+        <View style={[styles.navArrow, { backgroundColor: `${item.color}20` }]}>
+          <Text style={[styles.arrowIcon, { color: item.color }]}>→</Text>
         </View>
       </Animated.View>
     </TouchableOpacity>
@@ -118,53 +126,80 @@ const NavCard = ({ item, colors, delay }) => {
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  grid: {
-    gap: 10,
+    marginBottom: 16,
   },
   card: {
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  navGrid: {
+    gap: 12,
+  },
+  navButton: {
+    marginBottom: 4,
+  },
+  navCard: {
     borderRadius: 12,
-    padding: 12,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+  navIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
-  icon: {
-    fontSize: 20,
+  navIcon: {
+    fontSize: 24,
   },
-  textContainer: {
+  navTextContainer: {
     flex: 1,
   },
-  itemTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 2,
+  navTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
   },
-  itemSubtitle: {
-    fontSize: 11,
+  navSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  navArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowIcon: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

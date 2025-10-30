@@ -1,10 +1,10 @@
 /**
- * Enhanced Analytics Dashboard Component
- * Combines usage statistics and service status in a beautiful, cohesive design
- * Now includes performance metrics, emergency patterns, and report export
+ * Modern Analytics Dashboard Component
+ * Beautiful, cohesive design with consistent styling and animations
  */
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Dimensions, Animated, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import AnalyticsCards from '../components/AnalyticsCards';
 import ServiceStatus from '../components/ServiceStatus';
@@ -17,41 +17,132 @@ const { width } = Dimensions.get('window');
 const AnalyticsDashboard = ({ usageStats, serviceStatus, metrics, patterns, exportData }) => {
   const { getThemeColors } = useAccessibility();
   const colors = getThemeColors();
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   return (
-    <ScrollView 
-      style={styles.scrollContainer}
-      showsVerticalScrollIndicator={false}
+    <Animated.View 
+      style={[
+        styles.container,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
+        }
+      ]}
     >
-      <View style={[styles.container, { backgroundColor: colors.surface }]}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Dashboard Overview</Text>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-        </View>
+      <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>📊 Analytics Overview</Text>
         
-        <View style={styles.content}>
-          <AnalyticsCards usageStats={usageStats} />
-          <ServiceStatus serviceStatus={serviceStatus} />
-          
-          {/* New Analytics Components */}
-          <PerformanceMetrics metrics={metrics} />
-          <EmergencyPatterns patterns={patterns} />
-          <ReportExporter data={exportData} />
+        {/* Usage Statistics Cards */}
+        <View style={styles.statsGrid}>
+          <StatCard
+            title="Voice Commands"
+            value={usageStats?.voiceCommands || 0}
+            icon="🎤"
+            color={colors.primary}
+            backgroundColor={`${colors.primary}15`}
+          />
+          <StatCard
+            title="Gestures"
+            value={usageStats?.gestureDetections || 0}
+            icon="✋"
+            color={colors.accent}
+            backgroundColor={`${colors.accent}15`}
+          />
+          <StatCard
+            title="Emergencies"
+            value={usageStats?.emergencyEvents || 0}
+            icon="🚨"
+            color={colors.error}
+            backgroundColor={`${colors.error}15`}
+          />
+          <StatCard
+            title="Accuracy"
+            value={`${metrics?.accuracy || 0}%`}
+            icon="🎯"
+            color={colors.success}
+            backgroundColor={`${colors.success}15`}
+          />
+        </View>
+
+        {/* Performance Metrics */}
+        <View style={styles.metricsSection}>
+          <Text style={[styles.subsectionTitle, { color: colors.text }]}>Performance</Text>
+          <View style={styles.metricsRow}>
+            <MetricItem
+              label="Response Time"
+              value={`${metrics?.latency || 0}ms`}
+              colors={colors}
+            />
+            <MetricItem
+              label="Uptime"
+              value={`${metrics?.uptime || 0}%`}
+              colors={colors}
+            />
+          </View>
         </View>
       </View>
-    </ScrollView>
+    </Animated.View>
   );
 };
 
+const StatCard = ({ title, value, icon, color, backgroundColor }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      tension: 50,
+      friction: 7,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  return (
+    <Animated.View 
+      style={[
+        styles.statCard,
+        { backgroundColor, transform: [{ scale: scaleAnim }] }
+      ]}
+    >
+      <Text style={styles.statIcon}>{icon}</Text>
+      <Text style={[styles.statValue, { color }]}>{value}</Text>
+      <Text style={[styles.statTitle, { color }]}>{title}</Text>
+    </Animated.View>
+  );
+};
+
+const MetricItem = ({ label, value, colors }) => (
+  <View style={styles.metricItem}>
+    <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{label}</Text>
+    <Text style={[styles.metricValue, { color: colors.text }]}>{value}</Text>
+  </View>
+);
+
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flex: 1,
-  },
   container: {
-    borderRadius: 16,
     marginHorizontal: 16,
-    marginTop: -8,
-    marginBottom: 12,
+    marginBottom: 16,
+  },
+  card: {
+    borderRadius: 16,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -60,24 +151,65 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 5,
-    overflow: 'hidden',
   },
-  header: {
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  statCard: {
+    width: (width - 64) / 2,
+    borderRadius: 12,
     padding: 16,
-    paddingBottom: 12,
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  title: {
+  statIcon: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  statTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  metricsSection: {
+    marginTop: 8,
+  },
+  subsectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  divider: {
-    height: 1,
-    width: '100%',
+  metricsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  content: {
-    padding: 14,
-    paddingTop: 0,
+  metricItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  metricLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  metricValue: {
+    fontSize: 16,
+    fontWeight: '800',
   },
 });
 

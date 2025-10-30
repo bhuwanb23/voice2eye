@@ -1,10 +1,13 @@
 /**
- * Voice Commands Guide Component
- * Compact design with smooth animations and visual effects
+ * Modern Voice Commands Guide Component
+ * Beautiful, cohesive design with consistent styling and animations
  */
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
+
+const { width } = Dimensions.get('window');
 
 const VoiceCommandsGuide = () => {
   const { getThemeColors } = useAccessibility();
@@ -29,52 +32,56 @@ const VoiceCommandsGuide = () => {
   }, []);
 
   const commands = [
-    { icon: '🚨', text: 'Say "Emergency" or "Help"' },
-    { icon: '⚙️', text: 'Say "Settings"' },
-    { icon: '👥', text: 'Say "Contacts"' },
-    { icon: '📷', text: 'Say "Camera"' },
+    { icon: '🚨', text: 'Say "Emergency" or "Help"', color: colors.error },
+    { icon: '⚙️', text: 'Say "Settings"', color: colors.primary },
+    { icon: '👥', text: 'Say "Contacts"', color: colors.success },
+    { icon: '📷', text: 'Say "Camera"', color: colors.accent },
+    { icon: '✋', text: 'Say "Gesture Training"', color: colors.warning },
+    { icon: '❓', text: 'Say "Help"', color: colors.info },
   ];
 
   return (
     <Animated.View 
       style={[
-        styles.container, 
-        { 
-          backgroundColor: colors.surface,
+        styles.container,
+        {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }]
         }
       ]}
     >
-      <Text style={[styles.title, { color: colors.text }]}>Voice Commands</Text>
-      <View style={styles.commandsList}>
-        {commands.map((command, index) => (
-          <CommandItem 
-            key={index} 
-            command={command} 
-            colors={colors} 
-            delay={index * 100}
-          />
-        ))}
+      <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>🎤 Voice Commands</Text>
+        <View style={styles.commandsGrid}>
+          {commands.map((command, index) => (
+            <CommandCard 
+              key={index} 
+              command={command} 
+              colors={colors} 
+              delay={index * 100}
+            />
+          ))}
+        </View>
       </View>
     </Animated.View>
   );
 };
 
-const CommandItem = ({ command, colors, delay }) => {
+const CommandCard = ({ command, colors, delay }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeIn = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(-10)).current;
 
   useEffect(() => {
     setTimeout(() => {
       Animated.parallel([
-        Animated.timing(fadeIn, {
+        Animated.spring(scaleAnim, {
           toValue: 1,
-          duration: 300,
+          tension: 50,
+          friction: 7,
           useNativeDriver: true,
         }),
-        Animated.timing(translateX, {
-          toValue: 0,
+        Animated.timing(fadeIn, {
+          toValue: 1,
           duration: 300,
           useNativeDriver: true,
         }),
@@ -85,14 +92,18 @@ const CommandItem = ({ command, colors, delay }) => {
   return (
     <Animated.View
       style={[
-        styles.commandItem,
+        styles.commandCard,
         {
+          backgroundColor: colors.background,
+          borderColor: `${command.color}30`,
           opacity: fadeIn,
-          transform: [{ translateX }],
+          transform: [{ scale: scaleAnim }],
         },
       ]}
     >
-      <Text style={[styles.commandIcon, { color: colors.primary }]}>{command.icon}</Text>
+      <View style={[styles.commandIconContainer, { backgroundColor: `${command.color}15` }]}>
+        <Text style={[styles.commandIcon, { color: command.color }]}>{command.icon}</Text>
+      </View>
       <Text style={[styles.commandText, { color: colors.text }]}>{command.text}</Text>
     </Animated.View>
   );
@@ -100,40 +111,64 @@ const CommandItem = ({ command, colors, delay }) => {
 
 const styles = StyleSheet.create({
   container: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  card: {
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  commandsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  commandCard: {
+    width: (width - 64) / 2,
     borderRadius: 12,
-    margin: 16,
-    padding: 14,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  title: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  commandsList: {
-    gap: 10,
-  },
-  commandItem: {
-    flexDirection: 'row',
+  commandIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   commandIcon: {
-    fontSize: 18,
-    marginRight: 10,
+    fontSize: 20,
   },
   commandText: {
     fontSize: 12,
-    lineHeight: 18,
-    flex: 1,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 16,
   },
 });
 

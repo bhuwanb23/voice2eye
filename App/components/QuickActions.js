@@ -1,10 +1,13 @@
 /**
- * Enhanced Quick Actions Component
- * Compact design with smooth animations and visual effects
+ * Modern Quick Actions Component
+ * Beautiful, cohesive design with consistent styling and animations
  */
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
+
+const { width } = Dimensions.get('window');
 
 const QuickActions = ({ actions }) => {
   const { getThemeColors } = useAccessibility();
@@ -35,11 +38,13 @@ const QuickActions = ({ actions }) => {
         { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
       ]}
     >
-      <Text style={[styles.title, { color: colors.text }]}>Quick Actions</Text>
-      <View style={styles.grid}>
-        {actions.map((action, index) => (
-          <ActionCard key={index} action={action} colors={colors} delay={index * 100} />
-        ))}
+      <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>⚡ Quick Actions</Text>
+        <View style={styles.actionsGrid}>
+          {actions.map((action, index) => (
+            <ActionCard key={index} action={action} colors={colors} delay={index * 150} />
+          ))}
+        </View>
       </View>
     </Animated.View>
   );
@@ -89,26 +94,31 @@ const ActionCard = ({ action, colors, delay }) => {
       activeOpacity={0.9}
       accessibilityLabel={action.accessibilityLabel}
       accessibilityHint={action.accessibilityHint}
+      style={styles.actionButton}
     >
       <Animated.View
         style={[
-          styles.card,
+          styles.actionCard,
           {
-            backgroundColor: colors.surface,
             transform: [{ scale: scaleAnim }],
             opacity: cardFade,
           },
         ]}
       >
-        <View style={[styles.iconContainer, { backgroundColor: action.gradient[0] }]}>
-          <Text style={styles.icon}>{action.icon}</Text>
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={[styles.actionTitle, { color: colors.text }]}>{action.title}</Text>
-          <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>
-            {action.subtitle}
-          </Text>
-        </View>
+        <LinearGradient
+          colors={action.gradient}
+          style={styles.gradientCard}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.actionContent}>
+            <Text style={styles.actionIcon}>{action.icon}</Text>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>{action.title}</Text>
+              <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+            </View>
+          </View>
+        </LinearGradient>
       </Animated.View>
     </TouchableOpacity>
   );
@@ -117,54 +127,69 @@ const ActionCard = ({ action, colors, delay }) => {
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  grid: {
-    gap: 10,
+    marginBottom: 16,
   },
   card: {
-    borderRadius: 12,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    borderRadius: 16,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  actionsGrid: {
+    gap: 16,
+  },
+  actionButton: {
+    marginBottom: 4,
+  },
+  actionCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  gradientCard: {
+    borderRadius: 16,
+    padding: 20,
+  },
+  actionContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
   },
-  icon: {
-    fontSize: 20,
-    color: 'white',
+  actionIcon: {
+    fontSize: 28,
+    marginRight: 16,
   },
-  textContainer: {
+  actionTextContainer: {
     flex: 1,
   },
   actionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 2,
+    fontSize: 18,
+    fontWeight: '800',
+    color: 'white',
+    marginBottom: 4,
   },
   actionSubtitle: {
-    fontSize: 11,
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '500',
   },
 });
 

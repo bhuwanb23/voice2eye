@@ -1,10 +1,13 @@
 /**
- * Last Command Display Component
- * Compact design with smooth animations and visual effects
+ * Modern Last Command Display Component
+ * Beautiful, cohesive design with consistent styling and animations
  */
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
+
+const { width } = Dimensions.get('window');
 
 const LastCommandDisplay = ({ lastCommand }) => {
   const { getThemeColors } = useAccessibility();
@@ -52,19 +55,33 @@ const LastCommandDisplay = ({ lastCommand }) => {
       style={[
         styles.container,
         {
-          backgroundColor: colors.surface,
           opacity: fadeAnim,
           transform: [{ scale: scaleAnim }, { translateY: slideAnim }],
         },
       ]}
     >
-      <View style={styles.header}>
-        <View style={[styles.iconContainer, { backgroundColor: `${colors.primary}15` }]}>
-          <Text style={[styles.icon, { color: colors.primary }]}>💬</Text>
+      <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>💬 Last Command</Text>
+        
+        <View style={styles.commandContainer}>
+          <LinearGradient
+            colors={[`${colors.primary}20`, `${colors.primary}10`]}
+            style={styles.commandGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.commandContent}>
+              <View style={[styles.micIcon, { backgroundColor: `${colors.primary}25` }]}>
+                <Text style={[styles.micEmoji, { color: colors.primary }]}>🎤</Text>
+              </View>
+              <View style={styles.commandTextContainer}>
+                <Text style={[styles.commandLabel, { color: colors.textSecondary }]}>You said:</Text>
+                <Text style={[styles.commandText, { color: colors.text }]}>"{lastCommand}"</Text>
+              </View>
+            </View>
+          </LinearGradient>
         </View>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Last Command</Text>
       </View>
-      <Text style={[styles.commandText, { color: colors.text }]}>"{lastCommand}"</Text>
     </Animated.View>
   );
 };
