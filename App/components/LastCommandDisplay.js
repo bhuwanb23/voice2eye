@@ -88,44 +88,65 @@ const LastCommandDisplay = ({ lastCommand }) => {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
-    margin: 16,
-    padding: 14,
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  card: {
+    borderRadius: 16,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  header: {
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  commandContainer: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  commandGradient: {
+    borderRadius: 12,
+    padding: 16,
+  },
+  commandContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
   },
-  iconContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+  micIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 16,
   },
-  icon: {
-    fontSize: 14,
+  micEmoji: {
+    fontSize: 24,
   },
-  label: {
-    fontSize: 11,
+  commandTextContainer: {
+    flex: 1,
+  },
+  commandLabel: {
+    fontSize: 12,
     fontWeight: '600',
+    marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   commandText: {
-    fontSize: 13,
+    fontSize: 16,
+    fontWeight: '700',
     fontStyle: 'italic',
-    lineHeight: 18,
+    lineHeight: 22,
   },
 });
 

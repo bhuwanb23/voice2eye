@@ -136,10 +136,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 12,
   },
   commandCard: {
-    width: (width - 64) / 2,
+    width: (width - 64) / 2 - 6,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',

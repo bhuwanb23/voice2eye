@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   statCard: {
-    width: (width - 64) / 2,
+    width: (width - 72) / 2,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
