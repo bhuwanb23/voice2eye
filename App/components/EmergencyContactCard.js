@@ -1,16 +1,13 @@
-/**
- * Emergency Contact Card Component
- * Reusable component for displaying emergency contact information
- */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useAccessibility } from './AccessibilityProvider';
+import { useAccessibility } from '../components/AccessibilityProvider';
 import AccessibleButton from './AccessibleButton';
 
 const EmergencyContactCard = ({
   contact,
   onEdit,
   onDelete,
+  notificationStatus, // 'pending', 'sent', 'failed'
   style,
 }) => {
   const { getThemeColors } = useAccessibility();
@@ -44,6 +41,31 @@ const EmergencyContactCard = ({
     }
   };
 
+  const getNotificationStatusColor = (status) => {
+    switch (status) {
+      case 'sent':
+        return colors.success;
+      case 'failed':
+        return colors.error;
+      case 'pending':
+      default:
+        return colors.warning;
+    }
+  };
+
+  const getNotificationStatusText = (status) => {
+    switch (status) {
+      case 'sent':
+        return 'Notified';
+      case 'failed':
+        return 'Failed';
+      case 'pending':
+        return 'Pending';
+      default:
+        return '';
+    }
+  };
+
   // Safely capitalize the first letter of a string
   const capitalizeFirstLetter = (string) => {
     if (!string || typeof string !== 'string') return '';
@@ -74,10 +96,19 @@ const EmergencyContactCard = ({
             {contact.relationship} • {capitalizeFirstLetter(contact.group)}
           </Text>
         </View>
-        <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(contact.priority) }]}>
-          <Text style={styles.priorityText}>
-            {contact.priority && typeof contact.priority === 'string' ? contact.priority.toUpperCase() : 'MEDIUM'}
-          </Text>
+        <View style={styles.statusContainer}>
+          <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(contact.priority) }]}>
+            <Text style={styles.priorityText}>
+              {contact.priority && typeof contact.priority === 'string' ? contact.priority.toUpperCase() : 'MEDIUM'}
+            </Text>
+          </View>
+          {notificationStatus && (
+            <View style={[styles.notificationStatus, { backgroundColor: getNotificationStatusColor(notificationStatus) }]}>
+              <Text style={styles.notificationStatusText}>
+                {getNotificationStatusText(notificationStatus)}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
       
@@ -105,17 +136,17 @@ const EmergencyContactCard = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 4,
+    elevation: 3,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
   },
@@ -125,7 +156,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   icon: {
-    fontSize: 28,
+    fontSize: 24,
     marginRight: 12,
     marginTop: 2,
   },
@@ -139,14 +170,13 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontWeight: 'bold',
-    flex: 1,
+    fontWeight: '600',
+    marginRight: 8,
   },
   primaryBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 8,
+    borderRadius: 8,
   },
   primaryBadgeText: {
     color: 'white',
@@ -160,13 +190,26 @@ const styles = StyleSheet.create({
   details: {
     fontSize: 14,
   },
+  statusContainer: {
+    alignItems: 'flex-end',
+  },
   priorityIndicator: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    alignSelf: 'flex-start',
   },
   priorityText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  notificationStatus: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  notificationStatusText: {
     color: 'white',
     fontSize: 10,
     fontWeight: 'bold',
@@ -174,10 +217,10 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    gap: 8,
   },
   actionButton: {
-    marginLeft: 12,
-    minWidth: 70,
+    minWidth: 80,
   },
 });
 

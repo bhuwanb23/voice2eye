@@ -717,7 +717,7 @@ const styles = StyleSheet.create({
   },
   contactCard: {
     marginVertical: 6,
-    marginHorizontal: 4,
+    marginHorizontal: 14,
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,

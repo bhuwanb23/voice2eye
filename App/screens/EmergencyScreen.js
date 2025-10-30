@@ -54,7 +54,8 @@ const EmergencyScreen = ({ navigation, route }) => {
     silentEmergency: false,
     multipleContactAttempts: true,
   });
-  
+  const [notificationStatuses, setNotificationStatuses] = useState({});
+
   // Load data from backend on mount
   useEffect(() => {
     loadEmergencyData();
@@ -99,6 +100,26 @@ const EmergencyScreen = ({ navigation, route }) => {
           enabled: true
         }
       ]);
+      
+      // Mock history data
+      setEmergencyHistory([
+        {
+          alert_id: 'mock_1',
+          trigger_type: 'manual',
+          status: 'confirmed',
+          timestamp: new Date().toISOString(),
+          location: '123 Main St, City, State',
+          messages_sent: 3
+        },
+        {
+          alert_id: 'mock_2',
+          trigger_type: 'voice',
+          status: 'cancelled',
+          timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+          location: '456 Oak Ave, City, State',
+          messages_sent: 0
+        }
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -107,23 +128,30 @@ const EmergencyScreen = ({ navigation, route }) => {
   const triggerEmergency = async () => {
     try {
       setIsLoading(true);
+      
+      // Get current location if location tracking is enabled
+      let currentLocation = location;
+      if (emergencySettings.locationTracking) {
+        // In a real implementation, we would get the actual current location
+        currentLocation = "Current location being determined...";
+      }
+      
       const result = await apiService.triggerEmergency({
         trigger_type: 'manual',
         trigger_data: {
           emergency_type: emergencyType,
-          custom_message: customMessage,
-          location: location
-        }
+          custom_message: customMessage || `HELP! I need immediate assistance. My location is: ${currentLocation}. Time: ${new Date().toLocaleString()}`,
+          location: currentLocation
+        },
+        location: currentLocation,
+        user_id: null // In a real implementation, this would be the actual user ID
       });
       
       setCurrentAlertId(result.alert_id);
       setEmergencyStatus('triggered');
-      setCountdown(30); // 30 second confirmation window
+      setCountdown(result.confirmation_timeout || 30); // Use backend timeout or default to 30 seconds
       
       console.log('Emergency triggered:', result);
-      
-      // Start countdown
-      startCountdown();
       
     } catch (error) {
       console.error('Failed to trigger emergency:', error);
@@ -143,6 +171,18 @@ const EmergencyScreen = ({ navigation, route }) => {
       
       console.log('Emergency confirmed:', result);
       
+      // Update notification statuses for contacts
+      if (result.contact_statuses) {
+        setNotificationStatuses(result.contact_statuses);
+      }
+      
+      // Show confirmation message
+      Alert.alert(
+        'Emergency Confirmed',
+        `Help has been contacted. ${result.messages_sent || 0} contacts notified.`,
+        [{ text: 'OK' }]
+      );
+      
       // Reload history to show new emergency
       loadEmergencyData();
       
@@ -161,6 +201,13 @@ const EmergencyScreen = ({ navigation, route }) => {
       setCurrentAlertId(null);
       
       console.log('Emergency cancelled');
+      
+      // Show cancellation message
+      Alert.alert(
+        'Emergency Cancelled',
+        'Your emergency alert has been cancelled.',
+        [{ text: 'OK' }]
+      );
       
     } catch (error) {
       console.error('Failed to cancel emergency:', error);
@@ -188,16 +235,19 @@ const EmergencyScreen = ({ navigation, route }) => {
   const flashAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Start emergency countdown
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          confirmEmergency();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // Start emergency countdown only when in triggered state
+    let timer;
+    if (emergencyStatus === 'triggered') {
+      timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            confirmEmergency();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
 
     // Start pulsing animation
     const pulse = Animated.loop(
@@ -242,11 +292,11 @@ const EmergencyScreen = ({ navigation, route }) => {
     }
 
     return () => {
-      clearInterval(timer);
+      if (timer) clearInterval(timer);
       pulse.stop();
       flash.stop();
     };
-  }, []);
+  }, [emergencyStatus]);
 
   const announceEmergency = () => {
     const message = `Emergency mode activated! Help will be contacted in ${countdown} seconds. Say "Cancel" to stop the emergency.`;
@@ -290,6 +340,36 @@ const EmergencyScreen = ({ navigation, route }) => {
       [key]: value
     }));
   };
+
+  const getEmergencyStatus = async () => {
+    if (!currentAlertId) return;
+    
+    try {
+      const status = await apiService.getEmergencyStatus(currentAlertId);
+      console.log('Emergency status:', status);
+      // In a real implementation, we might update UI based on status
+    } catch (error) {
+      console.error('Failed to get emergency status:', error);
+    }
+  };
+
+  // Poll for emergency status updates when in triggered state
+  useEffect(() => {
+    let statusInterval;
+    if (emergencyStatus === 'triggered' && currentAlertId) {
+      // Get initial status
+      getEmergencyStatus();
+      
+      // Poll for status updates every 5 seconds
+      statusInterval = setInterval(() => {
+        getEmergencyStatus();
+      }, 5000);
+    }
+    
+    return () => {
+      if (statusInterval) clearInterval(statusInterval);
+    };
+  }, [emergencyStatus, currentAlertId]);
 
   // Show loading indicator while fetching data
   if (isLoading && emergencyContacts.length === 0) {
@@ -388,7 +468,10 @@ const EmergencyScreen = ({ navigation, route }) => {
         {/* Contacts Tab */}
         {activeTab === 'contacts' && (
           <View style={styles.tabContent}>
-            <EmergencyContactDisplay contacts={emergencyContacts} />
+            <EmergencyContactDisplay 
+              contacts={emergencyContacts} 
+              notificationStatuses={notificationStatuses}
+            />
           </View>
         )}
 

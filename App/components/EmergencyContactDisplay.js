@@ -7,7 +7,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import EmergencyContactCard from './EmergencyContactCard';
 
-const EmergencyContactDisplay = ({ contacts = [] }) => {
+const EmergencyContactDisplay = ({ contacts = [], notificationStatuses = {} }) => {
   const { getThemeColors } = useAccessibility();
   const colors = getThemeColors();
 
@@ -36,6 +36,7 @@ const EmergencyContactDisplay = ({ contacts = [] }) => {
         <EmergencyContactCard 
           key={contact.id || index}
           contact={contact}
+          notificationStatus={notificationStatuses[contact.id]}
           onEdit={() => {}}
           onDelete={() => {}}
           style={styles.contactCard}

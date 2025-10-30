@@ -1,14 +1,13 @@
-/**
- * Emergency History Timeline Component
- * Displays a timeline of emergency alerts with status and details
- */
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Picker, TouchableOpacity } from 'react-native';
 import { useAccessibility } from '../components/AccessibilityProvider';
 
 const EmergencyHistoryTimeline = ({ history = [] }) => {
   const { getThemeColors } = useAccessibility();
   const colors = getThemeColors();
+  
+  const [filter, setFilter] = useState('all'); // 'all', 'confirmed', 'cancelled', 'pending'
+  const [sortBy, setSortBy] = useState('newest'); // 'newest', 'oldest'
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -51,10 +50,23 @@ const EmergencyHistoryTimeline = ({ history = [] }) => {
     );
   }
 
-  // Sort history by timestamp (newest first)
-  const sortedHistory = [...history].sort((a, b) => 
-    new Date(b.timestamp || b.created_at) - new Date(a.timestamp || a.created_at)
-  );
+  // Filter history based on selected filter
+  const filteredHistory = history.filter(alert => {
+    if (filter === 'all') return true;
+    return alert.status === filter;
+  });
+
+  // Sort history based on selected sort option
+  const sortedHistory = [...filteredHistory].sort((a, b) => {
+    const dateA = new Date(a.timestamp || a.created_at);
+    const dateB = new Date(b.timestamp || b.created_at);
+    
+    if (sortBy === 'newest') {
+      return dateB - dateA;
+    } else {
+      return dateA - dateB;
+    }
+  });
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -64,6 +76,36 @@ const EmergencyHistoryTimeline = ({ history = [] }) => {
           {history.length} alert{history.length !== 1 ? 's' : ''}
         </Text>
       </View>
+      
+      {/* Filter and Sort Controls */}
+      <View style={styles.controlsContainer}>
+        <View style={styles.controlGroup}>
+          <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Filter:</Text>
+          <Picker
+            selectedValue={filter}
+            style={[styles.picker, { color: colors.text }]}
+            onValueChange={(value) => setFilter(value)}
+          >
+            <Picker.Item label="All Alerts" value="all" />
+            <Picker.Item label="Confirmed" value="confirmed" />
+            <Picker.Item label="Cancelled" value="cancelled" />
+            <Picker.Item label="Pending" value="pending" />
+          </Picker>
+        </View>
+        
+        <View style={styles.controlGroup}>
+          <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Sort:</Text>
+          <Picker
+            selectedValue={sortBy}
+            style={[styles.picker, { color: colors.text }]}
+            onValueChange={(value) => setSortBy(value)}
+          >
+            <Picker.Item label="Newest First" value="newest" />
+            <Picker.Item label="Oldest First" value="oldest" />
+          </Picker>
+        </View>
+      </View>
+      
       {sortedHistory.map((alert, index) => (
         <View 
           key={alert.alert_id || alert.id || index} 
@@ -151,6 +193,23 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontStyle: 'italic',
+  },
+  controlsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 10,
+  },
+  controlGroup: {
+    flex: 1,
+  },
+  controlLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  picker: {
+    height: 40,
+    width: '100%',
   },
   timelineItem: {
     borderLeftWidth: 4,
