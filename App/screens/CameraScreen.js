@@ -19,6 +19,7 @@ import { useAccessibility } from '../components/AccessibilityProvider';
 import AccessibleButton from '../components/AccessibleButton';
 import StatusIndicator from '../components/StatusIndicator';
 import * as Speech from 'expo-speech';
+import * as FileSystem from 'expo-file-system';
 
 const CameraScreen = ({ navigation }) => {
   const { settings, getThemeColors } = useAccessibility();
@@ -33,6 +34,7 @@ const CameraScreen = ({ navigation }) => {
   const [zoom, setZoom] = useState(1);
   const [detectedGestures, setDetectedGestures] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const [status, setStatus] = useState('idle');
   const [statusMessage, setStatusMessage] = useState('Camera ready');
@@ -170,31 +172,172 @@ const CameraScreen = ({ navigation }) => {
     }
   };
 
-  const simulateGestureDetection = () => {
-    // In a real implementation, this would connect to the gesture detection API
-    const gestures = ['Open Hand', 'Fist', 'Two Fingers', 'Thumbs Up', 'Thumbs Down', 'Pointing'];
-    const randomGesture = gestures[Math.floor(Math.random() * gestures.length)];
+  const simulateGestureDetection = async () => {
+    if (!cameraRef.current || isProcessing) return;
     
-    const newGesture = {
-      id: Date.now(),
-      name: randomGesture,
-      timestamp: new Date().toLocaleTimeString(),
-      confidence: Math.floor(Math.random() * 40) + 60, // 60-100%
-    };
-    
-    setDetectedGestures(prev => [newGesture, ...prev.slice(0, 4)]);
-    
-    if (settings.voiceNavigation) {
-      Speech.speak(`Detected gesture: ${randomGesture}`, {
-        rate: settings.speechRate,
-        pitch: settings.speechPitch,
+    try {
+      setIsProcessing(true);
+      setStatus('processing');
+      setStatusMessage('Detecting gesture...');
+      
+      // Check camera permissions first
+      if (!hasPermission) {
+        throw new Error('Camera permission not granted');
+      }
+      
+      // Capture photo
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.8,
+        base64: true,
+        skipProcessing: true
       });
-    }
-    
-    // Simulate different actions based on gesture
-    if (randomGesture === 'Two Fingers') {
-      // Trigger emergency
-      navigation.navigate('Emergency');
+      
+      if (settings.voiceNavigation) {
+        Speech.speak('Analyzing gesture', {
+          rate: settings.speechRate,
+          pitch: settings.speechPitch,
+        });
+      }
+      
+      // Send to backend for gesture analysis
+      const result = await apiService.analyzeGesture(photo.uri, 0.7);
+      
+      // Process result
+      if (result && result.gesture_type) {
+        const newGesture = {
+          id: Date.now(),
+          name: result.gesture_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          timestamp: new Date().toLocaleTimeString(),
+          confidence: Math.round(result.confidence * 100),
+          isEmergency: result.is_emergency || false
+        };
+        
+        setDetectedGestures(prev => [newGesture, ...prev.slice(0, 4)]);
+        
+        // Provide real-time feedback based on confidence
+        let feedbackMessage = '';
+        if (newGesture.confidence >= 90) {
+          feedbackMessage = `Excellent! ${newGesture.name} detected with ${newGesture.confidence}% confidence`;
+        } else if (newGesture.confidence >= 70) {
+          feedbackMessage = `Good! ${newGesture.name} detected with ${newGesture.confidence}% confidence`;
+        } else if (newGesture.confidence >= 50) {
+          feedbackMessage = `Fair! ${newGesture.name} detected with ${newGesture.confidence}% confidence`;
+        } else {
+          feedbackMessage = `Low confidence detection: ${newGesture.name} (${newGesture.confidence}%)`;
+        }
+        
+        if (settings.voiceNavigation) {
+          Speech.speak(feedbackMessage, {
+            rate: settings.speechRate,
+            pitch: settings.speechPitch,
+          });
+        }
+        
+        // Provide haptic feedback based on confidence
+        if (settings.hapticFeedback) {
+          if (newGesture.confidence >= 90) {
+            // Strong vibration for high confidence
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          } else if (newGesture.confidence >= 70) {
+            // Medium vibration for good confidence
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          } else {
+            // Light vibration for low confidence
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+        }
+        
+        // Handle emergency gesture
+        if (result.is_emergency) {
+          setStatus('emergency');
+          setStatusMessage('Emergency gesture detected!');
+          
+          if (settings.voiceNavigation) {
+            Speech.speak('Emergency gesture detected! Navigating to emergency screen.', {
+              rate: settings.speechRate,
+              pitch: settings.speechPitch,
+            });
+          }
+          
+          // Navigate to emergency after a short delay
+          setTimeout(() => {
+            navigation.navigate('Emergency');
+          }, 2000);
+        } else {
+          // Set status based on confidence
+          if (newGesture.confidence >= 80) {
+            setStatus('success');
+          } else if (newGesture.confidence >= 60) {
+            setStatus('warning');
+          } else {
+            setStatus('error');
+          }
+          setStatusMessage(`${newGesture.name} (${newGesture.confidence}%)`);
+        }
+      } else {
+        setStatus('warning');
+        setStatusMessage('No gesture detected. Try again.');
+        
+        if (settings.voiceNavigation) {
+          Speech.speak('No gesture detected. Please try again.', {
+            rate: settings.speechRate,
+            pitch: settings.speechPitch,
+          });
+        }
+        
+        // Light haptic feedback for no detection
+        if (settings.hapticFeedback) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        }
+      }
+    } catch (error) {
+      console.error('Gesture detection failed:', error);
+      setStatus('error');
+      setStatusMessage('Detection failed. Please try again.');
+      
+      // Provide specific error guidance
+      let errorMessage = 'Gesture detection failed. Please try again.';
+      if (error.message.includes('permission')) {
+        errorMessage = 'Camera permission required. Please enable camera access in settings.';
+      } else if (error.message.includes('network')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Request timeout. Please try again.';
+      }
+      
+      if (settings.voiceNavigation) {
+        Speech.speak(errorMessage, {
+          rate: settings.speechRate,
+          pitch: settings.speechPitch,
+        });
+      }
+      
+      // Error haptic feedback
+      if (settings.hapticFeedback) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+      
+      // Show alert for critical errors
+      if (error.message.includes('permission')) {
+        Alert.alert(
+          'Permission Required',
+          'Camera permission is required for gesture detection. Please enable it in your device settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Settings', onPress: () => Linking.openSettings() }
+          ]
+        );
+      }
+    } finally {
+      setIsProcessing(false);
+      
+      // Reset status after delay
+      setTimeout(() => {
+        if (status !== 'error' && status !== 'emergency') {
+          setStatus('ready');
+          setStatusMessage('Camera ready');
+        }
+      }, 3000);
     }
   };
 
@@ -311,11 +454,12 @@ const CameraScreen = ({ navigation }) => {
       {/* Bottom Controls */}
       <View style={[styles.bottomControls, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
         <AccessibleButton
-          title="🎯 DETECT"
+          title={isProcessing ? "🔄 PROCESSING" : "🎯 DETECT"}
           onPress={simulateGestureDetection}
           variant="primary"
           size="large"
-          accessibilityLabel="Detect gestures"
+          disabled={isProcessing}
+          accessibilityLabel={isProcessing ? "Processing gesture" : "Detect gestures"}
           style={styles.mainButton}
         />
         
@@ -324,6 +468,7 @@ const CameraScreen = ({ navigation }) => {
           onPress={startTrainingCapture}
           variant={isRecording ? "error" : "accent"}
           size="large"
+          disabled={isProcessing}
           accessibilityLabel={isRecording ? "Stop recording" : "Start recording for training"}
           style={styles.mainButton}
         />
@@ -338,6 +483,12 @@ const CameraScreen = ({ navigation }) => {
         <Text style={styles.detectionText}>Gesture Detection Area</Text>
       </View>
       
+      {/* Status Indicator with Enhanced Visual Feedback */}
+      <View style={[styles.statusOverlay, getStatusOverlayStyle()]}>
+        <Text style={styles.statusTextOverlay}>{statusMessage}</Text>
+        {isProcessing && <ActivityIndicator color="#FFFFFF" size="small" />}
+      </View>
+      
       {/* Detected Gestures */}
       {detectedGestures.length > 0 && (
         <View style={[styles.gestureHistory, { backgroundColor: 'rgba(0,0,0,0.7)' }]}>
@@ -346,13 +497,46 @@ const CameraScreen = ({ navigation }) => {
             <View key={gesture.id} style={styles.gestureItem}>
               <Text style={styles.gestureName}>{gesture.name}</Text>
               <Text style={styles.gestureTime}>{gesture.timestamp}</Text>
-              <Text style={styles.gestureConfidence}>{gesture.confidence}%</Text>
+              <Text style={[styles.gestureConfidence, getConfidenceStyle(gesture.confidence)]}>
+                {gesture.confidence}%
+              </Text>
             </View>
           ))}
         </View>
       )}
     </View>
   );
+
+  // Get status overlay style based on status
+  const getStatusOverlayStyle = () => {
+    switch (status) {
+      case 'success':
+        return { backgroundColor: 'rgba(76, 175, 80, 0.9)' }; // Green
+      case 'warning':
+        return { backgroundColor: 'rgba(255, 152, 0, 0.9)' }; // Orange
+      case 'error':
+        return { backgroundColor: 'rgba(244, 67, 54, 0.9)' }; // Red
+      case 'emergency':
+        return { backgroundColor: 'rgba(233, 30, 99, 0.9)' }; // Pink
+      case 'processing':
+        return { backgroundColor: 'rgba(33, 150, 243, 0.9)' }; // Blue
+      default:
+        return { backgroundColor: 'rgba(0, 0, 0, 0.5)' }; // Default
+    }
+  };
+
+  // Get confidence style based on confidence level
+  const getConfidenceStyle = (confidence) => {
+    if (confidence >= 90) {
+      return { color: '#4CAF50' }; // Green
+    } else if (confidence >= 70) {
+      return { color: '#2196F3' }; // Blue
+    } else if (confidence >= 50) {
+      return { color: '#FF9800' }; // Orange
+    } else {
+      return { color: '#F44336' }; // Red
+    }
+  };
 
   if (!permission) {
     return (
@@ -587,6 +771,24 @@ const styles = StyleSheet.create({
   },
   backButton: {
     minWidth: 80,
+  },
+  statusOverlay: {
+    position: 'absolute',
+    top: 100,
+    left: 20,
+    right: 20,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  statusTextOverlay: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
   },
 });
 
