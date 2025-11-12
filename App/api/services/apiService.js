@@ -5,7 +5,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.31.67:8000/api'  // Local development - replace with your local IP
+  ? 'http://localhost:8000/api'  // Local development - replace with your local IP
   : 'https://your-production-domain.com/api';  // Production URL
 
 class ApiService {
@@ -201,13 +201,74 @@ class ApiService {
     return this.fetch('/gestures/status');
   }
 
+  // ============ SPEECH API ============
+  
+  async recognizeSpeech(audioFile) {
+    const formData = new FormData();
+    formData.append('audio_file', audioFile);
+
+    return fetch(`${this.baseURL}/speech/recognize`, {
+      method: 'POST',
+      body: formData,
+    }).then(response => response.json());
+  }
+
+  async synthesizeSpeech(text, tone = 'normal', rate = 150, volume = 0.8) {
+    const formData = new FormData();
+    formData.append('text', text);
+    formData.append('tone', tone);
+    formData.append('rate', rate.toString());
+    formData.append('volume', volume.toString());
+
+    return fetch(`${this.baseURL}/speech/synthesize`, {
+      method: 'POST',
+      body: formData,
+    }).then(response => response.json());
+  }
+
+  async getSpeechStatus() {
+    return this.fetch('/speech/status');
+  }
+
+  // WebSocket for real-time speech streaming
+  connectSpeechStream(onResult, onError, onClose) {
+    const wsUrl = this.baseURL.replace('http', 'ws') + '/speech/recognize/stream';
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log('Speech WebSocket connected');
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onResult(data);
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+        if (onError) onError(error);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('Speech WebSocket error:', error);
+      if (onError) onError(error);
+    };
+
+    ws.onclose = () => {
+      console.log('Speech WebSocket disconnected');
+      if (onClose) onClose();
+    };
+
+    return ws;
+  }
+
   // WebSocket for real-time gesture streaming
   connectGestureStream(onGestureDetected) {
     const wsUrl = this.baseURL.replace('http', 'ws') + '/gestures/analyze/stream';
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log('WebSocket connected');
+      console.log('Gesture WebSocket connected');
     };
 
     ws.onmessage = (event) => {
@@ -220,11 +281,11 @@ class ApiService {
     };
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error('Gesture WebSocket error:', error);
     };
 
     ws.onclose = () => {
-      console.log('WebSocket disconnected');
+      console.log('Gesture WebSocket disconnected');
     };
 
     return ws;
