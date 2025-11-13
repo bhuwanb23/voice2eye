@@ -4,8 +4,10 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// For mobile development, we need to use the actual IP address of the development machine
+// instead of localhost, as localhost on mobile refers to the device itself
 const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:8000/api'  // Local development - replace with your local IP
+  ? 'http://10.0.2.2:8000/api'  // Android emulator IP for localhost
   : 'https://your-production-domain.com/api';  // Production URL
 
 class ApiService {
