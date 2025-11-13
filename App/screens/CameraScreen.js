@@ -153,6 +153,15 @@ const CameraScreen = ({ navigation }) => {
         }
       }
     });
+    
+    // Cleanup function
+    return () => {
+      // Stop video frame streaming if active
+      stopVideoFrameStreaming();
+      
+      // Disconnect from gesture streaming service
+      GestureStreamingService.disconnect();
+    };
   }, [settings, navigation]);
 
   const checkPermissions = async () => {
@@ -295,6 +304,9 @@ const CameraScreen = ({ navigation }) => {
         setIsGestureStreaming(true);
         setStreamingGestures([]);
         
+        // Start capturing and sending video frames
+        startVideoFrameStreaming();
+        
         if (settings.voiceNavigation) {
           Speech.speak('Gesture streaming started.', {
             rate: settings.speechRate,
@@ -323,6 +335,9 @@ const CameraScreen = ({ navigation }) => {
   // Stop gesture streaming
   const stopGestureStreaming = async () => {
     try {
+      // Stop capturing video frames
+      stopVideoFrameStreaming();
+      
       GestureStreamingService.stopStreaming();
       setIsGestureStreaming(false);
       
@@ -337,6 +352,46 @@ const CameraScreen = ({ navigation }) => {
     } catch (error) {
       console.error('Stop streaming error:', error);
       Alert.alert('Error', `Failed to stop streaming: ${error.message}`);
+    }
+  };
+
+  // Start video frame streaming
+  const startVideoFrameStreaming = () => {
+    if (!cameraRef.current) return;
+    
+    // Set up interval to capture and send frames
+    const frameInterval = setInterval(async () => {
+      if (!isGestureStreaming || gestureConnectionStatus !== 'connected') {
+        clearInterval(frameInterval);
+        return;
+      }
+      
+      try {
+        // Capture a frame from the camera
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.5, // Lower quality for faster streaming
+          base64: true,
+          skipProcessing: true
+        });
+        
+        // Send frame through GestureStreamingService with message queuing
+        if (photo.base64) {
+          GestureStreamingService.sendFrame(photo.base64);
+        }
+      } catch (error) {
+        console.error('Error capturing frame:', error);
+      }
+    }, 100); // Send frames every 100ms
+    
+    // Store interval ID to clear later
+    global.gestureFrameInterval = frameInterval;
+  };
+
+  // Stop video frame streaming
+  const stopVideoFrameStreaming = () => {
+    if (global.gestureFrameInterval) {
+      clearInterval(global.gestureFrameInterval);
+      global.gestureFrameInterval = null;
     }
   };
 

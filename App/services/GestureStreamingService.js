@@ -55,6 +55,13 @@ class GestureStreamingService {
     
     // Log status changes for debugging
     console.log(`Gesture Streaming Service: Connection status changed to ${status}`);
+    
+    // When we connect, process any queued frames
+    if (status === 'connected') {
+      setTimeout(() => {
+        this.processFrameQueue();
+      }, 100);
+    }
   }
   
   // Get detailed connection info
@@ -213,24 +220,68 @@ class GestureStreamingService {
     console.log('Gesture streaming stopped');
   }
 
-  // Send video frame through WebSocket
+  // Send video frame through WebSocket with message queuing for offline support
   sendFrame(frameData) {
-    if (this.webSocket && this.webSocket.readyState === WebSocket.OPEN) {
+    // Add frame to queue
+    this.frameQueue.push({
+      data: frameData,
+      timestamp: new Date().toISOString(),
+      retries: 0
+    });
+    
+    // Process the queue
+    return this.processFrameQueue();
+  }
+  
+  // Process frame queue with offline support
+  processFrameQueue() {
+    if (this.frameQueue.length === 0) {
+      return false;
+    }
+    
+    // If we're not connected, don't try to send
+    if (!this.webSocket || this.webSocket.readyState !== WebSocket.OPEN) {
+      console.warn('Not connected, frame queued for later sending');
+      return false;
+    }
+    
+    // Send all queued frames
+    while (this.frameQueue.length > 0) {
+      const frame = this.frameQueue[0];
+      
       try {
         this.webSocket.send(JSON.stringify({
           type: 'video_frame',
-          data: frameData,
-          timestamp: new Date().toISOString()
+          data: frame.data,
+          timestamp: frame.timestamp
         }));
-        return true;
+        
+        // Remove frame from queue after successful send
+        this.frameQueue.shift();
       } catch (error) {
         console.error('Error sending frame data:', error);
-        return false;
+        frame.retries++;
+        
+        // If we've retried too many times, remove from queue
+        if (frame.retries > 3) {
+          console.warn('Frame failed to send after 3 retries, removing from queue');
+          this.frameQueue.shift();
+        } else {
+          // Break and wait for next attempt
+          break;
+        }
       }
     }
-    return false;
+    
+    return true;
   }
-
+  
+  // Clear frame queue (use when disconnecting or resetting)
+  clearFrameQueue() {
+    this.frameQueue = [];
+    console.log('Frame queue cleared');
+  }
+  
   // Send continuous frames (for real-time streaming)
   sendContinuousFrames(frameData) {
     if (!this.isStreaming) {
@@ -255,6 +306,7 @@ class GestureStreamingService {
     }
     
     this.updateConnectionStatus('disconnected');
+    this.clearFrameQueue(); // Clear frame queue on disconnect
   }
 
   // Get current connection state
