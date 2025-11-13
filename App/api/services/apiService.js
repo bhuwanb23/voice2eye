@@ -201,6 +201,37 @@ class ApiService {
     return this.fetch('/gestures/status');
   }
 
+  // WebSocket for real-time gesture streaming
+  connectGestureStream(onGestureDetected, onError, onClose) {
+    const wsUrl = this.baseURL.replace('http', 'ws') + '/gestures/analyze/stream';
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log('Gesture WebSocket connected');
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onGestureDetected(data);
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('Gesture WebSocket error:', error);
+      if (onError) onError(error);
+    };
+
+    ws.onclose = () => {
+      console.log('Gesture WebSocket disconnected');
+      if (onClose) onClose();
+    };
+
+    return ws;
+  }
+
   // ============ SPEECH API ============
   
   async recognizeSpeech(audioFile) {
@@ -257,35 +288,6 @@ class ApiService {
     ws.onclose = () => {
       console.log('Speech WebSocket disconnected');
       if (onClose) onClose();
-    };
-
-    return ws;
-  }
-
-  // WebSocket for real-time gesture streaming
-  connectGestureStream(onGestureDetected) {
-    const wsUrl = this.baseURL.replace('http', 'ws') + '/gestures/analyze/stream';
-    const ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-      console.log('Gesture WebSocket connected');
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        onGestureDetected(data);
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-      }
-    };
-
-    ws.onerror = (error) => {
-      console.error('Gesture WebSocket error:', error);
-    };
-
-    ws.onclose = () => {
-      console.log('Gesture WebSocket disconnected');
     };
 
     return ws;

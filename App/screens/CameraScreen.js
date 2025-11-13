@@ -12,6 +12,7 @@ import {
   PermissionsAndroid,
   Platform,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, Camera, useCameraPermissions } from 'expo-camera';
@@ -20,6 +21,10 @@ import AccessibleButton from '../components/AccessibleButton';
 import StatusIndicator from '../components/StatusIndicator';
 import * as Speech from 'expo-speech';
 import * as FileSystem from 'expo-file-system';
+import * as Haptics from 'expo-haptics';
+import apiService from '../api/services/apiService';
+import GestureStreamingService from '../services/GestureStreamingService';
+import GestureOverlay from '../components/GestureOverlay';
 
 const CameraScreen = ({ navigation }) => {
   const { settings, getThemeColors } = useAccessibility();
@@ -36,6 +41,12 @@ const CameraScreen = ({ navigation }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
+  // Gesture streaming states
+  const [isGestureStreaming, setIsGestureStreaming] = useState(false);
+  const [gestureConnectionStatus, setGestureConnectionStatus] = useState('disconnected');
+  const [gestureStreamingError, setGestureStreamingError] = useState(null);
+  const [streamingGestures, setStreamingGestures] = useState([]);
+  
   const [status, setStatus] = useState('idle');
   const [statusMessage, setStatusMessage] = useState('Camera ready');
 
@@ -43,176 +54,42 @@ const CameraScreen = ({ navigation }) => {
     checkPermissions();
   }, []);
 
-  const checkPermissions = async () => {
-    if (Platform.OS === 'android') {
-      const cameraPermission = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.CAMERA
-      );
-      
-      const audioPermission = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-      );
-      
-      if (cameraPermission === PermissionsAndroid.RESULTS.GRANTED && 
-          audioPermission === PermissionsAndroid.RESULTS.GRANTED) {
-        setHasPermission(true);
-        setCameraActive(true);
-        setStatus('ready');
-        setStatusMessage('Camera ready');
-        
-        if (settings.voiceNavigation) {
-          Speech.speak('Camera permissions granted. Camera is ready.', {
-            rate: settings.speechRate,
-            pitch: settings.speechPitch,
-          });
-        }
-      } else {
-        setHasPermission(false);
-        setStatus('error');
-        setStatusMessage('Camera permissions denied');
-        
-        if (settings.voiceNavigation) {
-          Speech.speak('Camera permissions denied. Please enable camera permissions in settings.', {
-            rate: settings.speechRate,
-            pitch: settings.speechPitch,
-          });
-        }
-        
-        Alert.alert(
-          'Permissions Required',
-          'Camera and audio permissions are required for this feature. Please enable them in your device settings.',
-          [
-            { text: 'OK', onPress: () => navigation.goBack() },
-            { text: 'Settings', onPress: () => Linking.openSettings() }
-          ]
-        );
-      }
-    } else {
-      // iOS permissions are handled by the Camera component
-      const { status } = await requestPermission();
-      setHasPermission(status === 'granted');
-      setCameraActive(status === 'granted');
-      setStatus(status === 'granted' ? 'ready' : 'error');
-      setStatusMessage(status === 'granted' ? 'Camera ready' : 'Camera permissions denied');
-      
-      if (status === 'granted' && settings.voiceNavigation) {
-        Speech.speak('Camera permissions granted. Camera is ready.', {
-          rate: settings.speechRate,
-          pitch: settings.speechPitch,
-        });
-      } else if (status !== 'granted' && settings.voiceNavigation) {
-        Speech.speak('Camera permissions denied. Please enable camera permissions in settings.', {
-          rate: settings.speechRate,
-          pitch: settings.speechPitch,
-        });
-      }
-    }
-  };
-
-  const toggleFlash = () => {
-    const nextFlash = flash === 'off' ? 'on' : 'off';
-    setFlash(nextFlash);
+  useEffect(() => {
+    // Initialize gesture streaming service
+    GestureStreamingService.setOnStatusChange((status) => {
+      setGestureConnectionStatus(status);
+      console.log('Gesture connection status:', status);
+    });
     
-    if (settings.voiceNavigation) {
-      Speech.speak(`Flash ${nextFlash}`, {
-        rate: settings.speechRate,
-        pitch: settings.speechPitch,
-      });
-    }
-  };
-
-  const switchCamera = () => {
-    const nextPosition = cameraPosition === 'back' ? 'front' : 'back';
-    setCameraPosition(nextPosition);
-    
-    if (settings.voiceNavigation) {
-      Speech.speak(`Switched to ${nextPosition} camera`, {
-        rate: settings.speechRate,
-        pitch: settings.speechPitch,
-      });
-    }
-  };
-
-  const zoomIn = () => {
-    if (zoom < 5) {
-      const newZoom = zoom + 0.5;
-      setZoom(newZoom);
+    GestureStreamingService.setOnError((error) => {
+      setGestureStreamingError(error.message || 'Connection error');
+      console.error('Gesture streaming error:', error);
       
       if (settings.voiceNavigation) {
-        Speech.speak(`Zoom level ${newZoom}`, {
+        Speech.speak(`Gesture streaming error: ${error.message || 'Unknown error'}`, {
           rate: settings.speechRate,
           pitch: settings.speechPitch,
         });
       }
-    }
-  };
-
-  const zoomOut = () => {
-    if (zoom > 1) {
-      const newZoom = zoom - 0.5;
-      setZoom(newZoom);
       
-      if (settings.voiceNavigation) {
-        Speech.speak(`Zoom level ${newZoom}`, {
-          rate: settings.speechRate,
-          pitch: settings.speechPitch,
-        });
-      }
-    }
-  };
-
-  const resetZoom = () => {
-    setZoom(1);
+      // Show alert for critical errors
+      Alert.alert('Gesture Streaming Error', error.message || 'Unknown error occurred');
+    });
     
-    if (settings.voiceNavigation) {
-      Speech.speak('Zoom reset', {
-        rate: settings.speechRate,
-        pitch: settings.speechPitch,
-      });
-    }
-  };
-
-  const simulateGestureDetection = async () => {
-    if (!cameraRef.current || isProcessing) return;
-    
-    try {
-      setIsProcessing(true);
-      setStatus('processing');
-      setStatusMessage('Detecting gesture...');
+    GestureStreamingService.setOnResult((data) => {
+      console.log('Gesture recognition result:', data);
       
-      // Check camera permissions first
-      if (!hasPermission) {
-        throw new Error('Camera permission not granted');
-      }
-      
-      // Capture photo
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
-        base64: true,
-        skipProcessing: true
-      });
-      
-      if (settings.voiceNavigation) {
-        Speech.speak('Analyzing gesture', {
-          rate: settings.speechRate,
-          pitch: settings.speechPitch,
-        });
-      }
-      
-      // Send to backend for gesture analysis
-      const result = await apiService.analyzeGesture(photo.uri, 0.7);
-      
-      // Process result
-      if (result && result.gesture_type) {
+      if (data && data.gesture_type) {
         const newGesture = {
           id: Date.now(),
-          name: result.gesture_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          name: data.gesture_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
           timestamp: new Date().toLocaleTimeString(),
-          confidence: Math.round(result.confidence * 100),
-          isEmergency: result.is_emergency || false
+          confidence: Math.round((data.confidence || 0) * 100),
+          isEmergency: data.is_emergency || false,
+          boundingBox: data.bounding_box || null
         };
         
-        setDetectedGestures(prev => [newGesture, ...prev.slice(0, 4)]);
+        setStreamingGestures(prev => [newGesture, ...prev.slice(0, 4)]);
         
         // Provide real-time feedback based on confidence
         let feedbackMessage = '';
@@ -248,7 +125,7 @@ const CameraScreen = ({ navigation }) => {
         }
         
         // Handle emergency gesture
-        if (result.is_emergency) {
+        if (data.is_emergency) {
           setStatus('emergency');
           setStatusMessage('Emergency gesture detected!');
           
@@ -274,122 +151,249 @@ const CameraScreen = ({ navigation }) => {
           }
           setStatusMessage(`${newGesture.name} (${newGesture.confidence}%)`);
         }
-      } else {
-        setStatus('warning');
-        setStatusMessage('No gesture detected. Try again.');
-        
-        if (settings.voiceNavigation) {
-          Speech.speak('No gesture detected. Please try again.', {
-            rate: settings.speechRate,
-            pitch: settings.speechPitch,
-          });
+      }
+    });
+  }, [settings, navigation]);
+
+  const checkPermissions = async () => {
+    if (Platform.OS === 'android') {
+      const { status } = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: 'Camera Permission',
+          message: 'This app needs access to your camera to take photos and videos.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
         }
-        
-        // Light haptic feedback for no detection
-        if (settings.hapticFeedback) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        }
-      }
-    } catch (error) {
-      console.error('Gesture detection failed:', error);
-      setStatus('error');
-      setStatusMessage('Detection failed. Please try again.');
-      
-      // Provide specific error guidance
-      let errorMessage = 'Gesture detection failed. Please try again.';
-      if (error.message.includes('permission')) {
-        errorMessage = 'Camera permission required. Please enable camera access in settings.';
-      } else if (error.message.includes('network')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (error.message.includes('timeout')) {
-        errorMessage = 'Request timeout. Please try again.';
-      }
-      
-      if (settings.voiceNavigation) {
-        Speech.speak(errorMessage, {
-          rate: settings.speechRate,
-          pitch: settings.speechPitch,
-        });
-      }
-      
-      // Error haptic feedback
-      if (settings.hapticFeedback) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-      
-      // Show alert for critical errors
-      if (error.message.includes('permission')) {
-        Alert.alert(
-          'Permission Required',
-          'Camera permission is required for gesture detection. Please enable it in your device settings.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Settings', onPress: () => Linking.openSettings() }
-          ]
-        );
-      }
-    } finally {
-      setIsProcessing(false);
-      
-      // Reset status after delay
-      setTimeout(() => {
-        if (status !== 'error' && status !== 'emergency') {
-          setStatus('ready');
-          setStatusMessage('Camera ready');
-        }
-      }, 3000);
+      );
+      setHasPermission(status === 'granted');
+    } else {
+      const { status } = await requestPermission();
+      setHasPermission(status === 'granted');
     }
   };
 
-  const startTrainingCapture = async () => {
-    if (!cameraRef.current) return;
+  const toggleFlash = () => {
+    setFlash((prevFlash) => (prevFlash === 'off' ? 'on' : 'off'));
+  };
+
+  const toggleCameraPosition = () => {
+    setCameraPosition((prevPosition) => (prevPosition === 'back' ? 'front' : 'back'));
+  };
+
+  const handleZoomIn = () => {
+    setZoom((prevZoom) => Math.min(prevZoom + 0.1, 1));
+  };
+
+  const handleZoomOut = () => {
+    setZoom((prevZoom) => Math.max(prevZoom - 0.1, 0));
+  };
+
+  const resetZoom = () => {
+    setZoom(1);
     
-    try {
+    if (settings.voiceNavigation) {
+      Speech.speak('Zoom reset', {
+        rate: settings.speechRate,
+        pitch: settings.speechPitch,
+      });
+    }
+  };
+
+  const handleGestureDetected = (gesture) => {
+    setDetectedGestures((prevGestures) => [...prevGestures, gesture]);
+  };
+
+  const handleStartRecording = async () => {
+    if (cameraRef.current) {
       setIsRecording(true);
-      setStatus('recording');
-      setStatusMessage('Recording gesture for training...');
+      const videoUri = await cameraRef.current.recordAsync();
+      setIsRecording(false);
+      handleProcessVideo(videoUri);
+    }
+  };
+
+  const handleProcessVideo = async (videoUri) => {
+    setIsProcessing(true);
+    try {
+      const processedGestures = await apiService.processVideo(videoUri);
+      setDetectedGestures(processedGestures);
+      setStatusMessage('Video processed successfully');
+      setStatus('success');
+    } catch (error) {
+      setStatusMessage('Error processing video');
+      setStatus('error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Connect to gesture streaming
+  const connectGestureStreaming = async () => {
+    try {
+      setGestureStreamingError(null);
+      const success = await GestureStreamingService.connect();
+      
+      if (success) {
+        if (settings.voiceNavigation) {
+          Speech.speak('Connected to gesture streaming service.', {
+            rate: settings.speechRate,
+            pitch: settings.speechPitch,
+          });
+        }
+        Alert.alert('Success', 'Connected to gesture streaming service');
+      } else {
+        throw new Error('Failed to connect to gesture streaming service');
+      }
+    } catch (error) {
+      console.error('Connection error:', error);
+      setGestureStreamingError(error.message);
       
       if (settings.voiceNavigation) {
-        Speech.speak('Starting gesture recording for training', {
+        Speech.speak(`Connection failed: ${error.message}`, {
           rate: settings.speechRate,
           pitch: settings.speechPitch,
         });
       }
       
-      // In a real implementation, this would start recording video
-      // For now, we'll just simulate it
-      setTimeout(() => {
-        setIsRecording(false);
-        setStatus('ready');
-        setStatusMessage('Recording complete');
+      Alert.alert('Error', `Failed to connect: ${error.message}`);
+    }
+  };
+
+  // Disconnect from gesture streaming
+  const disconnectGestureStreaming = async () => {
+    try {
+      GestureStreamingService.disconnect();
+      
+      if (settings.voiceNavigation) {
+        Speech.speak('Disconnected from gesture streaming service.', {
+          rate: settings.speechRate,
+          pitch: settings.speechPitch,
+        });
+      }
+      
+      Alert.alert('Success', 'Disconnected from gesture streaming service');
+    } catch (error) {
+      console.error('Disconnection error:', error);
+      Alert.alert('Error', `Failed to disconnect: ${error.message}`);
+    }
+  };
+
+  // Start gesture streaming
+  const startGestureStreaming = async () => {
+    try {
+      // Check if we're connected first
+      if (gestureConnectionStatus !== 'connected') {
+        Alert.alert('Not Connected', 'Please connect to the gesture streaming service first.');
+        return;
+      }
+      
+      const success = await GestureStreamingService.startStreaming();
+      
+      if (success) {
+        setIsGestureStreaming(true);
+        setStreamingGestures([]);
         
         if (settings.voiceNavigation) {
-          Speech.speak('Gesture recording complete. You can now train this gesture.', {
+          Speech.speak('Gesture streaming started.', {
             rate: settings.speechRate,
             pitch: settings.speechPitch,
           });
         }
         
-        Alert.alert(
-          'Training Capture Complete',
-          'Gesture has been recorded. You can now train this gesture in the Gesture Training section.',
-          [{ text: 'OK' }]
-        );
-      }, 3000);
+        Alert.alert('Success', 'Gesture streaming started');
+      } else {
+        throw new Error('Failed to start gesture streaming');
+      }
     } catch (error) {
-      setIsRecording(false);
-      setStatus('error');
-      setStatusMessage('Recording failed');
+      console.error('Start streaming error:', error);
       
       if (settings.voiceNavigation) {
-        Speech.speak('Recording failed. Please try again.', {
+        Speech.speak(`Streaming start failed: ${error.message}`, {
           rate: settings.speechRate,
           pitch: settings.speechPitch,
         });
       }
       
-      Alert.alert('Error', 'Failed to start recording. Please try again.');
+      Alert.alert('Error', `Failed to start streaming: ${error.message}`);
     }
+  };
+
+  // Stop gesture streaming
+  const stopGestureStreaming = async () => {
+    try {
+      GestureStreamingService.stopStreaming();
+      setIsGestureStreaming(false);
+      
+      if (settings.voiceNavigation) {
+        Speech.speak('Gesture streaming stopped.', {
+          rate: settings.speechRate,
+          pitch: settings.speechPitch,
+        });
+      }
+      
+      Alert.alert('Success', 'Gesture streaming stopped');
+    } catch (error) {
+      console.error('Stop streaming error:', error);
+      Alert.alert('Error', `Failed to stop streaming: ${error.message}`);
+    }
+  };
+
+  // Force reconnect to gesture streaming
+  const reconnectGestureStreaming = async () => {
+    try {
+      setGestureStreamingError(null);
+      const success = await GestureStreamingService.forceReconnect();
+      
+      if (success) {
+        if (settings.voiceNavigation) {
+          Speech.speak('Reconnected to gesture streaming service.', {
+            rate: settings.speechRate,
+            pitch: settings.speechPitch,
+          });
+        }
+        Alert.alert('Success', 'Reconnected to gesture streaming service');
+      } else {
+        throw new Error('Failed to reconnect to gesture streaming service');
+      }
+    } catch (error) {
+      console.error('Reconnection error:', error);
+      setGestureStreamingError(error.message);
+      
+      if (settings.voiceNavigation) {
+        Speech.speak(`Reconnection failed: ${error.message}`, {
+          rate: settings.speechRate,
+          pitch: settings.speechPitch,
+        });
+      }
+      
+      Alert.alert('Error', `Failed to reconnect: ${error.message}`);
+    }
+  };
+
+  const handleGestureStreamingStatusChange = (status) => {
+    setGestureConnectionStatus(status);
+  };
+
+  const handleGestureStreamingError = (error) => {
+    setGestureStreamingError(error);
+  };
+
+  const handleStreamingGestures = (gestures) => {
+    setStreamingGestures(gestures);
+  };
+
+  const handleSpeakStatusMessage = () => {
+    Speech.speak(statusMessage);
+  };
+
+  const handleOpenSettings = () => {
+    Linking.openSettings();
+  };
+
+  const handleHapticFeedback = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   const renderCameraControls = () => (
@@ -428,7 +432,7 @@ const CameraScreen = ({ navigation }) => {
         />
         
         <View style={styles.zoomIndicator}>
-          <Text style={styles.zoomText}>{zoom}x</Text>
+          <Text style={styles.zoomText}>{zoom.toFixed(1)}x</Text>
         </View>
         
         <AccessibleButton
@@ -449,6 +453,64 @@ const CameraScreen = ({ navigation }) => {
           accessibilityLabel="Reset zoom"
           style={styles.resetButton}
         />
+      </View>
+      
+      {/* Gesture Streaming Controls */}
+      <View style={[styles.gestureControls, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+        {gestureConnectionStatus === 'disconnected' && (
+          <AccessibleButton
+            title="🔗 CONNECT GESTURE STREAM"
+            onPress={connectGestureStreaming}
+            variant="primary"
+            size="medium"
+            accessibilityLabel="Connect to gesture streaming service"
+            style={styles.gestureButton}
+          />
+        )}
+        
+        {gestureConnectionStatus === 'connected' && !isGestureStreaming && (
+          <AccessibleButton
+            title="▶ START GESTURE STREAMING"
+            onPress={startGestureStreaming}
+            variant="success"
+            size="medium"
+            accessibilityLabel="Start gesture streaming"
+            style={styles.gestureButton}
+          />
+        )}
+        
+        {isGestureStreaming && (
+          <AccessibleButton
+            title="⏹ STOP GESTURE STREAMING"
+            onPress={stopGestureStreaming}
+            variant="error"
+            size="medium"
+            accessibilityLabel="Stop gesture streaming"
+            style={styles.gestureButton}
+          />
+        )}
+        
+        {gestureConnectionStatus === 'connected' && (
+          <AccessibleButton
+            title="🚫 DISCONNECT GESTURE STREAM"
+            onPress={disconnectGestureStreaming}
+            variant="outline"
+            size="small"
+            accessibilityLabel="Disconnect from gesture streaming service"
+            style={styles.gestureButton}
+          />
+        )}
+        
+        {gestureConnectionStatus === 'error' && (
+          <AccessibleButton
+            title="🔁 RECONNECT GESTURE STREAM"
+            onPress={reconnectGestureStreaming}
+            variant="warning"
+            size="medium"
+            accessibilityLabel="Reconnect to gesture streaming service"
+            style={styles.gestureButton}
+          />
+        )}
       </View>
       
       {/* Bottom Controls */}
@@ -476,111 +538,6 @@ const CameraScreen = ({ navigation }) => {
     </View>
   );
 
-  const renderGestureOverlay = () => (
-    <View style={styles.overlayContainer}>
-      {/* Gesture Detection Area */}
-      <View style={styles.detectionArea}>
-        <Text style={styles.detectionText}>Gesture Detection Area</Text>
-      </View>
-      
-      {/* Status Indicator with Enhanced Visual Feedback */}
-      <View style={[styles.statusOverlay, getStatusOverlayStyle()]}>
-        <Text style={styles.statusTextOverlay}>{statusMessage}</Text>
-        {isProcessing && <ActivityIndicator color="#FFFFFF" size="small" />}
-      </View>
-      
-      {/* Detected Gestures */}
-      {detectedGestures.length > 0 && (
-        <View style={[styles.gestureHistory, { backgroundColor: 'rgba(0,0,0,0.7)' }]}>
-          <Text style={styles.historyTitle}>Recent Gestures</Text>
-          {detectedGestures.map((gesture) => (
-            <View key={gesture.id} style={styles.gestureItem}>
-              <Text style={styles.gestureName}>{gesture.name}</Text>
-              <Text style={styles.gestureTime}>{gesture.timestamp}</Text>
-              <Text style={[styles.gestureConfidence, getConfidenceStyle(gesture.confidence)]}>
-                {gesture.confidence}%
-              </Text>
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-
-  // Get status overlay style based on status
-  const getStatusOverlayStyle = () => {
-    switch (status) {
-      case 'success':
-        return { backgroundColor: 'rgba(76, 175, 80, 0.9)' }; // Green
-      case 'warning':
-        return { backgroundColor: 'rgba(255, 152, 0, 0.9)' }; // Orange
-      case 'error':
-        return { backgroundColor: 'rgba(244, 67, 54, 0.9)' }; // Red
-      case 'emergency':
-        return { backgroundColor: 'rgba(233, 30, 99, 0.9)' }; // Pink
-      case 'processing':
-        return { backgroundColor: 'rgba(33, 150, 243, 0.9)' }; // Blue
-      default:
-        return { backgroundColor: 'rgba(0, 0, 0, 0.5)' }; // Default
-    }
-  };
-
-  // Get confidence style based on confidence level
-  const getConfidenceStyle = (confidence) => {
-    if (confidence >= 90) {
-      return { color: '#4CAF50' }; // Green
-    } else if (confidence >= 70) {
-      return { color: '#2196F3' }; // Blue
-    } else if (confidence >= 50) {
-      return { color: '#FF9800' }; // Orange
-    } else {
-      return { color: '#F44336' }; // Red
-    }
-  };
-
-  if (!permission) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.permissionContainer}>
-          <Text style={[styles.permissionTitle, { color: colors.text }]}>
-            Requesting camera permission
-          </Text>
-          <AccessibleButton
-            title="Request Permission"
-            onPress={requestPermission}
-            variant="primary"
-            size="large"
-            accessibilityLabel="Request camera permission"
-            style={styles.permissionButton}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!hasPermission) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.permissionContainer}>
-          <Text style={[styles.permissionTitle, { color: colors.text }]}>
-            Camera Permission Required
-          </Text>
-          <Text style={[styles.permissionText, { color: colors.textSecondary }]}>
-            Please grant camera permission to use this feature.
-          </Text>
-          <AccessibleButton
-            title="Request Permission"
-            onPress={checkPermissions}
-            variant="primary"
-            size="large"
-            accessibilityLabel="Request camera permission"
-            style={styles.permissionButton}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Camera View */}
@@ -598,8 +555,13 @@ const CameraScreen = ({ navigation }) => {
         />
       )}
       
-      {/* Overlay UI */}
-      {renderGestureOverlay()}
+      {/* Gesture Overlay for real-time detection */}
+      <GestureOverlay
+        detectedGestures={isGestureStreaming ? streamingGestures : detectedGestures}
+        connectionStatus={gestureConnectionStatus}
+        isStreaming={isGestureStreaming}
+        streamingError={gestureStreamingError}
+      />
       
       {/* Status Indicator */}
       <StatusIndicator
@@ -748,6 +710,18 @@ const styles = StyleSheet.create({
   resetButton: {
     minWidth: 50,
     marginLeft: 10,
+  },
+  gestureControls: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 30,
+    alignSelf: 'center',
+  },
+  gestureButton: {
+    minWidth: 200,
+    marginVertical: 5,
   },
   bottomControls: {
     flexDirection: 'row',
