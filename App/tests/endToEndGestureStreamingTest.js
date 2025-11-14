@@ -2,7 +2,7 @@
  * End-to-End Gesture Streaming Test
  * Test the complete gesture streaming workflow with real data
  */
-import GestureStreamingService from '../services/GestureStreamingService';
+import GestureStreamingService from '../services/GestureStreamingService.js';
 
 // Mock gesture data for testing
 const mockGestureData = {

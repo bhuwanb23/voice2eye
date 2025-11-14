@@ -2,8 +2,8 @@
  * Gesture Streaming Test
  * Test the WebSocket connection to /api/gestures/analyze/stream endpoint
  */
-import GestureStreamingService from '../services/GestureStreamingService';
-import apiService from '../api/services/apiService';
+import GestureStreamingService from '../services/GestureStreamingService.js';
+import apiService from '../api/services/apiService.js';
 
 // Test gesture streaming connection
 async function testGestureStreaming() {

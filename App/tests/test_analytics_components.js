@@ -52,7 +52,7 @@ jest.mock('../api/services/apiService', () => ({
   generateReport: jest.fn(),
 }));
 
-import apiService from '../api/services/apiService';
+import apiService from '../api/services/apiService.js';
 
 describe('Analytics Components', () => {
   beforeEach(() => {

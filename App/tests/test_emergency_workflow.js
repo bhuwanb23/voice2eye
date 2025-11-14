@@ -50,7 +50,7 @@ jest.mock('../api/services/apiService', () => ({
   getEmergencyStatus: jest.fn(),
 }));
 
-import apiService from '../api/services/apiService';
+import apiService from '../api/services/apiService.js';
 
 describe('Emergency Workflow', () => {
   beforeEach(() => {

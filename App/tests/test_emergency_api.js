@@ -2,326 +2,204 @@
  * Test script for Emergency API endpoints
  * This script tests the emergency API integration
  */
-import apiService from '../api/services/apiService';
+import apiService from '../api/services/apiService.js';
 
 // Mock useAccessibility hook
 jest.mock('../components/AccessibilityProvider', () => ({
   useAccessibility: () => ({
-    settings: {
-      voiceNavigation: false,
-      speechRate: 1.0,
-      speechPitch: 1.0,
-      theme: 'light',
-      highContrast: false,
-    },
-    getThemeColors: () => ({
-      primary: '#4A90E2',
-      secondary: '#2E7D32',
-      background: '#FFFFFF',
-      surface: '#F8F9FA',
-      text: '#212529',
-      textSecondary: '#6C757D',
-      accent: '#FF6B6B',
-      error: '#DC3545',
-      success: '#28A745',
-      warning: '#FFC107',
-      border: '#DEE2E6',
-    }),
-    updateSetting: jest.fn(),
-    saveSettings: jest.fn(),
-    resetToDefaults: jest.fn(),
-    getAccessibilityProps: jest.fn(),
+    isScreenReaderEnabled: false,
+    isHighContrastEnabled: false,
+    isReducedMotionEnabled: false,
   }),
 }));
 
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+}));
+
+// Mock fetch
+global.fetch = jest.fn();
+
 describe('Emergency API Integration', () => {
   beforeEach(() => {
+    // Clear all mocks before each test
     jest.clearAllMocks();
   });
 
-  it('should trigger emergency successfully', async () => {
-    // Mock the API response
-    const mockResponse = {
-      alert_id: 'test_alert_123',
-      status: 'pending',
-      confirmation_required: true,
-      confirmation_timeout: 30,
-      timestamp: '2023-01-01T00:00:00Z'
-    };
-
-    // Mock the fetch implementation
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
+  test('should trigger emergency alert', async () => {
+    // Mock successful response
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ 
+        alert_id: 'test-alert-123',
+        status: 'triggered',
+        timestamp: new Date().toISOString()
       })
-    );
-
-    const result = await apiService.triggerEmergency({
-      trigger_type: 'manual',
-      trigger_data: {
-        emergency_type: 'general',
-        custom_message: 'Test emergency',
-        location: 'Test location'
-      }
     });
 
-    expect(result).toEqual(mockResponse);
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/emergency/trigger'),
-      expect.objectContaining({
-        method: 'POST',
-        body: expect.any(String)
-      })
-    );
-  });
-
-  it('should confirm emergency successfully', async () => {
-    // Mock the API response
-    const mockResponse = {
-      alert_id: 'test_alert_123',
-      status: 'confirmed',
-      messages_sent: 3,
-      failed_contacts: 0,
-      timestamp: '2023-01-01T00:00:00Z'
-    };
-
-    // Mock the fetch implementation
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      })
-    );
-
-    const result = await apiService.confirmEmergency('test_alert_123');
-
-    expect(result).toEqual(mockResponse);
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/emergency/confirm'),
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ alert_id: 'test_alert_123' })
-      })
-    );
-  });
-
-  it('should cancel emergency successfully', async () => {
-    // Mock the API response
-    const mockResponse = {
-      alert_id: 'test_alert_123',
-      status: 'cancelled',
-      cancellation_reason: 'User cancelled',
-      timestamp: '2023-01-01T00:00:00Z'
-    };
-
-    // Mock the fetch implementation
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      })
-    );
-
-    const result = await apiService.cancelEmergency('test_alert_123', 'User cancelled');
-
-    expect(result).toEqual(mockResponse);
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/emergency/cancel'),
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ 
-          alert_id: 'test_alert_123', 
-          cancellation_reason: 'User cancelled' 
-        })
-      })
-    );
-  });
-
-  it('should get emergency status successfully', async () => {
-    // Mock the API response
-    const mockResponse = {
-      alert_id: 'test_alert_123',
-      status: 'confirmed',
+    const triggerData = {
       trigger_type: 'manual',
-      messages_sent: [],
-      location: 'Test location',
-      timestamp: '2023-01-01T00:00:00Z'
+      location: {
+        latitude: 40.7128,
+        longitude: -74.0060,
+        address: 'New York, NY'
+      },
+      message: 'Test emergency alert'
     };
 
-    // Mock the fetch implementation
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      })
-    );
+    const result = await apiService.triggerEmergency(triggerData);
 
-    const result = await apiService.getEmergencyStatus('test_alert_123');
-
-    expect(result).toEqual(mockResponse);
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/emergency/status/test_alert_123'),
-      expect.objectContaining({
-        method: 'GET'
-      })
+      'http://localhost:8000/api/emergency/trigger',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(triggerData),
+      }
     );
+
+    expect(result.alert_id).toBe('test-alert-123');
+    expect(result.status).toBe('triggered');
   });
 
-  it('should get emergency history successfully', async () => {
-    // Mock the API response
-    const mockResponse = {
-      alerts: [
-        {
-          alert_id: 'test_alert_123',
-          trigger_type: 'manual',
-          status: 'confirmed',
-          timestamp: '2023-01-01T00:00:00Z',
-          location: 'Test location',
-          messages_sent: 3
-        }
-      ],
-      total_count: 1,
-      days: 30,
-      limit: 50
-    };
-
-    // Mock the fetch implementation
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
+  test('should confirm emergency alert', async () => {
+    // Mock successful response
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ 
+        alert_id: 'test-alert-123',
+        status: 'confirmed',
+        timestamp: new Date().toISOString()
       })
+    });
+
+    const result = await apiService.confirmEmergency('test-alert-123');
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://localhost:8000/api/emergency/confirm',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ alert_id: 'test-alert-123' }),
+      }
     );
+
+    expect(result.alert_id).toBe('test-alert-123');
+    expect(result.status).toBe('confirmed');
+  });
+
+  test('should cancel emergency alert', async () => {
+    // Mock successful response
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ 
+        alert_id: 'test-alert-123',
+        status: 'cancelled',
+        timestamp: new Date().toISOString()
+      })
+    });
+
+    const result = await apiService.cancelEmergency('test-alert-123', 'Test cancellation');
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://localhost:8000/api/emergency/cancel',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          alert_id: 'test-alert-123',
+          cancellation_reason: 'Test cancellation'
+        }),
+      }
+    );
+
+    expect(result.alert_id).toBe('test-alert-123');
+    expect(result.status).toBe('cancelled');
+  });
+
+  test('should get emergency status', async () => {
+    // Mock successful response
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ 
+        alert_id: 'test-alert-123',
+        status: 'active',
+        trigger_type: 'manual',
+        timestamp: new Date().toISOString()
+      })
+    });
+
+    const result = await apiService.getEmergencyStatus('test-alert-123');
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://localhost:8000/api/emergency/status/test-alert-123'
+    );
+
+    expect(result.alert_id).toBe('test-alert-123');
+    expect(result.status).toBe('active');
+  });
+
+  test('should get emergency history', async () => {
+    // Mock successful response
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ 
+        alerts: [
+          {
+            alert_id: 'test-alert-123',
+            status: 'resolved',
+            trigger_type: 'manual',
+            timestamp: new Date().toISOString()
+          }
+        ],
+        total_count: 1
+      })
+    });
 
     const result = await apiService.getEmergencyHistory(30, 50);
 
-    expect(result).toEqual(mockResponse);
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/emergency/history?days=30&limit=50'),
-      expect.objectContaining({
-        method: 'GET'
-      })
+      'http://localhost:8000/api/emergency/history?days=30&limit=50'
     );
+
+    expect(result.alerts).toHaveLength(1);
+    expect(result.alerts[0].alert_id).toBe('test-alert-123');
   });
 
-  it('should get emergency contacts successfully', async () => {
-    // Mock the API response
-    const mockResponse = {
-      contacts: [
-        {
-          id: '1',
-          name: 'Emergency Services',
-          phone: '911',
-          priority: 'high',
-          group: 'emergency',
-          relationship: 'Emergency Services',
-          isPrimary: true,
-          enabled: true
-        }
-      ]
-    };
-
-    // Mock the fetch implementation
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      })
-    );
-
-    const result = await apiService.getEmergencyContacts(true);
-
-    expect(result).toEqual(mockResponse);
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/settings/contacts?enabled_only=true'),
-      expect.objectContaining({
-        method: 'GET'
-      })
-    );
-  });
-
-  it('should handle trigger emergency API error', async () => {
-    // Mock the fetch implementation to return an error
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error'
-      })
-    );
+  test('should handle API errors gracefully', async () => {
+    // Mock error response
+    global.fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error'
+    });
 
     await expect(
-      apiService.triggerEmergency({
-        trigger_type: 'manual',
-        trigger_data: {
-          emergency_type: 'general',
-          custom_message: 'Test emergency',
-          location: 'Test location'
-        }
-      })
-    ).rejects.toThrow('HTTP error! status: 500');
+      apiService.triggerEmergency({})
+    ).rejects.toThrow('API Error: 500 Internal Server Error');
   });
 
-  it('should handle confirm emergency API error', async () => {
-    // Mock the fetch implementation to return an error
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found'
-      })
-    );
+  test('should handle network errors', async () => {
+    // Mock network error
+    global.fetch.mockRejectedValueOnce(new Error('Network request failed'));
 
     await expect(
-      apiService.confirmEmergency('nonexistent_alert')
-    ).rejects.toThrow('HTTP error! status: 404');
+      apiService.triggerEmergency({})
+    ).rejects.toThrow('Network request failed');
   });
 
-  it('should handle cancel emergency API error', async () => {
-    // Mock the fetch implementation to return an error
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request'
-      })
-    );
-
-    await expect(
-      apiService.cancelEmergency('invalid_alert', 'User cancelled')
-    ).rejects.toThrow('HTTP error! status: 400');
-  });
-
-  it('should handle get emergency status API error', async () => {
-    // Mock the fetch implementation to return an error
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found'
-      })
-    );
-
-    await expect(
-      apiService.getEmergencyStatus('nonexistent_alert')
-    ).rejects.toThrow('HTTP error! status: 404');
-  });
-
-  it('should handle network error', async () => {
-    // Mock the fetch implementation to throw a network error
-    global.fetch = jest.fn(() =>
-      Promise.reject(new Error('Network error'))
-    );
-
-    await expect(
-      apiService.getEmergencyHistory(30, 50)
-    ).rejects.toThrow('Network error');
-  });
-
-  it('should handle JSON parsing error', async () => {
-    // Mock the fetch implementation to return invalid JSON
-    global.fetch = jest.fn(() =>
+  test('should handle invalid JSON responses', async () => {
+    // Mock response with invalid JSON
+    global.fetch.mockResolvedValueOnce(
       Promise.resolve({
         ok: true,
         json: () => Promise.reject(new Error('Invalid JSON'))

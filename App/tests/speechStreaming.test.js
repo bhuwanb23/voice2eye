@@ -2,7 +2,7 @@
  * Speech Streaming Integration Test
  * Tests the WebSocket integration for real-time speech streaming
  */
-import SpeechStreamingService from '../services/SpeechStreamingService';
+import SpeechStreamingService from '../services/SpeechStreamingService.js';
 
 // Mock WebSocket implementation for testing
 class MockWebSocket {
