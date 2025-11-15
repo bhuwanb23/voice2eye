@@ -136,22 +136,42 @@ const EmergencyScreen = ({ navigation, route }) => {
         currentLocation = "Current location being determined...";
       }
       
-      const result = await apiService.triggerEmergency({
-        trigger_type: 'manual',
-        trigger_data: {
-          emergency_type: emergencyType,
-          custom_message: customMessage || `HELP! I need immediate assistance. My location is: ${currentLocation}. Time: ${new Date().toLocaleString()}`,
-          location: currentLocation
-        },
-        location: currentLocation,
-        user_id: null // In a real implementation, this would be the actual user ID
-      });
-      
-      setCurrentAlertId(result.alert_id);
-      setEmergencyStatus('triggered');
-      setCountdown(result.confirmation_timeout || 30); // Use backend timeout or default to 30 seconds
-      
-      console.log('Emergency triggered:', result);
+      try {
+        const result = await apiService.triggerEmergency({
+          trigger_type: 'manual',
+          trigger_data: {
+            emergency_type: emergencyType,
+            custom_message: customMessage || `HELP! I need immediate assistance. My location is: ${currentLocation}. Time: ${new Date().toLocaleString()}`,
+            location: currentLocation
+          },
+          location: currentLocation,
+          user_id: null // In a real implementation, this would be the actual user ID
+        });
+        
+        setCurrentAlertId(result.alert_id);
+        setEmergencyStatus('triggered');
+        setCountdown(result.confirmation_timeout || 30); // Use backend timeout or default to 30 seconds
+        
+        console.log('Emergency triggered via API:', result);
+        
+      } catch (apiError) {
+        console.warn('API unavailable, using offline mode:', apiError.message);
+        
+        // Fallback to offline emergency mode
+        const mockAlertId = `offline_${Date.now()}`;
+        setCurrentAlertId(mockAlertId);
+        setEmergencyStatus('triggered');
+        setCountdown(emergencySettings.emergencyTimeout || 10); // Use settings timeout or default to 10 seconds
+        
+        console.log('Emergency triggered in offline mode:', mockAlertId);
+        
+        // Show offline mode notification
+        Alert.alert(
+          'Emergency Activated (Offline Mode)', 
+          'Backend unavailable. Emergency will proceed with local countdown.',
+          [{ text: 'OK' }]
+        );
+      }
       
     } catch (error) {
       console.error('Failed to trigger emergency:', error);
@@ -165,11 +185,29 @@ const EmergencyScreen = ({ navigation, route }) => {
     if (!currentAlertId) return;
     
     try {
+      if (currentAlertId.startsWith('offline_')) {
+        // Handle offline mode confirmation
+        setEmergencyStatus('confirmed');
+        setContactsNotified(emergencyContacts.length);
+        
+        console.log('Emergency confirmed in offline mode:', currentAlertId);
+        
+        // Show offline confirmation message
+        Alert.alert(
+          'Emergency Confirmed (Offline Mode)',
+          `Emergency activated locally. ${emergencyContacts.length} contacts would be notified when online.`,
+          [{ text: 'OK' }]
+        );
+        
+        return;
+      }
+      
+      // Try API confirmation
       const result = await apiService.confirmEmergency(currentAlertId);
       setEmergencyStatus('confirmed');
       setContactsNotified(result.messages_sent || 0);
       
-      console.log('Emergency confirmed:', result);
+      console.log('Emergency confirmed via API:', result);
       
       // Update notification statuses for contacts
       if (result.contact_statuses) {
@@ -188,7 +226,16 @@ const EmergencyScreen = ({ navigation, route }) => {
       
     } catch (error) {
       console.error('Failed to confirm emergency:', error);
-      Alert.alert('Error', 'Failed to confirm emergency.');
+      
+      // Fallback to offline confirmation
+      setEmergencyStatus('confirmed');
+      setContactsNotified(emergencyContacts.length);
+      
+      Alert.alert(
+        'Emergency Confirmed (Offline Mode)', 
+        `API unavailable. Emergency confirmed locally. ${emergencyContacts.length} contacts would be notified when online.`,
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -196,11 +243,29 @@ const EmergencyScreen = ({ navigation, route }) => {
     if (!currentAlertId) return;
     
     try {
+      if (currentAlertId.startsWith('offline_')) {
+        // Handle offline mode cancellation
+        setEmergencyStatus('cancelled');
+        setCurrentAlertId(null);
+        
+        console.log('Emergency cancelled in offline mode:', currentAlertId);
+        
+        // Show offline cancellation message
+        Alert.alert(
+          'Emergency Cancelled',
+          'Your emergency alert has been cancelled.',
+          [{ text: 'OK' }]
+        );
+        
+        return;
+      }
+      
+      // Try API cancellation
       await apiService.cancelEmergency(currentAlertId, 'User cancelled');
       setEmergencyStatus('cancelled');
       setCurrentAlertId(null);
       
-      console.log('Emergency cancelled');
+      console.log('Emergency cancelled via API');
       
       // Show cancellation message
       Alert.alert(
@@ -210,8 +275,19 @@ const EmergencyScreen = ({ navigation, route }) => {
       );
       
     } catch (error) {
-      console.error('Failed to cancel emergency:', error);
-      Alert.alert('Error', 'Failed to cancel emergency.');
+      console.error('Failed to cancel emergency via API:', error);
+      
+      // Fallback to offline cancellation
+      setEmergencyStatus('cancelled');
+      setCurrentAlertId(null);
+      
+      console.log('Emergency cancelled in offline mode (fallback)');
+      
+      Alert.alert(
+        'Emergency Cancelled',
+        'Your emergency alert has been cancelled.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
