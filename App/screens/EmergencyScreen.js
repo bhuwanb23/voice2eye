@@ -504,30 +504,59 @@ const EmergencyScreen = ({ navigation, route }) => {
         )}
       </ScrollView>
 
-      {/* Floating Emergency Button - Fixed at bottom right */}
-      <View style={styles.floatingButtonContainer}>
-        {emergencyStatus === 'triggered' && (
-          <AccessibleButton
-            title="CANCEL"
-            onPress={cancelEmergency}
-            variant="warning"
-            size="large"
-            accessibilityLabel="Cancel emergency alert"
-            style={styles.cancelButton}
-          />
+      {/* Emergency Control Panel - Fixed at bottom */}
+      <View style={[styles.emergencyControlPanel, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+        {emergencyStatus === 'triggered' ? (
+          // Emergency Active State
+          <Animated.View style={[
+            styles.emergencyActivePanel,
+            {
+              backgroundColor: colors.error,
+              transform: [{ scale: pulseAnim }],
+              opacity: flashAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.9, 1],
+              }),
+            }
+          ]}>
+            <View style={styles.timerSection}>
+              <Text style={styles.emergencyTimerLabel}>EMERGENCY ACTIVE</Text>
+              <Text style={styles.emergencyTimerCount}>{countdown}s</Text>
+              <Text style={styles.emergencyTimerSubtext}>Auto-confirming in</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.stopEmergencyButton, { backgroundColor: colors.warning }]}
+              onPress={cancelEmergency}
+              accessibilityLabel="Stop emergency countdown"
+            >
+              <Text style={styles.stopEmergencyText}>STOP</Text>
+              <Text style={styles.stopEmergencySubtext}>Cancel Emergency</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        ) : (
+          // Normal State
+          <View style={styles.emergencyNormalPanel}>
+            <TouchableOpacity
+              style={[styles.triggerEmergencyButton, { backgroundColor: colors.error }]}
+              onPress={triggerEmergency}
+              disabled={isLoading}
+              accessibilityLabel="Trigger emergency alert"
+            >
+              <Text style={styles.triggerEmergencyText}>🚨 EMERGENCY</Text>
+              <Text style={styles.triggerEmergencySubtext}>Tap to activate</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.callButton, { backgroundColor: colors.primary }]}
+              onPress={() => {
+                Alert.alert('Calling 911', 'Emergency services will be contacted.');
+              }}
+              accessibilityLabel="Call 911 emergency services"
+            >
+              <Text style={styles.callButtonText}>📞 CALL 911</Text>
+              <Text style={styles.callButtonSubtext}>Direct call</Text>
+            </TouchableOpacity>
+          </View>
         )}
-        
-        <AccessibleButton
-          title="CALLTYPE"
-          onPress={() => {
-            // In a real app, this would open the phone dialer
-            Alert.alert('Calling 911', 'Emergency services will be contacted.');
-          }}
-          variant="error"
-          size="large"
-          accessibilityLabel="Call 911 emergency services"
-          style={styles.emergencyButton}
-        />
       </View>
 
       {/* Status Indicator - Positioned properly to avoid overlap */}
@@ -613,44 +642,143 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
-    paddingBottom: 100, // Extra padding to account for floating button
+    paddingBottom: 120, // Extra padding to account for emergency control panel
   },
   tabContent: {
     flex: 1,
   },
-  // Floating button container - positioned at bottom right
-  floatingButtonContainer: {
+  // Emergency Control Panel - Fixed at bottom
+  emergencyControlPanel: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
-    flexDirection: 'column',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: 2,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  emergencyActivePanel: {
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  emergencyNormalPanel: {
+    flexDirection: 'row',
     gap: 12,
-    alignItems: 'flex-end',
   },
-  cancelButton: {
+  timerSection: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  emergencyTimerLabel: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  emergencyTimerCount: {
+    color: '#FFFFFF',
+    fontSize: 36,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    marginBottom: 2,
+  },
+  emergencyTimerSubtext: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
+    opacity: 0.9,
+  },
+  stopEmergencyButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
     minWidth: 120,
-    minHeight: 50,
-    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  stopEmergencyText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  stopEmergencySubtext: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
+    opacity: 0.9,
+    marginTop: 2,
+  },
+  triggerEmergencyButton: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
-  emergencyButton: {
-    minWidth: 120,
-    minHeight: 50,
-    borderRadius: 25,
+  triggerEmergencyText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  triggerEmergencySubtext: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+    opacity: 0.9,
+    marginTop: 2,
+  },
+  callButton: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
-  // Status indicator container - positioned above floating button
+  callButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  callButtonSubtext: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+    opacity: 0.9,
+    marginTop: 2,
+  },
+  // Status indicator container - positioned above emergency control panel
   statusIndicatorContainer: {
     position: 'absolute',
-    bottom: 90,
+    bottom: 120,
     left: 20,
     right: 20,
   },
