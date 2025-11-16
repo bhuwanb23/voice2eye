@@ -61,7 +61,7 @@ if FASTAPI_AVAILABLE:
 # Include routers
 if FASTAPI_AVAILABLE:
     try:
-        from api.routes import health, speech, gestures, emergency, settings, analytics
+        from api.routes import health, speech, gestures, emergency, settings, analytics, translation
         from api.websocket import routes as websocket_routes
         app.include_router(health.router, prefix="/api", tags=["health"])
         app.include_router(speech.router, prefix="/api/speech", tags=["speech"])
@@ -69,28 +69,31 @@ if FASTAPI_AVAILABLE:
         app.include_router(emergency.router, prefix="/api/emergency", tags=["emergency"])
         app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
         app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+        app.include_router(translation.router, prefix="/api/translation", tags=["translation"])
         app.include_router(websocket_routes.router, prefix="/api", tags=["websocket"])
     except ImportError as e:
         print(f"Could not import routes: {e}")
         # Try without analytics if it's not available
         try:
-            from api.routes import health, speech, gestures, emergency, settings
+            from api.routes import health, speech, gestures, emergency, settings, translation
             from api.websocket import routes as websocket_routes
             app.include_router(health.router, prefix="/api", tags=["health"])
             app.include_router(speech.router, prefix="/api/speech", tags=["speech"])
             app.include_router(gestures.router, prefix="/api/gestures", tags=["gestures"])
             app.include_router(emergency.router, prefix="/api/emergency", tags=["emergency"])
             app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
+            app.include_router(translation.router, prefix="/api/translation", tags=["translation"])
             app.include_router(websocket_routes.router, prefix="/api", tags=["websocket"])
         except ImportError as e2:
             print(f"Could not import basic routes: {e2}")
             try:
-                from api.routes import health, speech, gestures, emergency, settings
+                from api.routes import health, speech, gestures, emergency, settings, translation
                 app.include_router(health.router, prefix="/api", tags=["health"])
                 app.include_router(speech.router, prefix="/api/speech", tags=["speech"])
                 app.include_router(gestures.router, prefix="/api/gestures", tags=["gestures"])
                 app.include_router(emergency.router, prefix="/api/emergency", tags=["emergency"])
                 app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
+                app.include_router(translation.router, prefix="/api/translation", tags=["translation"])
             except ImportError as e3:
                 print(f"Could not import basic routes: {e3}")
 
