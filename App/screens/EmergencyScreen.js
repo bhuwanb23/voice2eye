@@ -17,8 +17,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccessibility } from '../components/AccessibilityProvider';
-import AccessibleButton from '../components/AccessibleButton';
-import StatusIndicator from '../components/StatusIndicator';
 import EmergencyContactDisplay from '../components/EmergencyContactDisplay';
 import EmergencyHistoryTimeline from '../components/EmergencyHistoryTimeline';
 import EmergencyMessageCustomizer from '../components/EmergencyMessageCustomizer';
@@ -101,23 +99,71 @@ const EmergencyScreen = ({ navigation, route }) => {
         }
       ]);
       
-      // Mock history data
+      // Mock history data with more sample entries
       setEmergencyHistory([
         {
-          alert_id: 'mock_1',
+          alert_id: 'sample_1',
           trigger_type: 'manual',
           status: 'confirmed',
           timestamp: new Date().toISOString(),
-          location: '123 Main St, City, State',
+          location: '123 Main St, Downtown, City 10001',
+          messages_sent: 5
+        },
+        {
+          alert_id: 'sample_2',
+          trigger_type: 'voice',
+          status: 'cancelled',
+          timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+          location: '456 Oak Ave, Suburb, City 10002',
+          messages_sent: 0
+        },
+        {
+          alert_id: 'sample_3',
+          trigger_type: 'gesture',
+          status: 'confirmed',
+          timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+          location: '789 Pine Rd, Uptown, City 10003',
+          messages_sent: 4
+        },
+        {
+          alert_id: 'sample_4',
+          trigger_type: 'manual',
+          status: 'confirmed',
+          timestamp: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+          location: '321 Elm St, Midtown, City 10004',
+          messages_sent: 6
+        },
+        {
+          alert_id: 'sample_5',
+          trigger_type: 'voice',
+          status: 'pending',
+          timestamp: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+          location: '654 Maple Dr, Eastside, City 10005',
+          messages_sent: 2
+        },
+        {
+          alert_id: 'sample_6',
+          trigger_type: 'gesture',
+          status: 'cancelled',
+          timestamp: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
+          location: '987 Cedar Ln, Westside, City 10006',
+          messages_sent: 0
+        },
+        {
+          alert_id: 'sample_7',
+          trigger_type: 'manual',
+          status: 'confirmed',
+          timestamp: new Date(Date.now() - 432000000).toISOString(), // 5 days ago
+          location: '147 Birch Ave, Northside, City 10007',
           messages_sent: 3
         },
         {
-          alert_id: 'mock_2',
+          alert_id: 'sample_8',
           trigger_type: 'voice',
-          status: 'cancelled',
-          timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-          location: '456 Oak Ave, City, State',
-          messages_sent: 0
+          status: 'confirmed',
+          timestamp: new Date(Date.now() - 518400000).toISOString(), // 6 days ago
+          location: '258 Spruce St, Southside, City 10008',
+          messages_sent: 5
         }
       ]);
     } finally {
@@ -281,8 +327,6 @@ const EmergencyScreen = ({ navigation, route }) => {
       setEmergencyStatus('cancelled');
       setCurrentAlertId(null);
       
-      console.log('Emergency cancelled in offline mode (fallback)');
-      
       Alert.alert(
         'Emergency Cancelled',
         'Your emergency alert has been cancelled.',
@@ -291,22 +335,6 @@ const EmergencyScreen = ({ navigation, route }) => {
     }
   };
 
-  const startCountdown = () => {
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          // Auto-confirm if user doesn't cancel
-          if (emergencyStatus === 'triggered') {
-            confirmEmergency();
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-  
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const flashAnim = useRef(new Animated.Value(0)).current;
 
@@ -323,66 +351,25 @@ const EmergencyScreen = ({ navigation, route }) => {
           return prev - 1;
         });
       }, 1000);
-    }
-
-    // Start pulsing animation
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    pulse.start();
-
-    // Start flashing animation
-    const flash = Animated.loop(
-      Animated.sequence([
-        Animated.timing(flashAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(flashAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    flash.start();
-
-    // Emergency voice announcement
-    announceEmergency();
-
-    // Haptic feedback
-    if (settings.hapticFeedback) {
-      Vibration.vibrate([0, 500, 200, 500, 200, 500]); // Emergency pattern
+      
+      // Voice announcement only when emergency is triggered (not on page load)
+      const message = `Emergency triggered! Help will be contacted in ${countdown} seconds. Tap stop to cancel.`;
+      Speech.speak(message, {
+        rate: 0.7,
+        pitch: 1.2,
+        language: 'en',
+      });
+      
+      // Haptic feedback
+      if (settings.hapticFeedback) {
+        Vibration.vibrate([0, 500, 200, 500]); // Emergency pattern
+      }
     }
 
     return () => {
       if (timer) clearInterval(timer);
-      pulse.stop();
-      flash.stop();
     };
   }, [emergencyStatus]);
-
-  const announceEmergency = () => {
-    const message = `Emergency mode activated! Help will be contacted in ${countdown} seconds. Say "Cancel" to stop the emergency.`;
-    
-    Speech.speak(message, {
-      rate: 0.6, // Slower for emergency
-      pitch: 1.3, // Higher pitch for urgency
-      language: 'en',
-    });
-  };
 
   const getEmergencyMessage = () => {
     switch (emergencyStatus) {
@@ -400,11 +387,11 @@ const EmergencyScreen = ({ navigation, route }) => {
   const getStatusColor = () => {
     switch (emergencyStatus) {
       case 'triggered':
-        return colors.warning;
-      case 'confirmed':
         return colors.error;
-      case 'cancelled':
+      case 'confirmed':
         return colors.success;
+      case 'cancelled':
+        return colors.warning;
       default:
         return colors.warning;
     }
@@ -470,27 +457,23 @@ const EmergencyScreen = ({ navigation, route }) => {
         </View>
       )}
 
-      {/* Emergency Header */}
-      <Animated.View
-        style={[
-          styles.emergencyHeader,
-          {
-            backgroundColor: getStatusColor(),
-            transform: [{ scale: pulseAnim }],
-            opacity: flashAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0.8, 1],
-            }),
-          },
-        ]}
-      >
-        <Text style={styles.emergencyTitle}>
-          🚨 EMERGENCY MODE 🚨
-        </Text>
-        <Text style={styles.emergencySubtitle}>
-          {getEmergencyMessage()}
-        </Text>
-      </Animated.View>
+      {/* Professional Emergency Header */}
+      <View style={[styles.emergencyHeader, { backgroundColor: emergencyStatus === 'triggered' ? colors.error : colors.surface }]}>
+        <View style={styles.headerContent}>
+          <Text style={[styles.emergencyTitle, { color: emergencyStatus === 'triggered' ? '#FFFFFF' : colors.text }]}>
+            {emergencyStatus === 'triggered' ? '🚨 Emergency Active' : '🛡️ Emergency Center'}
+          </Text>
+          <Text style={[styles.emergencySubtitle, { color: emergencyStatus === 'triggered' ? '#FFFFFF' : colors.textSecondary }]}>
+            {emergencyStatus === 'triggered' ? `Auto-confirming in ${countdown}s` : 'Ready to assist you'}
+          </Text>
+        </View>
+        {emergencyStatus === 'triggered' && (
+          <View style={styles.countdownBadge}>
+            <Text style={styles.countdownNumber}>{countdown}</Text>
+            <Text style={styles.countdownLabel}>sec</Text>
+          </View>
+        )}
+      </View>
 
       {/* Tab Navigation */}
       <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
@@ -580,68 +563,71 @@ const EmergencyScreen = ({ navigation, route }) => {
         )}
       </ScrollView>
 
-      {/* Emergency Control Panel - Fixed at bottom */}
+      {/* Professional Emergency Control Panel - Fixed at bottom */}
       <View style={[styles.emergencyControlPanel, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         {emergencyStatus === 'triggered' ? (
-          // Emergency Active State
-          <Animated.View style={[
-            styles.emergencyActivePanel,
-            {
-              backgroundColor: colors.error,
-              transform: [{ scale: pulseAnim }],
-              opacity: flashAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.9, 1],
-              }),
-            }
-          ]}>
-            <View style={styles.timerSection}>
-              <Text style={styles.emergencyTimerLabel}>EMERGENCY ACTIVE</Text>
-              <Text style={styles.emergencyTimerCount}>{countdown}s</Text>
-              <Text style={styles.emergencyTimerSubtext}>Auto-confirming in</Text>
+          // Emergency Active State - Professional Design
+          <View style={styles.emergencyActivePanel}>
+            <View style={[styles.activeStatusCard, { backgroundColor: colors.error }]}>
+              <View style={styles.statusRow}>
+                <View style={styles.pulseIndicator}>
+                  <View style={[styles.pulseDot, { backgroundColor: '#FFFFFF' }]} />
+                </View>
+                <View style={styles.statusInfo}>
+                  <Text style={styles.activeStatusTitle}>Emergency Active</Text>
+                  <Text style={styles.activeStatusSubtitle}>Contacts will be notified</Text>
+                </View>
+                <View style={styles.timerBadge}>
+                  <Text style={styles.timerBadgeNumber}>{countdown}</Text>
+                  <Text style={styles.timerBadgeLabel}>sec</Text>
+                </View>
+              </View>
             </View>
             <TouchableOpacity
-              style={[styles.stopEmergencyButton, { backgroundColor: colors.warning }]}
+              style={[styles.cancelButton, { backgroundColor: colors.warning }]}
               onPress={cancelEmergency}
-              accessibilityLabel="Stop emergency countdown"
+              accessibilityLabel="Cancel emergency"
             >
-              <Text style={styles.stopEmergencyText}>STOP</Text>
-              <Text style={styles.stopEmergencySubtext}>Cancel Emergency</Text>
+              <Text style={styles.cancelButtonIcon}>✋</Text>
+              <Text style={styles.cancelButtonText}>Cancel Emergency</Text>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         ) : (
-          // Normal State
+          // Normal State - Professional Design
           <View style={styles.emergencyNormalPanel}>
             <TouchableOpacity
-              style={[styles.triggerEmergencyButton, { backgroundColor: colors.error }]}
+              style={[styles.mainEmergencyButton, { backgroundColor: colors.error }]}
               onPress={triggerEmergency}
               disabled={isLoading}
               accessibilityLabel="Trigger emergency alert"
             >
-              <Text style={styles.triggerEmergencyText}>🚨 EMERGENCY</Text>
-              <Text style={styles.triggerEmergencySubtext}>Tap to activate</Text>
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <View style={styles.buttonIconContainer}>
+                    <Text style={styles.buttonIcon}>🚨</Text>
+                  </View>
+                  <Text style={styles.mainButtonText}>Trigger Emergency</Text>
+                  <Text style={styles.mainButtonSubtext}>Alert all contacts</Text>
+                </>
+              )}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.callButton, { backgroundColor: colors.primary }]}
+              style={[styles.quickCallButton, { backgroundColor: colors.primary }]}
               onPress={() => {
                 Alert.alert('Calling 911', 'Emergency services will be contacted.');
               }}
               accessibilityLabel="Call 911 emergency services"
             >
-              <Text style={styles.callButtonText}>📞 CALL 911</Text>
-              <Text style={styles.callButtonSubtext}>Direct call</Text>
+              <View style={styles.buttonIconContainer}>
+                <Text style={styles.buttonIcon}>📞</Text>
+              </View>
+              <Text style={styles.quickCallText}>Call 911</Text>
+              <Text style={styles.quickCallSubtext}>Direct call</Text>
             </TouchableOpacity>
           </View>
         )}
-      </View>
-
-      {/* Status Indicator - Positioned properly to avoid overlap */}
-      <View style={styles.statusIndicatorContainer}>
-        <StatusIndicator
-          status="emergency"
-          message={getEmergencyMessage()}
-          announceVoice={false}
-        />
       </View>
     </SafeAreaView>
   );
@@ -670,45 +656,69 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
+  // Bigger Professional Header
   emergencyHeader: {
-    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 4,
-    borderBottomColor: '#FFFFFF',
+    padding: 16,
+    borderBottomWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerContent: {
+    flex: 1,
   },
   emergencyTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   emergencySubtitle: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '500',
   },
+  countdownBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 12,
+    padding: 8,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  countdownNumber: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  countdownLabel: {
+    fontSize: 9,
+    color: '#FFFFFF',
+    opacity: 0.9,
+  },
+  // Compact Tab Navigation
   tabContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,
   },
   tab: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: 12,
     alignItems: 'center',
     position: 'relative',
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
   },
   tabIndicator: {
     position: 'absolute',
     bottom: 0,
-    height: 3,
-    width: '80%',
-    borderRadius: 2,
+    height: 2,
+    width: '70%',
+    borderRadius: 1,
   },
   activeTab: {
     // Active tab styling
@@ -717,146 +727,169 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
-    paddingBottom: 120, // Extra padding to account for emergency control panel
+    padding: 12,
+    paddingBottom: 100, // Extra padding for control panel
   },
   tabContent: {
     flex: 1,
   },
-  // Emergency Control Panel - Fixed at bottom
+  // Compact Emergency Control Panel
   emergencyControlPanel: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    borderTopWidth: 2,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingBottom: 20,
+    borderTopWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 8,
   },
   emergencyActivePanel: {
-    borderRadius: 16,
-    padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    gap: 10,
   },
   emergencyNormalPanel: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   timerSection: {
     alignItems: 'center',
     flex: 1,
   },
-  emergencyTimerLabel: {
+  // Compact Active Panel Styles
+  activeStatusCard: {
+    flex: 1,
+    borderRadius: 10,
+    padding: 10,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pulseIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  pulseDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  statusInfo: {
+    flex: 1,
+  },
+  activeStatusTitle: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: 'bold',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  emergencyTimerCount: {
-    color: '#FFFFFF',
-    fontSize: 36,
-    fontWeight: 'bold',
-    fontFamily: 'monospace',
     marginBottom: 2,
   },
-  emergencyTimerSubtext: {
+  activeStatusSubtitle: {
     color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: 9,
     opacity: 0.9,
   },
-  stopEmergencyButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 12,
+  timerBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 8,
+    padding: 5,
+    minWidth: 45,
     alignItems: 'center',
-    minWidth: 120,
+  },
+  timerBadgeNumber: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  timerBadgeLabel: {
+    color: '#FFFFFF',
+    fontSize: 7,
+    opacity: 0.9,
+  },
+  cancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    minWidth: 85,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  cancelButtonIcon: {
+    fontSize: 16,
+    marginBottom: 3,
+  },
+  cancelButtonText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  // Smaller Bottom Buttons
+  mainEmergencyButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
   },
-  stopEmergencyText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    letterSpacing: 1,
+  buttonIconContainer: {
+    marginBottom: 3,
   },
-  stopEmergencySubtext: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '600',
-    opacity: 0.9,
-    marginTop: 2,
+  buttonIcon: {
+    fontSize: 18,
   },
-  triggerEmergencyButton: {
-    flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  triggerEmergencyText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-  triggerEmergencySubtext: {
+  mainButtonText: {
     color: '#FFFFFF',
     fontSize: 11,
-    fontWeight: '600',
-    opacity: 0.9,
-    marginTop: 2,
+    fontWeight: 'bold',
+    marginBottom: 1,
   },
-  callButton: {
+  mainButtonSubtext: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    opacity: 0.9,
+  },
+  quickCallButton: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  callButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-  callButtonSubtext: {
+  quickCallText: {
     color: '#FFFFFF',
     fontSize: 11,
-    fontWeight: '600',
-    opacity: 0.9,
-    marginTop: 2,
+    fontWeight: 'bold',
+    marginBottom: 1,
   },
-  // Status indicator container - positioned above emergency control panel
-  statusIndicatorContainer: {
-    position: 'absolute',
-    bottom: 120,
-    left: 20,
-    right: 20,
+  quickCallSubtext: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    opacity: 0.9,
   },
 });
 

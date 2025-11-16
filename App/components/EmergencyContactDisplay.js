@@ -48,17 +48,17 @@ const EmergencyContactDisplay = ({ contacts = [], notificationStatuses = {} }) =
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
   },
@@ -66,25 +66,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '500',
   },
   contactCard: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   emptyState: {
-    paddingVertical: 30,
+    paddingVertical: 20,
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 12,
     fontStyle: 'italic',
   },
 });

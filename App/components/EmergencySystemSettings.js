@@ -144,71 +144,71 @@ const EmergencySystemSettings = ({ settings, onSettingChange }) => {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '500',
   },
   settingsContainer: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   settingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 12,
     borderBottomWidth: 1,
   },
   settingContent: {
     flex: 1,
-    marginRight: 16,
+    marginRight: 10,
   },
   settingTitle: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   settingDescription: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 10,
+    lineHeight: 14,
   },
   pickerContainer: {
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    minWidth: 140,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    minWidth: 110,
   },
   picker: {
-    height: 44,
+    height: 32,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 8,
   },
   actionButton: {
     flex: 1,
-    marginHorizontal: 8,
-    minWidth: 120,
+    minWidth: 90,
   },
 });
 

@@ -147,29 +147,29 @@ const EmergencyMessageCustomizer = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '500',
   },
   editingContainer: {
@@ -177,30 +177,30 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    marginBottom: 20,
-    minHeight: 120,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 12,
+    marginBottom: 12,
+    minHeight: 80,
   },
   placeholderTitle: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   placeholderContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 20,
-    gap: 12,
+    marginBottom: 12,
+    gap: 8,
   },
   placeholderButton: {
-    minWidth: 90,
+    minWidth: 70,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 8,
   },
   actionButton: {
     flex: 1,
@@ -209,20 +209,20 @@ const styles = StyleSheet.create({
     
   },
   messagePreview: {
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
-    minHeight: 120,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    minHeight: 80,
   },
   messageText: {
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 12,
+    lineHeight: 16,
   },
   customizeButton: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   note: {
-    fontSize: 12,
+    fontSize: 10,
     fontStyle: 'italic',
     textAlign: 'center',
   },

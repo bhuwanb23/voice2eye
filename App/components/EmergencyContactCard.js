@@ -136,29 +136,29 @@ const EmergencyContactCard = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   icon: {
-    fontSize: 24,
-    marginRight: 12,
-    marginTop: 2,
+    fontSize: 18,
+    marginRight: 8,
+    marginTop: 1,
   },
   info: {
     flex: 1,
@@ -166,61 +166,61 @@ const styles = StyleSheet.create({
   nameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   name: {
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: '600',
-    marginRight: 8,
+    marginRight: 6,
   },
   primaryBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 6,
   },
   primaryBadgeText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: 'bold',
   },
   phone: {
-    fontSize: 16,
+    fontSize: 12,
     marginBottom: 2,
   },
   details: {
-    fontSize: 14,
+    fontSize: 10,
   },
   statusContainer: {
     alignItems: 'flex-end',
   },
   priorityIndicator: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   priorityText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 9,
     fontWeight: 'bold',
   },
   notificationStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginTop: 3,
   },
   notificationStatusText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: 'bold',
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 8,
+    gap: 6,
   },
   actionButton: {
-    minWidth: 80,
+    minWidth: 60,
   },
 });
 

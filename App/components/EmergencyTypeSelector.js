@@ -68,26 +68,26 @@ const EmergencyTypeSelector = ({ selectedType, onTypeChange }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
   title: {
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
-    marginBottom: 16,
+    fontSize: 10,
+    marginBottom: 10,
   },
   typesContainer: {
     flexDirection: 'row',
@@ -96,11 +96,11 @@ const styles = StyleSheet.create({
   },
   typeButton: {
     width: '100%',
-    marginBottom: 12,
-    paddingVertical: 16,
+    marginBottom: 8,
+    paddingVertical: 10,
   },
   typeButtonText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
   },
 });

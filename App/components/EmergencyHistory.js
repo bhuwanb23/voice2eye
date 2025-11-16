@@ -49,57 +49,57 @@ const EmergencyHistory = ({ emergencyHistory }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   historyItem: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
     elevation: 2,
   },
   historyItemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   historyType: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
   },
   historyStatus: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: '600',
   },
   historyTime: {
-    fontSize: 14,
+    fontSize: 10,
   },
   emptyHistory: {
-    padding: 20,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 10,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
     elevation: 2,
   },
   emptyHistoryText: {
-    fontSize: 16,
+    fontSize: 12,
     fontStyle: 'italic',
   },
 });
