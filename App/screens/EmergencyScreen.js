@@ -42,9 +42,95 @@ const EmergencyScreen = ({ navigation, route }) => {
   const [apiError, setApiError] = useState(null);
   const [activeTab, setActiveTab] = useState('contacts'); // contacts, history, settings, patterns
   
-  // Load emergency contacts and history from API
-  const [emergencyContacts, setEmergencyContacts] = useState([]);
-  const [emergencyHistory, setEmergencyHistory] = useState([]);
+  // Load emergency contacts and history from API with initial sample data
+  const [emergencyContacts, setEmergencyContacts] = useState([
+    {
+      id: '1',
+      name: 'Emergency Services',
+      phoneNumber: '911',
+      priority: 'high',
+      group: 'emergency',
+      relationship: 'Emergency Services',
+      isPrimary: true,
+      enabled: true
+    },
+    {
+      id: '2',
+      name: 'Family Contact',
+      phoneNumber: '+1234567890',
+      priority: 'medium',
+      group: 'family',
+      relationship: 'Family',
+      isPrimary: false,
+      enabled: true
+    }
+  ]);
+  const [emergencyHistory, setEmergencyHistory] = useState([
+    {
+      alert_id: 'sample_1',
+      trigger_type: 'manual',
+      status: 'confirmed',
+      timestamp: new Date().toISOString(),
+      location: '123 Main St, Downtown, City 10001',
+      messages_sent: 5
+    },
+    {
+      alert_id: 'sample_2',
+      trigger_type: 'voice',
+      status: 'cancelled',
+      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      location: '456 Oak Ave, Suburb, City 10002',
+      messages_sent: 0
+    },
+    {
+      alert_id: 'sample_3',
+      trigger_type: 'gesture',
+      status: 'confirmed',
+      timestamp: new Date(Date.now() - 86400000).toISOString(),
+      location: '789 Pine Rd, Uptown, City 10003',
+      messages_sent: 4
+    },
+    {
+      alert_id: 'sample_4',
+      trigger_type: 'manual',
+      status: 'confirmed',
+      timestamp: new Date(Date.now() - 172800000).toISOString(),
+      location: '321 Elm St, Midtown, City 10004',
+      messages_sent: 6
+    },
+    {
+      alert_id: 'sample_5',
+      trigger_type: 'voice',
+      status: 'pending',
+      timestamp: new Date(Date.now() - 259200000).toISOString(),
+      location: '654 Maple Dr, Eastside, City 10005',
+      messages_sent: 2
+    },
+    {
+      alert_id: 'sample_6',
+      trigger_type: 'gesture',
+      status: 'cancelled',
+      timestamp: new Date(Date.now() - 345600000).toISOString(),
+      location: '987 Cedar Ln, Westside, City 10006',
+      messages_sent: 0
+    },
+    {
+      alert_id: 'sample_7',
+      trigger_type: 'manual',
+      status: 'confirmed',
+      timestamp: new Date(Date.now() - 432000000).toISOString(),
+      location: '147 Birch Ave, Northside, City 10007',
+      messages_sent: 3
+    },
+    {
+      alert_id: 'sample_8',
+      trigger_type: 'voice',
+      status: 'confirmed',
+      timestamp: new Date(Date.now() - 518400000).toISOString(),
+      location: '258 Spruce St, Southside, City 10008',
+      messages_sent: 5
+    }
+  ]);
   const [emergencySettings, setEmergencySettings] = useState({
     autoTriggerEmergency: true,
     emergencyTimeout: 10,
@@ -457,8 +543,15 @@ const EmergencyScreen = ({ navigation, route }) => {
         </View>
       )}
 
-      {/* Professional Emergency Header */}
+      {/* Professional Emergency Header with Back Button */}
       <View style={[styles.emergencyHeader, { backgroundColor: emergencyStatus === 'triggered' ? colors.error : colors.surface }]}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Dashboard' })}
+          accessibilityLabel="Go back to Dashboard"
+        >
+          <Text style={[styles.backButtonIcon, { color: emergencyStatus === 'triggered' ? '#FFFFFF' : colors.text }]}>←</Text>
+        </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={[styles.emergencyTitle, { color: emergencyStatus === 'triggered' ? '#FFFFFF' : colors.text }]}>
             {emergencyStatus === 'triggered' ? '🚨 Emergency Active' : '🛡️ Emergency Center'}
@@ -668,6 +761,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 3,
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backButtonIcon: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   headerContent: {
     flex: 1,
