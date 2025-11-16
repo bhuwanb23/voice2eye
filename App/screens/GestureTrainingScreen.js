@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import * as Speech from 'expo-speech';
 import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from '../api/services/apiService';
 
 const { width, height } = Dimensions.get('window');
@@ -48,7 +49,26 @@ const GestureTrainingScreen = ({ navigation }) => {
 
   // Animation references
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    // Start animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Load gesture data
+    loadGestureData();
+  }, []);
 
   // Load gesture data and progress
   const loadGestureData = async () => {
@@ -573,10 +593,10 @@ const GestureTrainingScreen = ({ navigation }) => {
     <>
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Modern Compact Header */}
+        {/* Beautiful Header with Gradient */}
         <LinearGradient
-          colors={[colors.primary, colors.primary + 'DD', colors.primary + '99']}
-          style={styles.compactHeader}
+          colors={[colors.primary, colors.primary + 'E6', colors.primary + 'CC']}
+          style={styles.header}
         >
           <Animated.View
             style={[
@@ -587,24 +607,25 @@ const GestureTrainingScreen = ({ navigation }) => {
               }
             ]}
           >
-            <Text style={styles.headerTitle}>✋ Gesture Training</Text>
-            <Text style={styles.headerSubtitle}>Master your moves with precision</Text>
+            <Text style={styles.headerTitle}>👋 Gesture Training</Text>
+            <Text style={styles.headerSubtitle}>Master hand gestures with AI precision</Text>
 
-            {/* Quick Stats */}
+            {/* Compact Stats Row */}
             <View style={styles.quickStats}>
-              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                <Text style={styles.statNumber}>12</Text>
-                <Text style={styles.statLabel}>Mastered</Text>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{getTrainingStats().masteredGestures}</Text>
+                <Text style={styles.statText}>Mastered</Text>
               </View>
-              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
                 <Text style={styles.statNumber}>{progress}%</Text>
-                <Text style={styles.statLabel}>Progress</Text>
+                <Text style={styles.statText}>Progress</Text>
               </View>
-              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                <Text style={styles.statNumber}>92%</Text>
-                <Text style={styles.statLabel}>Accuracy</Text>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{getTrainingStats().averageAccuracy}%</Text>
+                <Text style={styles.statText}>Accuracy</Text>
               </View>
-
             </View>
           </Animated.View>
         </LinearGradient>
@@ -616,97 +637,208 @@ const GestureTrainingScreen = ({ navigation }) => {
           </View>
         )}
 
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {/* Mode & Status Section */}
-          <View style={styles.section}>
-            <View style={[styles.modeSelector, { backgroundColor: colors.surface }]}>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          {/* Mode Selector */}
+          <View style={[styles.modeContainer, { backgroundColor: colors.surface }]}>
+            <View style={styles.modeSelector}>
               <ModeButton mode="learn" label="Learn" isActive={trainingMode === 'learn'} />
               <ModeButton mode="practice" label="Practice" isActive={trainingMode === 'practice'} />
               <ModeButton mode="test" label="Test" isActive={trainingMode === 'test'} />
             </View>
-
-            <View style={[styles.statusIndicator, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.statusText, { color: colors.primary }]}>
-                {trainingMode.toUpperCase()} MODE
-              </Text>
-            </View>
           </View>
 
-          {/* Detection & Feedback Section */}
-          <View style={styles.section}>
-            {/* Last Detected Gesture */}
-            <View style={[styles.lastDetectedCard, { backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }]}>
-              <Text style={styles.lastDetectedLabel}>Last Detected Gesture</Text>
+          {/* Detection Area */}
+          <View style={[styles.detectionArea, { backgroundColor: colors.surface }]}>
+            <View style={styles.detectionHeader}>
+              <Text style={[styles.detectionTitle, { color: colors.text }]}>Detection Zone</Text>
+              <View style={[styles.statusBadge, { 
+                backgroundColor: isDetecting ? colors.warning + '20' : colors.success + '20',
+                borderColor: isDetecting ? colors.warning : colors.success
+              }]}>
+                <Text style={[styles.statusBadgeText, { 
+                  color: isDetecting ? colors.warning : colors.success 
+                }]}>
+                  {isDetecting ? 'Detecting...' : 'Ready'}
+                </Text>
+              </View>
+            </View>
+            
+            <View style={[styles.detectionZone, { borderColor: colors.border }]}>
               {lastDetectedGesture ? (
-                <>
-                  <Text style={styles.lastDetectedName}>{lastDetectedGesture.name}</Text>
-                  <View style={[styles.accuracyBadge, { backgroundColor: '#D1FAE5' }]}>
-                    <Text style={styles.accuracyText}>Accuracy: {lastDetectedGesture.confidence}%</Text>
+                <View style={styles.detectedGesture}>
+                  <Text style={styles.gestureEmoji}>{lastDetectedGesture.emoji}</Text>
+                  <Text style={[styles.gestureName, { color: colors.text }]}>{lastDetectedGesture.name}</Text>
+                  <View style={[styles.confidenceBadge, { backgroundColor: colors.primary + '20' }]}>
+                    <Text style={[styles.confidenceText, { color: colors.primary }]}>
+                      {lastDetectedGesture.confidence}% confidence
+                    </Text>
                   </View>
-                </>
+                </View>
               ) : (
-                <Text style={styles.noGestureText}>No gesture detected yet</Text>
+                <View style={styles.emptyDetection}>
+                  <Text style={styles.handIcon}>👋</Text>
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Show your hand gesture</Text>
+                  <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Position your hand in front of the camera</Text>
+                </View>
               )}
             </View>
-
-            {/* Feedback Cards */}
-            <FeedbackCard type={feedback?.type} message={feedback?.message} />
-
-            {/* Progress Bar */}
-            <ProgressBar progress={progress} />
+            
+            {/* Feedback */}
+            {feedback && (
+              <View style={[styles.feedbackContainer, {
+                backgroundColor: feedback.type === 'correct' ? colors.success + '15' : 
+                                feedback.type === 'warning' ? colors.warning + '15' : colors.error + '15',
+                borderColor: feedback.type === 'correct' ? colors.success : 
+                            feedback.type === 'warning' ? colors.warning : colors.error
+              }]}>
+                <Text style={styles.feedbackEmoji}>
+                  {feedback.type === 'correct' ? '✅' : feedback.type === 'warning' ? '⚠️' : '❌'}
+                </Text>
+                <Text style={[styles.feedbackText, {
+                  color: feedback.type === 'correct' ? colors.success : 
+                         feedback.type === 'warning' ? colors.warning : colors.error
+                }]}>
+                  {feedback.message}
+                </Text>
+              </View>
+            )}
           </View>
 
-          {/* Recommendations Section */}
+          {/* Quick Practice */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>For You to Practice</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.recommendationsContainer}>
-              {gestureList.slice(0, 3).map((gesture, index) => (
-                <RecommendationItem key={gesture.id || index} gesture={gesture} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Practice</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.practiceScrollContent}>
+              {gestureList.slice(0, 4).map((gesture, index) => (
+                <TouchableOpacity key={gesture.id || index} style={[styles.practiceCard, { backgroundColor: colors.surface }]}>
+                  <Text style={styles.practiceEmoji}>{gesture.emoji}</Text>
+                  <Text style={[styles.practiceName, { color: colors.text }]}>{gesture.name}</Text>
+                  <View style={[styles.practiceProgress, { backgroundColor: colors.primary + '20' }]}>
+                    <Text style={[styles.practiceProgressText, { color: colors.primary }]}>
+                      {getGestureStats(gesture.id).attempts > 0 ? 
+                        `${Math.round((getGestureStats(gesture.id).successes / getGestureStats(gesture.id).attempts) * 100)}%` : 
+                        'New'
+                      }
+                    </Text>
+                  </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
 
-          {/* Gesture Library Section */}
+          {/* Gesture Library */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Gesture Library</Text>
-            <View style={styles.gestureLibrary}>
-              {gestureList.map((gesture, index) => (
-                <GestureItem key={gesture.id || index} gesture={gesture} />
-              ))}
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Gesture Library</Text>
+            <View style={styles.gestureGrid}>
+              {gestureList.map((gesture, index) => {
+                const stats = getGestureStats(gesture.id);
+                const successRate = stats.attempts > 0 ? Math.round((stats.successes / stats.attempts) * 100) : 0;
+                const isMastered = stats.successes >= 5 && stats.averageConfidence >= 80;
+                
+                return (
+                  <TouchableOpacity key={gesture.id || index} style={[styles.gestureCard, { backgroundColor: colors.surface }]}>
+                    <View style={styles.gestureCardHeader}>
+                      <View style={[styles.gestureAvatar, { backgroundColor: colors.primary + '15' }]}>
+                        <Text style={styles.gestureCardEmoji}>{gesture.emoji}</Text>
+                      </View>
+                      {isMastered && (
+                        <View style={[styles.masteredBadge, { backgroundColor: colors.success }]}>
+                          <Text style={styles.masteredText}>✓</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.gestureCardName, { color: colors.text }]}>{gesture.name}</Text>
+                    <Text style={[styles.gestureCardDesc, { color: colors.textSecondary }]} numberOfLines={2}>
+                      {gesture.description}
+                    </Text>
+                    <View style={styles.gestureCardFooter}>
+                      <View style={[styles.difficultyChip, {
+                        backgroundColor: gesture.difficulty === 'Easy' ? colors.success + '20' :
+                                        gesture.difficulty === 'Medium' ? colors.warning + '20' : colors.error + '20'
+                      }]}>
+                        <Text style={[styles.difficultyChipText, {
+                          color: gesture.difficulty === 'Easy' ? colors.success :
+                                gesture.difficulty === 'Medium' ? colors.warning : colors.error
+                        }]}>
+                          {gesture.difficulty}
+                        </Text>
+                      </View>
+                      {stats.attempts > 0 && (
+                        <Text style={[styles.gestureStats, { color: colors.textSecondary }]}>
+                          {successRate}%
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
-          {/* Progress Stats Section */}
+          {/* Progress Overview */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Your Progress</Text>
-            <View style={styles.statsContainer}>
-              <StatsCard label="Gestures Mastered" value="12" total="50" />
-              <StatsCard label="Avg. Accuracy" value="92" total="%" />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Progress</Text>
+            <View style={styles.progressOverview}>
+              <View style={[styles.progressCard, { backgroundColor: colors.surface }]}>
+                <View style={styles.progressHeader}>
+                  <Text style={[styles.progressLabel, { color: colors.textSecondary }]}>Overall Progress</Text>
+                  <Text style={[styles.progressValue, { color: colors.primary }]}>{progress}%</Text>
+                </View>
+                <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+                  <LinearGradient
+                    colors={[colors.primary, colors.primary + 'CC']}
+                    style={[styles.progressFill, { width: `${progress}%` }]}
+                  />
+                </View>
+              </View>
+              
+              <View style={styles.statsRow}>
+                <View style={[styles.statBox, { backgroundColor: colors.surface }]}>
+                  <Text style={[styles.statBoxNumber, { color: colors.text }]}>{getTrainingStats().totalAttempts}</Text>
+                  <Text style={[styles.statBoxLabel, { color: colors.textSecondary }]}>Attempts</Text>
+                </View>
+                <View style={[styles.statBox, { backgroundColor: colors.surface }]}>
+                  <Text style={[styles.statBoxNumber, { color: colors.text }]}>{getTrainingStats().successRate}%</Text>
+                  <Text style={[styles.statBoxLabel, { color: colors.textSecondary }]}>Success Rate</Text>
+                </View>
+                <View style={[styles.statBox, { backgroundColor: colors.surface }]}>
+                  <Text style={[styles.statBoxNumber, { color: colors.text }]}>{getTrainingStats().masteredGestures}</Text>
+                  <Text style={[styles.statBoxLabel, { color: colors.textSecondary }]}>Mastered</Text>
+                </View>
+              </View>
             </View>
           </View>
         </ScrollView>
 
-        {/* Action Buttons Footer */}
-        <View style={[styles.footer, { backgroundColor: 'rgba(255, 255, 255, 0.8)' }]}>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.backButton, { backgroundColor: '#E5E7EB', paddingVertical: 10, paddingHorizontal: 14 }]}
-              onPress={() => navigation.goBack()}
-            >
-              <Text style={[styles.buttonText, { color: '#4B5563', fontSize: 13, fontWeight: '600' }]}>← Back</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.startButton, { backgroundColor: colors.primary, paddingVertical: 10, paddingHorizontal: 14 }]}
-              onPress={startGestureDetection}
-              disabled={isDetecting}
+        {/* Modern Action Bar */}
+        <View style={[styles.actionBar, { backgroundColor: colors.surface }]}>
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: colors.background, borderColor: colors.border }]}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={[styles.actionBtnText, { color: colors.text }]}>← Back</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.primaryActionBtn, { opacity: isDetecting ? 0.7 : 1 }]}
+            onPress={startGestureDetection}
+            disabled={isDetecting}
+          >
+            <LinearGradient
+              colors={[colors.primary, colors.primary + 'E6']}
+              style={styles.primaryActionGradient}
             >
               {isDetecting ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
+                <>
+                  <ActivityIndicator color="#FFFFFF" size="small" style={{ marginRight: 8 }} />
+                  <Text style={styles.primaryActionText}>Detecting...</Text>
+                </>
               ) : (
-                <Text style={[styles.buttonText, { color: '#FFFFFF', fontSize: 13, fontWeight: '600' }]}>Start Detection →</Text>
+                <>
+                  <Text style={styles.primaryActionText}>👋 Start Detection</Text>
+                </>
               )}
-            </TouchableOpacity>
-          </View>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </>
@@ -717,26 +849,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  compactHeader: {
-    height: 160,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 10,
+  // Header Styles
+  header: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingTop: 24,
   },
   headerContent: {
-    padding: 16,
     alignItems: 'center',
-    width: '100%',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: 'white',
     textAlign: 'center',
     opacity: 0.9,
@@ -744,280 +874,391 @@ const styles = StyleSheet.create({
   },
   quickStats: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginTop: 8,
-  },
-  statCard: {
-    padding: 12,
-    borderRadius: 10,
-    minWidth: 70,
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
   },
   statNumber: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: 'white',
   },
-  statLabel: {
-    fontSize: 10,
-    marginTop: 2,
+  statText: {
+    fontSize: 9,
     color: 'white',
     opacity: 0.8,
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginHorizontal: 10,
   },
   errorBanner: {
     margin: 12,
-    padding: 12,
+    padding: 10,
     borderRadius: 8,
   },
   errorText: {
-    fontSize: 13,
+    fontSize: 12,
     textAlign: 'center',
     fontWeight: '600',
   },
+  // Content Styles
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 80,
+  },
   section: {
-    marginVertical: 16,
+    marginVertical: 12,
     marginHorizontal: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    fontSize: 16,
+    fontWeight: 'bold',
     marginBottom: 12,
+  },
+  // Mode Selector
+  modeContainer: {
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 12,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   modeSelector: {
     flexDirection: 'row',
-    gap: 8,
-    padding: 4,
-    borderRadius: 12,
+    gap: 6,
   },
   modeButton: {
     flex: 1,
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     borderRadius: 8,
     alignItems: 'center',
-  },
-  activeModeButton: {
-    // backgroundColor will be set dynamically
   },
   modeButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  statusIndicator: {
-    marginTop: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  statusText: {
     fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  lastDetectedCard: {
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    minHeight: 140,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  lastDetectedLabel: {
-    color: '#4B5563',
-    fontSize: 14,
-  },
-  lastDetectedName: {
-    fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
-    marginTop: 4,
   },
-  noGestureText: {
-    color: '#6B7280',
-    fontStyle: 'italic',
+  // Detection Area
+  detectionArea: {
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  accuracyBadge: {
+  detectionHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 8,
+    marginBottom: 12,
+  },
+  detectionTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 9999,
-    backgroundColor: '#D1FAE5',
-  },
-  accuracyText: {
-    fontSize: 12,
-    color: '#065F46',
-    fontWeight: '500',
-  },
-  feedbackCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 16,
   },
-  feedbackEmoji: {
-    fontSize: 24,
-  },
-  feedbackContent: {
-    flex: 1,
-  },
-  feedbackTitle: {
-    fontSize: 16,
+  statusBadgeText: {
+    fontSize: 10,
     fontWeight: '600',
   },
-  feedbackMessage: {
-    fontSize: 14,
-    marginTop: 2,
-  },
-  progressBarContainer: {
-    width: '100%',
-    height: 10,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 9999,
-  },
-  progressBarInner: {
-    height: '100%',
-    borderRadius: 9999,
-  },
-  recommendationsContainer: {
-    flexDirection: 'row',
-  },
-  recommendationItem: {
-    flexShrink: 0,
-    width: 160,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    padding: 12,
+  detectionZone: {
+    height: 120,
     borderRadius: 12,
-    marginRight: 12,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  recommendationEmoji: {
-    fontSize: 24,
-  },
-  recommendationName: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginTop: 8,
-    color: '#111827',
-  },
-  recommendationCategory: {
-    fontSize: 12,
-    color: '#4B5563',
-    marginTop: 4,
-  },
-  gestureLibrary: {
-    gap: 12,
-  },
-  gestureItem: {
-    flexDirection: 'row',
+  detectedGesture: {
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  gestureIcon: {
-    padding: 12,
-    borderRadius: 8,
   },
   gestureEmoji: {
-    fontSize: 20,
-  },
-  gestureInfo: {
-    flex: 1,
-    marginLeft: 12,
+    fontSize: 32,
+    marginBottom: 8,
   },
   gestureName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: 'bold',
+    marginBottom: 6,
   },
-  gestureDescription: {
-    fontSize: 14,
-    color: '#4B5563',
-    marginTop: 2,
-  },
-  gestureProgress: {
-    fontSize: 12,
-    color: '#4B5563',
-    marginTop: 4,
-  },
-  difficultyBadge: {
+  confidenceBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 9999,
-  },
-  difficultyText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  statsCard: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    padding: 16,
     borderRadius: 12,
   },
-  statsLabel: {
+  confidenceText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  emptyDetection: {
+    alignItems: 'center',
+  },
+  handIcon: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+  emptyText: {
     fontSize: 14,
-    color: '#4B5563',
+    fontWeight: '600',
+    marginBottom: 4,
   },
-  statsValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    marginTop: 4,
+  emptySubtext: {
+    fontSize: 11,
+    textAlign: 'center',
   },
-  statsTotal: {
+  feedbackContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  feedbackEmoji: {
     fontSize: 16,
-    fontWeight: '500',
+    marginRight: 8,
   },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  feedbackText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  // Practice Cards
+  practiceScrollContent: {
+    paddingRight: 16,
+  },
+  practiceCard: {
+    width: 100,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  practiceEmoji: {
+    fontSize: 24,
+    marginBottom: 6,
+  },
+  practiceName: {
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  practiceProgress: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  practiceProgressText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  // Gesture Grid
+  gestureGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  gestureCard: {
+    width: (width - 56) / 2,
+    padding: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  gestureCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  gestureAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gestureCardEmoji: {
+    fontSize: 18,
+  },
+  masteredBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  masteredText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  gestureCardName: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  gestureCardDesc: {
+    fontSize: 10,
+    lineHeight: 14,
+    marginBottom: 8,
+  },
+  gestureCardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  difficultyChip: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  difficultyChipText: {
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  gestureStats: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  // Progress Overview
+  progressOverview: {
+    gap: 12,
+  },
+  progressCard: {
     padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  buttonContainer: {
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  progressValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  progressBar: {
+    height: 6,
+    borderRadius: 3,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  statsRow: {
     flexDirection: 'row',
     gap: 12,
   },
-  actionButton: {
+  statBox: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    padding: 12,
     borderRadius: 10,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  backButton: {
-    // backgroundColor will be set dynamically
+  statBoxNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2,
   },
-  startButton: {
-    // backgroundColor will be set dynamically
-  },
-  buttonText: {
-    fontSize: 14,
+  statBoxLabel: {
+    fontSize: 10,
     fontWeight: '600',
+  },
+  // Action Bar
+  actionBar: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  actionBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  primaryActionBtn: {
+    flex: 2,
+    borderRadius: 10,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  primaryActionGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  primaryActionText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 

@@ -120,7 +120,7 @@ pip install -r requirements.txt
 python install.py
 
 # Run the application
-python main.py
+uvicorn api.server:app --host 0.0.0.0 --port 8000
 ```
 
 ### **2. Run Tests**

@@ -1,8 +1,8 @@
 /**
- * Contact Form Component
- * Form for adding and editing emergency contacts
+ * Contact Form Component - Beautiful Modern Design
+ * Elegant form for adding and editing emergency contacts
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,12 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
+  Animated,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from './AccessibilityProvider';
 import AccessibleButton from './AccessibleButton';
 import * as Speech from 'expo-speech';
@@ -35,6 +39,10 @@ const ContactForm = ({ navigation, route }) => {
   
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Animation references
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
     if (mode === 'edit' && contact) {
@@ -47,6 +55,20 @@ const ContactForm = ({ navigation, route }) => {
         isPrimary: contact.isPrimary || false,
       });
     }
+    
+    // Start animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
     
     if (settings.voiceNavigation) {
       const message = mode === 'edit' 
@@ -167,181 +189,332 @@ const ContactForm = ({ navigation, route }) => {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.primary }]}>
-        <Text style={[styles.title, { color: 'white' }]}>
-          {mode === 'edit' ? 'Edit Contact' : 'Add Contact'}
-        </Text>
-        <Text style={[styles.subtitle, { color: 'white' }]}>
-          {mode === 'edit' ? 'Update emergency contact information' : 'Add a new emergency contact'}
-        </Text>
-      </View>
-
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+    <>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Beautiful Header with Gradient */}
+        <LinearGradient
+          colors={[colors.primary, colors.primary + 'E6', colors.primary + 'CC']}
+          style={styles.header}
         >
-          {/* Name Field */}
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Full Name *
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                  borderColor: errors.name ? colors.error : colors.border,
-                }
-              ]}
-              value={formData.name}
-              onChangeText={(value) => handleInputChange('name', value)}
-              placeholder="Enter full name"
-              placeholderTextColor={colors.textSecondary}
-              accessibilityLabel="Contact full name"
-              accessibilityHint="Enter the full name of the contact"
-            />
-            {errors.name && (
-              <Text style={[styles.errorText, { color: colors.error }]}>{errors.name}</Text>
-            )}
-          </View>
-
-          {/* Phone Number Field */}
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Phone Number *
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                  borderColor: errors.phoneNumber ? colors.error : colors.border,
-                }
-              ]}
-              value={formData.phoneNumber}
-              onChangeText={(value) => handleInputChange('phoneNumber', value)}
-              placeholder="Enter phone number"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="phone-pad"
-              accessibilityLabel="Contact phone number"
-              accessibilityHint="Enter the phone number of the contact"
-            />
-            {errors.phoneNumber && (
-              <Text style={[styles.errorText, { color: colors.error }]}>{errors.phoneNumber}</Text>
-            )}
-          </View>
-
-          {/* Relationship Field */}
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Relationship *
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                  borderColor: errors.relationship ? colors.error : colors.border,
-                }
-              ]}
-              value={formData.relationship}
-              onChangeText={(value) => handleInputChange('relationship', value)}
-              placeholder="Enter relationship (e.g., Spouse, Doctor)"
-              placeholderTextColor={colors.textSecondary}
-              accessibilityLabel="Contact relationship"
-              accessibilityHint="Enter your relationship to this contact"
-            />
-            {errors.relationship && (
-              <Text style={[styles.errorText, { color: colors.error }]}>{errors.relationship}</Text>
-            )}
-          </View>
-
-          {/* Priority Selection */}
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Priority Level
-            </Text>
-            <View style={styles.radioGroup}>
-              {priorityOptions.map((option) => (
-                <AccessibleButton
-                  key={option.value}
-                  title={option.label}
-                  onPress={() => handleInputChange('priority', option.value)}
-                  variant={formData.priority === option.value ? 'primary' : 'outline'}
-                  size="medium"
-                  accessibilityLabel={`Set priority to ${option.label}`}
-                  style={styles.radioButton}
-                />
-              ))}
+          <Animated.View 
+            style={[
+              styles.headerContent,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.backIcon}>←</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>
+                {mode === 'edit' ? '✏️ Edit Contact' : '➕ Add Contact'}
+              </Text>
+              <Text style={styles.headerSubtitle}>
+                {mode === 'edit' ? 'Update contact information' : 'Create new emergency contact'}
+              </Text>
             </View>
-          </View>
+          </Animated.View>
+        </LinearGradient>
 
-          {/* Group Selection */}
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Contact Group
-            </Text>
-            <View style={styles.radioGroup}>
-              {groupOptions.map((option) => (
-                <AccessibleButton
-                  key={option.value}
-                  title={option.label}
-                  onPress={() => handleInputChange('group', option.value)}
-                  variant={formData.group === option.value ? 'primary' : 'outline'}
-                  size="medium"
-                  accessibilityLabel={`Set group to ${option.label}`}
-                  style={styles.radioButton}
-                />
-              ))}
-            </View>
-          </View>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Name Field */}
+            <Animated.View 
+              style={[
+                styles.formSection,
+                { backgroundColor: colors.surface },
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+              ]}
+            >
+              <View style={styles.fieldContainer}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  👤 Full Name *
+                </Text>
+                <View style={[
+                  styles.inputContainer,
+                  { borderColor: errors.name ? colors.error : colors.border }
+                ]}>
+                  <TextInput
+                    style={[styles.textInput, { color: colors.text }]}
+                    value={formData.name}
+                    onChangeText={(value) => handleInputChange('name', value)}
+                    placeholder="Enter full name"
+                    placeholderTextColor={colors.textSecondary}
+                    accessibilityLabel="Contact full name"
+                    accessibilityHint="Enter the full name of the contact"
+                  />
+                </View>
+                {errors.name && (
+                  <Text style={[styles.errorText, { color: colors.error }]}>{errors.name}</Text>
+                )}
+              </View>
+            </Animated.View>
 
-          {/* Primary Contact Toggle */}
-          <View style={styles.formGroup}>
-            <AccessibleButton
-              title={formData.isPrimary ? "✓ Primary Emergency Contact" : "Set as Primary Emergency Contact"}
-              onPress={() => handleInputChange('isPrimary', !formData.isPrimary)}
-              variant={formData.isPrimary ? 'success' : 'outline'}
-              size="large"
-              accessibilityLabel={formData.isPrimary ? "This is your primary emergency contact" : "Set as primary emergency contact"}
-              style={styles.primaryToggle}
-            />
-          </View>
-        </ScrollView>
+            {/* Phone Number Field */}
+            <Animated.View 
+              style={[
+                styles.formSection,
+                { backgroundColor: colors.surface },
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+              ]}
+            >
+              <View style={styles.fieldContainer}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  📞 Phone Number *
+                </Text>
+                <View style={[
+                  styles.inputContainer,
+                  { borderColor: errors.phoneNumber ? colors.error : colors.border }
+                ]}>
+                  <TextInput
+                    style={[styles.textInput, { color: colors.text }]}
+                    value={formData.phoneNumber}
+                    onChangeText={(value) => handleInputChange('phoneNumber', value)}
+                    placeholder="Enter phone number"
+                    placeholderTextColor={colors.textSecondary}
+                    keyboardType="phone-pad"
+                    accessibilityLabel="Contact phone number"
+                    accessibilityHint="Enter the phone number of the contact"
+                  />
+                </View>
+                {errors.phoneNumber && (
+                  <Text style={[styles.errorText, { color: colors.error }]}>{errors.phoneNumber}</Text>
+                )}
+              </View>
+            </Animated.View>
 
-        {/* Action Buttons */}
-        <View style={[styles.buttonContainer, { backgroundColor: colors.surface }]}>
-          <AccessibleButton
-            title="Cancel"
-            onPress={handleCancel}
-            variant="outline"
-            size="large"
-            disabled={isSubmitting}
-            accessibilityLabel="Cancel and return to contacts list"
-            style={styles.button}
-          />
-          <AccessibleButton
-            title={isSubmitting ? "Saving..." : (mode === 'edit' ? "Update Contact" : "Add Contact")}
-            onPress={handleSubmit}
-            variant="primary"
-            size="large"
-            disabled={isSubmitting}
-            accessibilityLabel={isSubmitting ? "Saving contact" : (mode === 'edit' ? "Update contact information" : "Add new contact")}
-            style={styles.button}
-          />
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            {/* Relationship Field */}
+            <Animated.View 
+              style={[
+                styles.formSection,
+                { backgroundColor: colors.surface },
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+              ]}
+            >
+              <View style={styles.fieldContainer}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  🤝 Relationship *
+                </Text>
+                <View style={[
+                  styles.inputContainer,
+                  { borderColor: errors.relationship ? colors.error : colors.border }
+                ]}>
+                  <TextInput
+                    style={[styles.textInput, { color: colors.text }]}
+                    value={formData.relationship}
+                    onChangeText={(value) => handleInputChange('relationship', value)}
+                    placeholder="e.g., Spouse, Doctor, Friend"
+                    placeholderTextColor={colors.textSecondary}
+                    accessibilityLabel="Contact relationship"
+                    accessibilityHint="Enter your relationship to this contact"
+                  />
+                </View>
+                {errors.relationship && (
+                  <Text style={[styles.errorText, { color: colors.error }]}>{errors.relationship}</Text>
+                )}
+              </View>
+            </Animated.View>
+
+            {/* Priority Selection */}
+            <Animated.View 
+              style={[
+                styles.formSection,
+                { backgroundColor: colors.surface },
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+              ]}
+            >
+              <View style={styles.fieldContainer}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  ⚡ Priority Level
+                </Text>
+                <View style={styles.selectionGrid}>
+                  {priorityOptions.map((option) => {
+                    const isSelected = formData.priority === option.value;
+                    const priorityColors = {
+                      high: colors.error,
+                      medium: colors.warning,
+                      low: colors.success
+                    };
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        style={[
+                          styles.selectionCard,
+                          {
+                            backgroundColor: isSelected ? priorityColors[option.value] + '20' : colors.background,
+                            borderColor: isSelected ? priorityColors[option.value] : colors.border
+                          }
+                        ]}
+                        onPress={() => handleInputChange('priority', option.value)}
+                      >
+                        <Text style={[
+                          styles.selectionText,
+                          { color: isSelected ? priorityColors[option.value] : colors.text }
+                        ]}>
+                          {option.label}
+                        </Text>
+                        {isSelected && (
+                          <Text style={[styles.selectionCheck, { color: priorityColors[option.value] }]}>✓</Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </Animated.View>
+
+            {/* Group Selection */}
+            <Animated.View 
+              style={[
+                styles.formSection,
+                { backgroundColor: colors.surface },
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+              ]}
+            >
+              <View style={styles.fieldContainer}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  👥 Contact Group
+                </Text>
+                <View style={styles.selectionGrid}>
+                  {groupOptions.map((option) => {
+                    const isSelected = formData.group === option.value;
+                    const groupIcons = {
+                      family: '👨‍👩‍👧‍👦',
+                      medical: '🏥',
+                      friends: '👥',
+                      emergency: '🚨'
+                    };
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        style={[
+                          styles.selectionCard,
+                          {
+                            backgroundColor: isSelected ? colors.primary + '20' : colors.background,
+                            borderColor: isSelected ? colors.primary : colors.border
+                          }
+                        ]}
+                        onPress={() => handleInputChange('group', option.value)}
+                      >
+                        <Text style={styles.selectionIcon}>{groupIcons[option.value]}</Text>
+                        <Text style={[
+                          styles.selectionText,
+                          { color: isSelected ? colors.primary : colors.text }
+                        ]}>
+                          {option.label}
+                        </Text>
+                        {isSelected && (
+                          <Text style={[styles.selectionCheck, { color: colors.primary }]}>✓</Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </Animated.View>
+
+            {/* Primary Contact Toggle */}
+            <Animated.View 
+              style={[
+                styles.formSection,
+                { backgroundColor: colors.surface },
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+              ]}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.primaryToggle,
+                  {
+                    backgroundColor: formData.isPrimary ? colors.success + '20' : colors.background,
+                    borderColor: formData.isPrimary ? colors.success : colors.border
+                  }
+                ]}
+                onPress={() => handleInputChange('isPrimary', !formData.isPrimary)}
+              >
+                <View style={styles.toggleContent}>
+                  <Text style={styles.toggleIcon}>⭐</Text>
+                  <View style={styles.toggleText}>
+                    <Text style={[styles.toggleTitle, { color: formData.isPrimary ? colors.success : colors.text }]}>
+                      Primary Emergency Contact
+                    </Text>
+                    <Text style={[styles.toggleSubtitle, { color: colors.textSecondary }]}>
+                      {formData.isPrimary ? 'This contact will be called first' : 'Tap to set as primary contact'}
+                    </Text>
+                  </View>
+                  <View style={[
+                    styles.toggleSwitch,
+                    { backgroundColor: formData.isPrimary ? colors.success : colors.border }
+                  ]}>
+                    <View style={[
+                      styles.toggleKnob,
+                      {
+                        backgroundColor: 'white',
+                        transform: [{ translateX: formData.isPrimary ? 16 : 2 }]
+                      }
+                    ]} />
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+          </ScrollView>
+
+          {/* Action Buttons */}
+          <Animated.View 
+            style={[
+              styles.actionContainer,
+              { backgroundColor: colors.surface },
+              { opacity: fadeAnim }
+            ]}
+          >
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                styles.cancelButton,
+                { backgroundColor: colors.background, borderColor: colors.border }
+              ]}
+              onPress={handleCancel}
+              disabled={isSubmitting}
+            >
+              <Text style={[styles.cancelButtonText, { color: colors.text }]}>Cancel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                styles.submitButton,
+                { opacity: isSubmitting ? 0.7 : 1 }
+              ]}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              <LinearGradient
+                colors={[colors.primary, colors.primary + 'E6']}
+                style={styles.submitGradient}
+              >
+                <Text style={styles.submitButtonText}>
+                  {isSubmitting ? " Saving..." : (mode === 'edit' ? " Update Contact" : " Add Contact")}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -349,19 +522,45 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  // Header Styles
   header: {
-    padding: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingTop: 24,
+  },
+  headerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 5,
+  backButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  subtitle: {
+  backIcon: {
     fontSize: 16,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: 'white',
     opacity: 0.9,
   },
+  // Form Styles
   keyboardAvoidingView: {
     flex: 1,
   },
@@ -369,44 +568,156 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    paddingBottom: 16,
   },
-  formGroup: {
-    marginBottom: 20,
+  formSection: {
+    marginHorizontal: 16,
+    marginVertical: 6,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  label: {
-    fontSize: 16,
+  fieldContainer: {
+    width: '100%',
+  },
+  fieldLabel: {
+    fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 8,
   },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+  inputContainer: {
+    borderWidth: 1.5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.02)',
+  },
+  textInput: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    minHeight: 40,
   },
   errorText: {
-    fontSize: 14,
+    fontSize: 11,
     marginTop: 4,
+    fontWeight: '600',
   },
-  radioGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  // Selection Styles
+  selectionGrid: {
     gap: 8,
   },
-  radioButton: {
-    margin: 4,
-  },
-  primaryToggle: {
-    marginVertical: 8,
-  },
-  buttonContainer: {
+  selectionCard: {
     flexDirection: 'row',
-    padding: 20,
-    gap: 12,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    marginBottom: 6,
   },
-  button: {
+  selectionIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  selectionText: {
     flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  selectionCheck: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  // Toggle Styles
+  primaryToggle: {
+    borderRadius: 12,
+    borderWidth: 1.5,
+    padding: 16,
+    marginHorizontal: 16,
+    marginVertical: 6,
+  },
+  toggleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  toggleIcon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  toggleText: {
+    flex: 1,
+  },
+  toggleTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  toggleSubtitle: {
+    fontSize: 11,
+  },
+  toggleSwitch: {
+    width: 36,
+    height: 20,
+    borderRadius: 10,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  toggleKnob: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  // Action Button Styles
+  actionContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  actionButton: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  cancelButton: {
+    borderWidth: 1.5,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  submitButton: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  submitGradient: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
 

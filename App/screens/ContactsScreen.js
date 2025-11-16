@@ -1,6 +1,6 @@
 /**
- * Emergency Contacts Screen - Ultimate App Experience
- * Beautiful and attractive contact management with modern UI/UX
+ * Emergency Contacts Screen - Beautiful Modern Design
+ * Clean, attractive contact management with modern UI/UX
  */
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -16,14 +16,15 @@ import {
   Animated,
   StatusBar,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
-import AccessibleButton from '../components/AccessibleButton';
-import StatusIndicator from '../components/StatusIndicator';
 import * as Speech from 'expo-speech';
 import * as Haptics from 'expo-haptics';
+
+const { width } = Dimensions.get('window');
 
 const ContactsScreen = ({ navigation }) => {
   const { settings, getThemeColors } = useAccessibility();
@@ -306,54 +307,75 @@ const ContactsScreen = ({ navigation }) => {
   const renderContactItem = ({ item }) => (
     <Animated.View style={[
       styles.contactCard, 
-      { backgroundColor: colors.surface, borderColor: colors.border },
+      { backgroundColor: colors.surface },
       { opacity: fadeAnim }
     ]}>
-      <View style={styles.contactHeader}>
-        <View style={styles.iconContainer}>
-          <Text style={styles.contactIcon}>{getGroupIcon(item.group)}</Text>
+      {/* Contact Header */}
+      <View style={styles.cardHeader}>
+        <View style={styles.avatarContainer}>
+          <View style={[styles.avatar, { backgroundColor: getPriorityColor(item.priority) + '20' }]}>
+            <Text style={styles.avatarIcon}>{getGroupIcon(item.group)}</Text>
+          </View>
           {item.isPrimary && (
-            <View style={styles.primaryDot} />
+            <View style={[styles.primaryBadge, { backgroundColor: colors.error }]}>
+              <Text style={styles.primaryBadgeText}>★</Text>
+            </View>
           )}
         </View>
-        <View style={styles.contactInfo}>
-          <View style={styles.nameRow}>
+        
+        <View style={styles.contactDetails}>
+          <View style={styles.nameSection}>
             <Text style={[styles.contactName, { color: colors.text }]} numberOfLines={1}>
               {item.name}
             </Text>
-            <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(item.priority) }]}>
+            <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(item.priority) }]}>
               <Text style={styles.priorityText}>
                 {item.priority ? capitalizeFirstLetter(item.priority).charAt(0) : 'M'}
               </Text>
             </View>
           </View>
-          <Text style={[styles.contactPhone, { color: colors.textSecondary }]} numberOfLines={1}>
-            {item.phoneNumber}
+          
+          <Text style={[styles.phoneNumber, { color: colors.textSecondary }]} numberOfLines={1}>
+            📞 {item.phoneNumber}
           </Text>
-          <Text style={[styles.contactRelationship, { color: colors.textSecondary }]} numberOfLines={1}>
-            {item.relationship}
-          </Text>
+          
+          <View style={styles.relationshipRow}>
+            <Text style={[styles.relationship, { color: colors.textSecondary }]} numberOfLines={1}>
+              {item.relationship}
+            </Text>
+            <View style={[styles.groupTag, { backgroundColor: colors.primary + '15' }]}>
+              <Text style={[styles.groupTagText, { color: colors.primary }]}>
+                {capitalizeFirstLetter(item.group)}
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
       
-      <View style={styles.contactActions}>
+      {/* Action Buttons */}
+      <View style={styles.actionRow}>
         <TouchableOpacity 
-          style={[styles.miniActionButton, { backgroundColor: colors.primary + '20' }]}
+          style={[styles.actionBtn, { backgroundColor: colors.primary + '15' }]}
           onPress={() => handleEditContact(item)}
         >
-          <Text style={[styles.miniActionText, { color: colors.primary }]}>✏️</Text>
+          <Text style={styles.actionBtnIcon}>✏️</Text>
+          <Text style={[styles.actionBtnText, { color: colors.primary }]}>Edit</Text>
         </TouchableOpacity>
+        
         <TouchableOpacity 
-          style={[styles.miniActionButton, { backgroundColor: colors.success + '20' }]}
+          style={[styles.actionBtn, { backgroundColor: colors.success + '15' }]}
           onPress={() => handleShareContact(item)}
         >
-          <Text style={[styles.miniActionText, { color: colors.success }]}>📤</Text>
+          <Text style={styles.actionBtnIcon}>📤</Text>
+          <Text style={[styles.actionBtnText, { color: colors.success }]}>Share</Text>
         </TouchableOpacity>
+        
         <TouchableOpacity 
-          style={[styles.miniActionButton, { backgroundColor: colors.error + '20' }]}
+          style={[styles.actionBtn, { backgroundColor: colors.error + '15' }]}
           onPress={() => handleDeleteContact(item.id)}
         >
-          <Text style={[styles.miniActionText, { color: colors.error }]}>🗑️</Text>
+          <Text style={styles.actionBtnIcon}>🗑️</Text>
+          <Text style={[styles.actionBtnText, { color: colors.error }]}>Delete</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -398,101 +420,118 @@ const ContactsScreen = ({ navigation }) => {
         backgroundColor={colors.primary} 
       />
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Modern Hero Header with Gradient */}
+        {/* Beautiful Header with Gradient */}
         <LinearGradient
-          colors={[colors.primary, colors.primary + 'DD', colors.primary + '99']}
-          style={styles.heroHeader}
+          colors={[colors.primary, colors.primary + 'E6', colors.primary + 'CC']}
+          style={styles.header}
         >
           <Animated.View 
             style={[
-              styles.heroContent,
+              styles.headerContent,
               {
                 opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }]
               }
             ]}
           >
-            <Text style={styles.heroTitle}>👥 Emergency Contacts</Text>
-            <Text style={styles.heroSubtitle}>
-              Manage your emergency contact network
+            <Text style={styles.headerTitle}>� Emergency Contacts</Text>
+            <Text style={styles.headerSubtitle}>
+              Your trusted emergency network
             </Text>
             
-            {/* Quick Stats */}
-            <View style={styles.statsContainer}>
-              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+            {/* Quick Stats Row */}
+            <View style={styles.quickStats}>
+              <View style={styles.statItem}>
                 <Text style={styles.statNumber}>{contacts.length}</Text>
-                <Text style={styles.statLabel}>Total</Text>
+                <Text style={styles.statText}>Contacts</Text>
               </View>
-              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
                 <Text style={styles.statNumber}>
                   {contacts.filter(c => c.priority === 'high').length}
                 </Text>
-                <Text style={styles.statLabel}>High Priority</Text>
+                <Text style={styles.statText}>Priority</Text>
               </View>
-              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
                 <Text style={styles.statNumber}>
-                  {contacts.filter(c => c.isPrimary).length}
+                  {contacts.filter(c => c.group === 'emergency').length}
                 </Text>
-                <Text style={styles.statLabel}>Primary</Text>
+                <Text style={styles.statText}>Emergency</Text>
               </View>
             </View>
           </Animated.View>
         </LinearGradient>
 
-        {/* Compact Search and Filter Section */}
-        <View style={[styles.searchFilterContainer, { backgroundColor: colors.surface }]}>
-          <View style={styles.searchWrapper}>
+        {/* Modern Search Bar */}
+        <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={styles.searchIcon}>🔍</Text>
             <TextInput
-              style={[styles.modernSearchInput, { 
-                backgroundColor: colors.background,
-                color: colors.text,
-                borderColor: colors.border,
-              }]}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search contacts..."
               placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
               accessibilityLabel="Search contacts"
             />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Text style={[styles.clearButton, { color: colors.textSecondary }]}>✕</Text>
+              </TouchableOpacity>
+            )}
           </View>
-          
-          {/* Compact Filter Tabs */}
+        </View>
+
+        {/* Beautiful Filter Chips */}
+        <View style={styles.filterContainer}>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
-            style={styles.filterTabs}
-            contentContainerStyle={styles.filterTabsContent}
+            contentContainerStyle={styles.filterScrollContent}
           >
             {[
-              { key: 'all', label: 'All', icon: '📋' },
-              { key: 'emergency', label: 'Emergency', icon: '🚨' },
-              { key: 'family', label: 'Family', icon: '👨‍👩‍👧‍👦' },
-              { key: 'medical', label: 'Medical', icon: '🏥' },
-              { key: 'friends', label: 'Friends', icon: '👥' }
+              { key: 'all', label: 'All', icon: '📋', count: contacts.length },
+              { key: 'emergency', label: 'Emergency', icon: '🚨', count: contacts.filter(c => c.group === 'emergency').length },
+              { key: 'family', label: 'Family', icon: '👨‍👩‍👧‍👦', count: contacts.filter(c => c.group === 'family').length },
+              { key: 'medical', label: 'Medical', icon: '🏥', count: contacts.filter(c => c.group === 'medical').length },
+              { key: 'friends', label: 'Friends', icon: '👥', count: contacts.filter(c => c.group === 'friends').length }
             ].map((filter) => (
               <TouchableOpacity
                 key={filter.key}
                 style={[
-                  styles.filterTab,
-                  selectedGroup === filter.key && [styles.activeFilterTab, { backgroundColor: colors.primary }]
+                  styles.filterChip,
+                  { backgroundColor: selectedGroup === filter.key ? colors.primary : colors.surface },
+                  { borderColor: selectedGroup === filter.key ? colors.primary : colors.border }
                 ]}
                 onPress={() => setSelectedGroup(filter.key)}
               >
-                <Text style={styles.filterIcon}>{filter.icon}</Text>
+                <Text style={styles.chipIcon}>{filter.icon}</Text>
                 <Text style={[
-                  styles.filterLabel,
-                  { color: selectedGroup === filter.key ? 'white' : colors.textSecondary }
+                  styles.chipLabel,
+                  { color: selectedGroup === filter.key ? 'white' : colors.text }
                 ]}>
                   {filter.label}
                 </Text>
+                <View style={[
+                  styles.chipBadge,
+                  { backgroundColor: selectedGroup === filter.key ? 'rgba(255,255,255,0.3)' : colors.primary }
+                ]}>
+                  <Text style={[
+                    styles.chipBadgeText,
+                    { color: selectedGroup === filter.key ? 'white' : 'white' }
+                  ]}>
+                    {filter.count}
+                  </Text>
+                </View>
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
 
+        {/* Main Content */}
         <ScrollView
-          style={styles.scrollView}
+          style={styles.content}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -502,73 +541,81 @@ const ContactsScreen = ({ navigation }) => {
             />
           }
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.contentContainer}
         >
-        {/* Import/Export Controls */}
-        <View style={[styles.importExportContainer, { backgroundColor: colors.surface }]}>
-          <AccessibleButton
-            title="Import"
-            onPress={handleImportContacts}
-            variant="outline"
-            size="small"
-            accessibilityLabel="Import contacts from device"
-            style={styles.importExportButton}
-          />
-          <AccessibleButton
-            title="Export"
-            onPress={handleExportContacts}
-            variant="outline"
-            size="small"
-            accessibilityLabel="Export contacts to file"
-            style={styles.importExportButton}
-          />
-        </View>
+          {/* Quick Actions */}
+          <View style={[styles.quickActions, { backgroundColor: colors.surface }]}>
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: colors.primary + '15' }]}
+              onPress={handleImportContacts}
+            >
+              <Text style={styles.actionIcon}>📥</Text>
+              <Text style={[styles.actionText, { color: colors.primary }]}>Import</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: colors.success + '15' }]}
+              onPress={handleExportContacts}
+            >
+              <Text style={styles.actionIcon}>📤</Text>
+              <Text style={[styles.actionText, { color: colors.success }]}>Export</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: colors.warning + '15' }]}
+              onPress={handleAddContact}
+            >
+              <Text style={styles.actionIcon}>➕</Text>
+              <Text style={[styles.actionText, { color: colors.warning }]}>Add New</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Grouped Contacts */}
-        {Object.entries(getGroupedContacts()).map(([group, groupContacts]) => (
-          <View key={group}>
-            {renderGroupHeader(group)}
+          {/* Contacts List */}
+          {filteredContacts.length > 0 ? (
             <FlatList
-              data={groupContacts}
+              data={filteredContacts}
               renderItem={renderContactItem}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
+              ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
             />
-          </View>
-        ))}
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyIcon}>📱</Text>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                {searchQuery ? 'No matches found' : 'No contacts yet'}
+              </Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                {searchQuery 
+                  ? 'Try adjusting your search terms' 
+                  : 'Add your first emergency contact to get started'
+                }
+              </Text>
+              {!searchQuery && (
+                <TouchableOpacity
+                  style={[styles.emptyButton, { backgroundColor: colors.primary }]}
+                  onPress={handleAddContact}
+                >
+                  <Text style={styles.emptyButtonText}>Add Contact</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </ScrollView>
 
-        {/* Empty State */}
-        {filteredContacts.length === 0 && !loading && (
-          <View style={styles.emptyState}>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              {searchQuery ? 'No contacts match your search' : 'No emergency contacts added yet'}
-            </Text>
-            <AccessibleButton
-              title="Add Your First Contact"
-              onPress={handleAddContact}
-              variant="primary"
-              size="large"
-              accessibilityLabel="Add your first emergency contact"
-              style={styles.emptyButton}
-            />
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Floating Action Button */}
-      <Animated.View style={[styles.fabContainer, { opacity: fadeAnim }]}>
-        <TouchableOpacity
-          style={[styles.fab, { backgroundColor: colors.primary }]}
-          onPress={handleAddContact}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={[colors.primary, colors.primary + 'DD']}
-            style={styles.fabGradient}
+        {/* Modern Floating Action Button */}
+        <Animated.View style={[styles.fabContainer, { opacity: fadeAnim }]}>
+          <TouchableOpacity
+            style={[styles.fab, { backgroundColor: colors.primary }]}
+            onPress={handleAddContact}
+            activeOpacity={0.8}
           >
-            <Text style={styles.fabText}>+</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
+            <LinearGradient
+              colors={[colors.primary, colors.primary + 'E6']}
+              style={styles.fabGradient}
+            >
+              <Text style={styles.fabIcon}>+</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
     </SafeAreaView>
     </>
   );
@@ -578,185 +625,218 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  heroHeader: {
-    height: 160,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 10,
+  // Header Styles
+  header: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingTop: 24,
   },
-  heroContent: {
-    padding: 16,
+  headerContent: {
     alignItems: 'center',
-    width: '100%',
   },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
     marginBottom: 6,
   },
-  heroSubtitle: {
-    fontSize: 14,
+  headerSubtitle: {
+    fontSize: 13,
     color: 'white',
     textAlign: 'center',
     opacity: 0.9,
     marginBottom: 16,
   },
-  statsContainer: {
+  quickStats: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginTop: 8,
-  },
-  statCard: {
-    padding: 12,
-    borderRadius: 10,
-    minWidth: 70,
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
   },
   statNumber: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
   },
-  statLabel: {
-    fontSize: 11,
-    marginTop: 2,
+  statText: {
+    fontSize: 10,
     color: 'white',
     opacity: 0.8,
+    marginTop: 2,
   },
-  searchFilterContainer: {
-    padding: 12,
-    marginTop: -8,
+  statDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255,255,255,0.3)',
     marginHorizontal: 12,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
   },
-  searchWrapper: {
+  // Search Styles
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   searchIcon: {
     fontSize: 16,
     marginRight: 10,
   },
-  modernSearchInput: {
+  searchInput: {
     flex: 1,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    fontSize: 15,
+    fontSize: 14,
+    paddingVertical: 0,
   },
-  filterTabs: {
-    marginBottom: 4,
+  clearButton: {
+    fontSize: 14,
+    paddingHorizontal: 6,
   },
-  filterTabsContent: {
-    paddingHorizontal: 4,
+  // Filter Styles
+  filterContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
   },
-  filterTab: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    marginRight: 6,
-    alignItems: 'center',
+  filterScrollContent: {
+    paddingRight: 16,
+  },
+  filterChip: {
     flexDirection: 'row',
-    minHeight: 32,
-  },
-  activeFilterTab: {
-    elevation: 2,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginRight: 10,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.05,
     shadowRadius: 2,
+    elevation: 1,
   },
-  filterIcon: {
+  chipIcon: {
     fontSize: 12,
     marginRight: 4,
   },
-  filterLabel: {
-    fontSize: 11,
+  chipLabel: {
+    fontSize: 12,
     fontWeight: '600',
+    marginRight: 6,
   },
-  modernStatusIndicator: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  searchInput: {
-    borderWidth: 1,
+  chipBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
     borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+    minWidth: 16,
+    alignItems: 'center',
   },
-  scrollView: {
+  chipBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  // Content Styles
+  content: {
     flex: 1,
   },
-  importExportContainer: {
+  contentContainer: {
+    paddingBottom: 80,
+  },
+  quickActions: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    padding: 15,
-    marginHorizontal: 20,
+    marginHorizontal: 16,
+    marginBottom: 16,
     borderRadius: 12,
-    marginBottom: 10,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  importExportButton: {
-    marginHorizontal: 8,
-    minWidth: 100,
+  actionButton: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginHorizontal: 3,
   },
-  groupHeader: {
+  actionIcon: {
     fontSize: 16,
-    fontWeight: 'bold',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    marginBottom: 3,
   },
+  actionText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  // Contact Card Styles
   contactCard: {
-    marginVertical: 6,
-    marginHorizontal: 14,
+    marginHorizontal: 16,
     borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  contactHeader: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  iconContainer: {
+  avatarContainer: {
     position: 'relative',
     marginRight: 12,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  contactIcon: {
-    fontSize: 24,
+  avatarIcon: {
+    fontSize: 20,
   },
-  primaryDot: {
+  primaryBadge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#ff4444',
+    top: -3,
+    right: -3,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  contactInfo: {
+  primaryBadgeText: {
+    color: 'white',
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
+  contactDetails: {
     flex: 1,
   },
-  nameRow: {
+  nameSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   contactName: {
     fontSize: 16,
@@ -764,94 +844,127 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
-  priorityBadge: {
+  priorityIndicator: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
-    minWidth: 20,
+    minWidth: 18,
     alignItems: 'center',
   },
   priorityText: {
     color: 'white',
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
   },
-  contactPhone: {
-    fontSize: 14,
-    marginBottom: 2,
+  phoneNumber: {
+    fontSize: 13,
+    marginBottom: 6,
   },
-  contactRelationship: {
-    fontSize: 12,
-  },
-  contactActions: {
+  relationshipRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-  miniActionButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
-  miniActionText: {
-    fontSize: 14,
-  },
-  historySection: {
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 12,
-  },
-  historyTitle: {
+  relationship: {
     fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  historyItem: {
-    fontSize: 12,
-  },
-  emptyState: {
     flex: 1,
+  },
+  groupTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  groupTagText: {
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    marginHorizontal: 2,
   },
-  emptyText: {
-    fontSize: 18,
+  actionBtnIcon: {
+    fontSize: 12,
+    marginRight: 3,
+  },
+  actionBtnText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  // Empty State Styles
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 32,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontSize: 13,
     textAlign: 'center',
     marginBottom: 20,
+    lineHeight: 18,
   },
   emptyButton: {
-    minWidth: 200,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
+  emptyButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  // FAB Styles
   fabContainer: {
     position: 'absolute',
     right: 16,
-    bottom: 90,
+    bottom: 80,
     zIndex: 1000,
   },
   fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
   },
   fabGradient: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fabText: {
-    fontSize: 22,
+  fabIcon: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
   },
