@@ -2,11 +2,12 @@
  * VOICE2EYE Mobile App
  * Main application with navigation and accessibility features
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
+import { View } from 'react-native';
 import { AccessibilityProvider } from './components/AccessibilityProvider';
 import 'react-native-gesture-handler';
 
@@ -22,6 +23,10 @@ import CameraScreen from './screens/CameraScreen';
 
 // Import navigation component
 import BottomNavigationBar from './components/BottomNavigationBar';
+
+// Import translation components
+import TranslationFloatingButton from './components/TranslationFloatingButton';
+import TranslationModal from './components/TranslationModal';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -44,55 +49,70 @@ function TabNavigator() {
 }
 
 export default function App() {
+  const [translationModalVisible, setTranslationModalVisible] = useState(false);
+
   return (
     <AccessibilityProvider>
       <NavigationContainer>
         <StatusBar style="auto" />
-        <Stack.Navigator
-          initialRouteName="MainTabs"
-          screenOptions={{
-            headerShown: false,
-            gestureEnabled: true,
-            animationEnabled: true,
-          }}
-        >
-          <Stack.Screen
-            name="MainTabs"
-            component={TabNavigator}
-            options={{
-              title: 'VOICE2EYE',
+        <View style={{ flex: 1 }}>
+          <Stack.Navigator
+            initialRouteName="MainTabs"
+            screenOptions={{
+              headerShown: false,
+              gestureEnabled: true,
+              animationEnabled: true,
             }}
+          >
+            <Stack.Screen
+              name="MainTabs"
+              component={TabNavigator}
+              options={{
+                title: 'VOICE2EYE',
+              }}
+            />
+            <Stack.Screen
+              name="Emergency"
+              component={EmergencyScreen}
+              options={{
+                title: 'Emergency Mode',
+                gestureEnabled: false,
+              }}
+            />
+            <Stack.Screen
+              name="ContactForm"
+              component={ContactForm}
+              options={{
+                title: 'Contact Form',
+              }}
+            />
+            <Stack.Screen
+              name="Help"
+              component={HelpScreen}
+              options={{
+                title: 'Help & Tutorial',
+              }}
+            />
+            <Stack.Screen
+              name="Camera"
+              component={CameraScreen}
+              options={{
+                title: 'Camera View',
+              }}
+            />
+          </Stack.Navigator>
+          
+          {/* Translation Floating Button - Available on all screens */}
+          <TranslationFloatingButton 
+            onPress={() => setTranslationModalVisible(true)} 
           />
-          <Stack.Screen
-            name="Emergency"
-            component={EmergencyScreen}
-            options={{
-              title: 'Emergency Mode',
-              gestureEnabled: false,
-            }}
+          
+          {/* Translation Modal */}
+          <TranslationModal 
+            visible={translationModalVisible} 
+            onClose={() => setTranslationModalVisible(false)} 
           />
-          <Stack.Screen
-            name="ContactForm"
-            component={ContactForm}
-            options={{
-              title: 'Contact Form',
-            }}
-          />
-          <Stack.Screen
-            name="Help"
-            component={HelpScreen}
-            options={{
-              title: 'Help & Tutorial',
-            }}
-          />
-          <Stack.Screen
-            name="Camera"
-            component={CameraScreen}
-            options={{
-              title: 'Camera View',
-            }}
-          />
-        </Stack.Navigator>
+        </View>
       </NavigationContainer>
     </AccessibilityProvider>
   );

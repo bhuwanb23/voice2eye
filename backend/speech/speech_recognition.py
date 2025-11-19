@@ -219,6 +219,105 @@ class SpeechRecognitionService:
         self.stop_listening()
         self.audio_processor.cleanup()
         logger.info("Speech recognition service cleaned up")
+    
+    def process_audio_file(self, file_path: str) -> Optional[Dict[str, Any]]:
+        """
+        Process an audio file and return speech recognition result
+        
+        Args:
+            file_path: Path to the audio file (wav, mp3, etc.)
+            
+        Returns:
+            Dict containing recognized text and confidence, or None if failed
+        """
+        try:
+            if not self.model or not self.recognizer:
+                if not self.initialize_model():
+                    logger.error("Failed to initialize speech recognition model")
+                    return None
+            
+            # Import scipy for audio file processing
+            try:
+                import scipy.io.wavfile as wav
+                from scipy.io import wavfile
+            except ImportError:
+                logger.error("scipy not available for audio file processing")
+                return None
+            
+            # Check file extension and process accordingly
+            if file_path.lower().endswith('.wav'):
+                # Process WAV file directly
+                sample_rate, audio_data = wavfile.read(file_path)
+            else:
+                # For other formats, we would need to convert first
+                # This is a simplified implementation - in practice you might use librosa or pydub
+                logger.warning(f"File format not directly supported for processing: {file_path}")
+                logger.info("Attempting to process as WAV file...")
+                try:
+                    sample_rate, audio_data = wavfile.read(file_path)
+                except Exception as e:
+                    logger.error(f"Failed to read audio file: {e}")
+                    return None
+            
+            # Convert to mono if stereo
+            if len(audio_data.shape) > 1:
+                audio_data = audio_data[:, 0]  # Take first channel
+            
+            # Resample if needed
+            if sample_rate != SAMPLE_RATE:
+                import scipy.signal as signal
+                # Resample to target sample rate
+                number_of_samples = round(len(audio_data) * float(SAMPLE_RATE) / sample_rate)
+                audio_data = signal.resample(audio_data, number_of_samples)
+                sample_rate = SAMPLE_RATE
+            
+            # Convert to int16 if needed
+            if audio_data.dtype != np.int16:
+                # Normalize to int16 range
+                audio_data = audio_data / np.max(np.abs(audio_data)) * 32767
+                audio_data = audio_data.astype(np.int16)
+            
+            # Process in chunks
+            chunk_size = SAMPLE_RATE  # 1 second chunks
+            results = []
+            
+            for i in range(0, len(audio_data), chunk_size):
+                chunk = audio_data[i:i + chunk_size]
+                chunk_bytes = chunk.tobytes()
+                
+                # Process chunk
+                if self.recognizer.AcceptWaveform(chunk_bytes):
+                    result = json.loads(self.recognizer.Result())
+                    if result.get('text', '').strip():
+                        results.append(result)
+            
+            # Get final result
+            final_result = json.loads(self.recognizer.FinalResult())
+            if final_result.get('text', '').strip():
+                results.append(final_result)
+            
+            # Combine all results
+            if results:
+                combined_text = ' '.join([r.get('text', '') for r in results]).strip()
+                avg_confidence = np.mean([r.get('confidence', 0.0) for r in results]) if results else 0.0
+                
+                return {
+                    'text': combined_text,
+                    'confidence': avg_confidence,
+                    'word_count': len(combined_text.split()) if combined_text else 0
+                }
+            else:
+                return {
+                    'text': '',
+                    'confidence': 0.0,
+                    'word_count': 0
+                }
+                
+        except Exception as e:
+            logger.error(f"Error processing audio file {file_path}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return None
 
 # Convenience functions
 def create_speech_service(model_path: Optional[str] = None) -> SpeechRecognitionService:

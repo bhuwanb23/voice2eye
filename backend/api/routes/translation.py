@@ -164,16 +164,17 @@ async def recognize_and_translate(
                             transcribed_text = "[Speech recognition not available - placeholder text]"
                             recognition_confidence = 0.0
                     
-                    # TODO: Implement actual audio file processing
-                    # For now, this is a placeholder that would:
-                    # 1. Load audio file
-                    # 2. Process with speech recognition service
-                    # 3. Get transcribed text
+                    # Process audio file with speech recognition service
+                    speech_result = speech_service.process_audio_file(tmp_file_path)
                     
-                    # Placeholder implementation
-                    logger.warning("Speech recognition from file not fully implemented - using placeholder")
-                    transcribed_text = "[Audio file received but speech recognition from file not yet implemented]"
-                    recognition_confidence = 0.85
+                    if speech_result:
+                        transcribed_text = speech_result.get('text', '')
+                        recognition_confidence = speech_result.get('confidence', 0.0)
+                        logger.info(f"Speech recognition successful: '{transcribed_text[:50]}...' (confidence: {recognition_confidence:.2f})")
+                    else:
+                        logger.warning("Speech recognition returned no result")
+                        transcribed_text = "[Speech recognition failed to produce result]"
+                        recognition_confidence = 0.0
                     
                 except Exception as speech_error:
                     logger.error(f"Speech recognition error: {speech_error}")
@@ -202,10 +203,9 @@ async def recognize_and_translate(
                 "source_language": source_language,
                 "target_language": target_language,
                 "confidence": recognition_confidence,
-                "timestamp": translation_result.get('timestamp') if 'translation_result' in locals() else None,
-                "note": "Speech recognition from file is a placeholder - full implementation pending"
+                "timestamp": translation_result.get('timestamp') if 'translation_result' in locals() else None
             }
-            
+
         finally:
             # Clean up temporary file
             try:

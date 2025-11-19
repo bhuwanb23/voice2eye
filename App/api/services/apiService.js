@@ -295,6 +295,62 @@ class ApiService {
 
     return ws;
   }
+
+  // ============ TRANSLATION API ============
+  
+  /**
+   * Translate text from source language to target language
+   * @param {string} text - Text to translate
+   * @param {string} sourceLanguage - Source language code (e.g., 'en', 'es')
+   * @param {string} targetLanguage - Target language code (e.g., 'fr', 'de')
+   * @returns {Promise<Object>} Translation result with original and translated text
+   */
+  async translateText(text, sourceLanguage, targetLanguage) {
+    return this.fetch('/translation/translate', {
+      method: 'POST',
+      body: JSON.stringify({
+        text,
+        source_language: sourceLanguage,
+        target_language: targetLanguage,
+      }),
+    });
+  }
+
+  /**
+   * Recognize speech from audio file and translate to target language
+   * @param {File|Object} audioFile - Audio file to process
+   * @param {string} sourceLanguage - Source language code of the speech
+   * @param {string} targetLanguage - Target language code for translation
+   * @returns {Promise<Object>} Result with transcribed and translated text
+   */
+  async recognizeAndTranslate(audioFile, sourceLanguage, targetLanguage) {
+    const formData = new FormData();
+    formData.append('audio_file', audioFile);
+    formData.append('source_language', sourceLanguage);
+    formData.append('target_language', targetLanguage);
+
+    return fetch(`${this.baseURL}/translation/recognize-and-translate`, {
+      method: 'POST',
+      body: formData,
+    }).then(response => response.json());
+  }
+
+  /**
+   * Get list of supported languages for translation
+   * @returns {Promise<Object>} Object containing languages dictionary and count
+   */
+  async getSupportedLanguages() {
+    return this.fetch('/translation/languages');
+  }
+
+  /**
+   * Detect the language of the given text
+   * @param {string} text - Text to detect language for
+   * @returns {Promise<Object>} Object containing detected language and confidence
+   */
+  async detectLanguage(text) {
+    return this.fetch(`/translation/detect?text=${encodeURIComponent(text)}`);
+  }
 }
 
 // Export singleton instance
