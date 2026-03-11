@@ -233,8 +233,8 @@ const DashboardScreen = ({ navigation }) => {
 
   const announceScreenEntry = () => {
     const message = isEmergencyMode
-      ? "Emergency mode active. Main dashboard. Use voice commands or gestures to navigate."
-      : personalizedMessage || "Main dashboard. Voice recognition and gesture detection ready.";
+      ? "Emergency active. Home screen. Use voice or gestures."
+      : personalizedMessage || "Home screen. Ready.";
 
     Speech.speak(message, {
       rate: settings.speechRate,
@@ -325,69 +325,69 @@ const DashboardScreen = ({ navigation }) => {
 
   const quickActions = [
     {
-      title: 'Voice Recognition',
-      subtitle: 'Start listening for commands',
+      title: 'Listen',
+      subtitle: 'Start listening',
       icon: '🎤',
       gradient: ['#667eea', '#764ba2'],
       onPress: startVoiceRecognition,
       variant: 'primary',
-      accessibilityLabel: 'Start voice recognition',
-      accessibilityHint: 'Tap to begin listening for voice commands',
+      accessibilityLabel: 'Start listening',
+      accessibilityHint: 'Tap to listen for commands',
     },
     {
-      title: 'Gesture Detection',
-      subtitle: 'Detect hand gestures',
+      title: 'See Gestures',
+      subtitle: 'Start camera',
       icon: '✋',
       gradient: ['#f093fb', '#f5576c'],
       onPress: startGestureDetection,
       variant: 'secondary',
-      accessibilityLabel: 'Start gesture detection',
-      accessibilityHint: 'Tap to begin detecting hand gestures',
+      accessibilityLabel: 'Start camera',
+      accessibilityHint: 'Tap to detect gestures',
     },
     {
-      title: 'Emergency',
-      subtitle: 'Trigger emergency alert',
+      title: 'Help',
+      subtitle: 'Call for help',
       icon: '🚨',
       gradient: ['#ff6b6b', '#ee5a24'],
       onPress: triggerEmergency,
       variant: 'error',
-      accessibilityLabel: 'Trigger emergency alert',
-      accessibilityHint: 'Tap to activate emergency mode and contact help',
+      accessibilityLabel: 'Call for help',
+      accessibilityHint: 'Tap to get help now',
     },
   ];
 
   const navigationItems = [
     {
       title: 'Settings',
-      subtitle: 'Configure preferences',
+      subtitle: 'Change settings',
       icon: '⚙️',
       color: colors.primary,
       onPress: () => navigation.navigate('Settings'),
-      accessibilityLabel: 'Open settings',
+      accessibilityLabel: 'Settings',
     },
     {
       title: 'Contacts',
-      subtitle: 'Manage emergency contacts',
+      subtitle: 'Edit contacts',
       icon: '👥',
       color: colors.success,
       onPress: () => navigation.navigate('Contacts'),
-      accessibilityLabel: 'Manage emergency contacts',
+      accessibilityLabel: 'Contacts',
     },
     {
-      title: 'Gesture Training',
-      subtitle: 'Learn hand gestures',
+      title: 'Practice',
+      subtitle: 'Learn gestures',
       icon: '✋',
       color: colors.accent,
       onPress: () => navigation.navigate('GestureTraining'),
-      accessibilityLabel: 'Open gesture training',
+      accessibilityLabel: 'Practice gestures',
     },
     {
-      title: 'Help & Tutorial',
-      subtitle: 'Get help and learn',
+      title: 'Help',
+      subtitle: 'How to use',
       icon: '❓',
       color: colors.warning,
       onPress: () => navigation.navigate('Help'),
-      accessibilityLabel: 'Open help and tutorial',
+      accessibilityLabel: 'Open help',
     },
   ];
 
@@ -421,8 +421,8 @@ const DashboardScreen = ({ navigation }) => {
               }
             ]}
           >
-            <Text style={styles.headerTitle}>🏠 Dashboard</Text>
-            <Text style={styles.headerSubtitle}>Voice & Gesture Control</Text>
+            <Text style={styles.headerTitle}>Home</Text>
+            <Text style={styles.headerSubtitle}>Voice & Gestures</Text>
 
             {/* Compact Stats */}
             <View style={styles.quickStats}>
@@ -471,7 +471,7 @@ const DashboardScreen = ({ navigation }) => {
 
           {/* Consolidated Quick Actions & Stats */}
           <View style={[styles.mainCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>⚡ Quick Actions</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Actions</Text>
             
             {/* Action Buttons Grid */}
             <View style={styles.actionsGrid}>
@@ -492,19 +492,19 @@ const DashboardScreen = ({ navigation }) => {
 
             {/* Performance Metrics */}
             <View style={styles.metricsSection}>
-              <Text style={[styles.subsectionTitle, { color: colors.text }]}>Performance</Text>
+              <Text style={[styles.subsectionTitle, { color: colors.text }]}>System Info</Text>
               <View style={styles.metricsRow}>
                 <View style={[styles.metricItem, { backgroundColor: colors.background }]}>
                   <Text style={[styles.metricValue, { color: colors.primary }]}>{metrics.latency}ms</Text>
-                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Response</Text>
+                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Speed</Text>
                 </View>
                 <View style={[styles.metricItem, { backgroundColor: colors.background }]}>
                   <Text style={[styles.metricValue, { color: colors.success }]}>{metrics.uptime}%</Text>
-                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Uptime</Text>
+                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Active</Text>
                 </View>
                 <View style={[styles.metricItem, { backgroundColor: colors.background }]}>
                   <Text style={[styles.metricValue, { color: colors.accent }]}>{patterns.totalEmergencies}</Text>
-                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Emergencies</Text>
+                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Alerts</Text>
                 </View>
               </View>
             </View>
@@ -512,11 +512,11 @@ const DashboardScreen = ({ navigation }) => {
 
           {/* Real-time Charts */}
           <View style={[styles.chartsCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>📈 Real-time Analytics</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Stats</Text>
             
             {/* Usage Chart */}
             <View style={styles.chartSection}>
-              <Text style={[styles.chartTitle, { color: colors.text }]}>Usage Over Time</Text>
+              <Text style={[styles.chartTitle, { color: colors.text }]}>Weekly Usage</Text>
               <View style={[styles.chartContainer, { backgroundColor: colors.background }]}>
                 <View style={styles.chartBars}>
                   {chartData.map((height, index) => (
@@ -538,7 +538,7 @@ const DashboardScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.chartLegend}>
                   <Text style={[styles.legendText, { color: colors.textSecondary }]}>
-                    📊 Live Usage Data • Updates every 3s
+                    📊 Live Data
                   </Text>
                 </View>
               </View>
@@ -546,7 +546,7 @@ const DashboardScreen = ({ navigation }) => {
 
             {/* Performance Trends */}
             <View style={styles.chartSection}>
-              <Text style={[styles.chartTitle, { color: colors.text }]}>Performance Trends</Text>
+              <Text style={[styles.chartTitle, { color: colors.text }]}>System Health</Text>
               <View style={[styles.trendContainer, { backgroundColor: colors.background }]}>
                 <View style={styles.trendRow}>
                   <View style={styles.trendItem}>
@@ -555,13 +555,13 @@ const DashboardScreen = ({ navigation }) => {
                   </View>
                   <View style={styles.trendItem}>
                     <Text style={[styles.trendValue, { color: colors.primary }]}>↓ {metrics.latency}ms</Text>
-                    <Text style={[styles.trendLabel, { color: colors.textSecondary }]}>Latency</Text>
+                    <Text style={[styles.trendLabel, { color: colors.textSecondary }]}>Speed</Text>
                   </View>
                 </View>
                 <View style={styles.progressIndicators}>
                   <View style={styles.progressItem}>
                     <Text style={[styles.progressLabel, { color: colors.textSecondary }]}>
-                      Voice Recognition ({Math.round(performanceData.voiceAccuracy)}%)
+                      Voice ({Math.round(performanceData.voiceAccuracy)}%)
                     </Text>
                     <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                       <Animated.View style={[
@@ -575,7 +575,7 @@ const DashboardScreen = ({ navigation }) => {
                   </View>
                   <View style={styles.progressItem}>
                     <Text style={[styles.progressLabel, { color: colors.textSecondary }]}>
-                      Gesture Detection ({Math.round(performanceData.gestureAccuracy)}%)
+                      Gestures ({Math.round(performanceData.gestureAccuracy)}%)
                     </Text>
                     <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                       <Animated.View style={[
@@ -594,7 +594,7 @@ const DashboardScreen = ({ navigation }) => {
 
           {/* Navigation Menu - Fixed 2x2 Grid */}
           <View style={[styles.navCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>📱 Navigation</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Menu</Text>
             <View style={styles.navGrid}>
               {navigationItems.map((item, index) => (
                 <TouchableOpacity
@@ -615,14 +615,14 @@ const DashboardScreen = ({ navigation }) => {
           {/* Last Command & Voice Guide Combined */}
           {(lastCommand || currentStatus !== 'idle') && (
             <View style={[styles.commandCard, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>🎤 Voice Control</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Voice</Text>
               {lastCommand && (
                 <View style={[styles.lastCommand, { backgroundColor: colors.background }]}>
                   <Text style={[styles.commandText, { color: colors.text }]}>Last: "{lastCommand}"</Text>
                 </View>
               )}
               <View style={styles.voiceHints}>
-                <Text style={[styles.hintText, { color: colors.textSecondary }]}>Try: "Emergency", "Settings", "Contacts"</Text>
+                <Text style={[styles.hintText, { color: colors.textSecondary }]}>Say: "Help", "Settings", "Contacts"</Text>
               </View>
             </View>
           )}

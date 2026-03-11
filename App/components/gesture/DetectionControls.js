@@ -14,7 +14,7 @@ const DetectionControls = ({ isDetecting, onStartDetection, onNavigateBack }) =>
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <AccessibleButton
-        title={isDetecting ? "Detecting..." : "Start Detection"}
+        title={isDetecting ? "Working..." : "Start"}
         onPress={onStartDetection}
         variant="primary"
         size="large"
@@ -25,11 +25,11 @@ const DetectionControls = ({ isDetecting, onStartDetection, onNavigateBack }) =>
       />
       
       <AccessibleButton
-        title="Back to Dashboard"
+        title="Home"
         onPress={onNavigateBack}
         variant="outline"
         size="large"
-        accessibilityLabel="Return to main dashboard"
+        accessibilityLabel="Go home"
         style={styles.actionButton}
       />
     </View>

@@ -25,10 +25,10 @@ const GestureFeedback = ({ feedbackVisualization }) => {
         {feedbackVisualization.gesture.emoji}
       </Text>
       <Text style={styles.feedbackText}>
-        {feedbackVisualization.isAccurate ? 'Great job!' : 'Try again'}
+        {feedbackVisualization.isAccurate ? 'Good!' : 'Try again'}
       </Text>
       <Text style={styles.detailText}>
-        {feedbackVisualization.gesture.name} - {(feedbackVisualization.confidence * 100).toFixed(1)}% confidence
+        {feedbackVisualization.gesture.name} ({(feedbackVisualization.confidence * 100).toFixed(0)}%)
       </Text>
     </Animated.View>
   );

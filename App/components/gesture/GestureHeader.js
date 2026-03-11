@@ -15,10 +15,10 @@ const GestureHeader = () => {
   return (
     <View style={[styles.header, { backgroundColor: colors.primary }]}>
       <Text style={[styles.title, { color: 'white' }]}>
-        Gesture Training
+        Practice
       </Text>
       <Text style={[styles.subtitle, { color: 'white' }]}>
-        Learn and practice hand gestures
+        Learn gestures
       </Text>
     </View>
   );

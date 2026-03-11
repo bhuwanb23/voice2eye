@@ -15,25 +15,25 @@ const BottomNavigationBar = ({ navigation, currentRoute }) => {
       name: 'Dashboard', 
       icon: '\ud83c\udfe0',
       accessibilityLabel: 'Home',
-      accessibilityHint: 'Navigate to dashboard screen'
+      accessibilityHint: 'Go home'
     },
     { 
       name: 'Contacts', 
       icon: '\ud83d\udc65',
       accessibilityLabel: 'Contacts',
-      accessibilityHint: 'Navigate to emergency contacts screen'
+      accessibilityHint: 'Go to contacts'
     },
     { 
       name: 'GestureTraining', 
       icon: '\u270b',
-      accessibilityLabel: 'Gestures',
-      accessibilityHint: 'Navigate to gesture training screen'
+      accessibilityLabel: 'Practice',
+      accessibilityHint: 'Go to practice'
     },
     { 
       name: 'Settings', 
       icon: '\u2699\ufe0f',
       accessibilityLabel: 'Settings',
-      accessibilityHint: 'Navigate to settings screen'
+      accessibilityHint: 'Go to settings'
     },
   ];
 

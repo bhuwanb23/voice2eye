@@ -29,7 +29,7 @@ const GestureList = ({ gestures, onSelectGesture, gestureProgress, currentGestur
   return (
     <View style={stylesBase.container}>
       <Text style={[stylesBase.sectionTitle, { color: colors.text }]}>
-        Available Gestures
+        Gestures
       </Text>
       
       <View style={stylesBase.gestureContainer}>

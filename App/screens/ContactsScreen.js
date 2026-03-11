@@ -173,8 +173,8 @@ const ContactsScreen = ({ navigation }) => {
 
   const handleDeleteContact = (contactId) => {
     Alert.alert(
-      'Delete Contact',
-      'Are you sure you want to delete this contact?',
+      'Delete?',
+      'Delete this contact?',
       [
         {
           text: 'Cancel',
@@ -204,8 +204,8 @@ const ContactsScreen = ({ navigation }) => {
   const handleShareContact = (contact) => {
     // In a real implementation, this would share the contact
     Alert.alert(
-      'Share Contact',
-      `Sharing contact: ${contact.name}\nPhone: ${contact.phoneNumber}`,
+      'Share?',
+      `Sharing: ${contact.name}\nPhone: ${contact.phoneNumber}`,
       [
         { text: 'Cancel', style: 'cancel' },
         { 
@@ -217,7 +217,7 @@ const ContactsScreen = ({ navigation }) => {
                 pitch: settings.speechPitch,
               });
             }
-            Alert.alert('Shared', 'Contact shared successfully');
+            Alert.alert('Shared', 'Contact shared');
           }
         }
       ]
@@ -227,8 +227,8 @@ const ContactsScreen = ({ navigation }) => {
   const handleImportContacts = () => {
     // In a real implementation, this would import contacts from device
     Alert.alert(
-      'Import Contacts',
-      'This feature will import contacts from your device address book.',
+      'Import?',
+      'Import from phone?',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
@@ -240,7 +240,7 @@ const ContactsScreen = ({ navigation }) => {
                 pitch: settings.speechPitch,
               });
             }
-            Alert.alert('Imported', 'Contacts imported successfully');
+            Alert.alert('Imported', 'Contacts imported');
           }
         }
       ]
@@ -250,8 +250,8 @@ const ContactsScreen = ({ navigation }) => {
   const handleExportContacts = () => {
     // In a real implementation, this would export contacts to a file
     Alert.alert(
-      'Export Contacts',
-      'This feature will export all contacts to a file.',
+      'Export?',
+      'Save to file?',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
@@ -263,7 +263,7 @@ const ContactsScreen = ({ navigation }) => {
                 pitch: settings.speechPitch,
               });
             }
-            Alert.alert('Exported', 'Contacts exported successfully');
+            Alert.alert('Exported', 'Contacts exported');
           }
         }
       ]
@@ -434,23 +434,23 @@ const ContactsScreen = ({ navigation }) => {
               }
             ]}
           >
-            <Text style={styles.headerTitle}>� Emergency Contacts</Text>
+            <Text style={styles.headerTitle}>Contacts</Text>
             <Text style={styles.headerSubtitle}>
-              Your trusted emergency network
+              People to call
             </Text>
             
             {/* Quick Stats Row */}
             <View style={styles.quickStats}>
               <View style={styles.statItem}>
                 <Text style={styles.statNumber}>{contacts.length}</Text>
-                <Text style={styles.statText}>Contacts</Text>
+                <Text style={styles.statText}>Total</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statNumber}>
                   {contacts.filter(c => c.priority === 'high').length}
                 </Text>
-                <Text style={styles.statText}>Priority</Text>
+                <Text style={styles.statText}>High Priority</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
@@ -469,7 +469,7 @@ const ContactsScreen = ({ navigation }) => {
             <Text style={styles.searchIcon}>🔍</Text>
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
-              placeholder="Search contacts..."
+              placeholder="Search..."
               placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -564,7 +564,7 @@ const ContactsScreen = ({ navigation }) => {
               onPress={handleAddContact}
             >
               <Text style={styles.actionIcon}>➕</Text>
-              <Text style={[styles.actionText, { color: colors.warning }]}>Add New</Text>
+              <Text style={[styles.actionText, { color: colors.warning }]}>Add</Text>
             </TouchableOpacity>
           </View>
 
@@ -581,12 +581,12 @@ const ContactsScreen = ({ navigation }) => {
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>📱</Text>
               <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                {searchQuery ? 'No matches found' : 'No contacts yet'}
+                {searchQuery ? 'No contacts' : 'No contacts'}
               </Text>
               <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                 {searchQuery 
-                  ? 'Try adjusting your search terms' 
-                  : 'Add your first emergency contact to get started'
+                  ? 'Try a different name' 
+                  : 'Add a contact'
                 }
               </Text>
               {!searchQuery && (
@@ -594,7 +594,7 @@ const ContactsScreen = ({ navigation }) => {
                   style={[styles.emptyButton, { backgroundColor: colors.primary }]}
                   onPress={handleAddContact}
                 >
-                  <Text style={styles.emptyButtonText}>Add Contact</Text>
+                  <Text style={styles.emptyButtonText}>Add</Text>
                 </TouchableOpacity>
               )}
             </View>

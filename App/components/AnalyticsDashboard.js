@@ -47,12 +47,12 @@ const AnalyticsDashboard = ({ usageStats, serviceStatus, metrics, patterns, expo
       ]}
     >
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>📊 Analytics Overview</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>📊 Stats</Text>
         
         {/* Usage Statistics Cards */}
         <View style={styles.statsGrid}>
           <StatCard
-            title="Voice Commands"
+            title="Voice"
             value={usageStats?.voiceCommands || 0}
             icon="🎤"
             color={colors.primary}
@@ -66,7 +66,7 @@ const AnalyticsDashboard = ({ usageStats, serviceStatus, metrics, patterns, expo
             backgroundColor={`${colors.accent}15`}
           />
           <StatCard
-            title="Emergencies"
+            title="Alerts"
             value={usageStats?.emergencyEvents || 0}
             icon="🚨"
             color={colors.error}
@@ -83,15 +83,15 @@ const AnalyticsDashboard = ({ usageStats, serviceStatus, metrics, patterns, expo
 
         {/* Performance Metrics */}
         <View style={styles.metricsSection}>
-          <Text style={[styles.subsectionTitle, { color: colors.text }]}>Performance</Text>
+          <Text style={[styles.subsectionTitle, { color: colors.text }]}>System</Text>
           <View style={styles.metricsRow}>
             <MetricItem
-              label="Response Time"
+              label="Speed"
               value={`${metrics?.latency || 0}ms`}
               colors={colors}
             />
             <MetricItem
-              label="Uptime"
+              label="Active"
               value={`${metrics?.uptime || 0}%`}
               colors={colors}
             />

@@ -11,7 +11,7 @@ const DashboardHeader = ({ personalizedMessage, isEmergencyMode }) => {
       <View style={styles.content}>
         <Text style={styles.title}>VOICE2EYE</Text>
         <Text style={styles.subtitle}>
-          {isEmergencyMode ? 'Emergency Mode Active' : 'AI-Powered Assistive Technology'}
+          {isEmergencyMode ? 'Emergency' : 'Voice & Gesture Helper'}
         </Text>
         {personalizedMessage ? (
           <Text style={styles.welcomeMessage}>{personalizedMessage}</Text>
@@ -19,7 +19,7 @@ const DashboardHeader = ({ personalizedMessage, isEmergencyMode }) => {
         <View style={styles.statusBadge}>
           <View style={[styles.statusDot, { backgroundColor: isEmergencyMode ? '#ff6b6b' : '#4CAF50' }]} />
           <Text style={styles.statusText}>
-            {isEmergencyMode ? 'Emergency Active' : 'System Ready'}
+            {isEmergencyMode ? 'Emergency On' : 'Ready'}
           </Text>
         </View>
       </View>

@@ -43,7 +43,7 @@ const HelpScreen = ({ navigation }) => {
     ]).start();
 
     if (settings.voiceNavigation) {
-      Speech.speak('Help and tutorial screen. Learn how to use VOICE2EYE features.', {
+      Speech.speak('Help screen. Learn how to use.', {
         rate: settings.speechRate,
         pitch: settings.speechPitch,
       });
@@ -51,9 +51,9 @@ const HelpScreen = ({ navigation }) => {
   }, []);
 
   const helpSections = [
-    { id: 'overview', title: 'Overview', icon: '🏠' },
+    { id: 'overview', title: 'Start', icon: '🏠' },
     { id: 'gestures', title: 'Gestures', icon: '✋' },
-    { id: 'voice', title: 'Voice Commands', icon: '🎤' },
+    { id: 'voice', title: 'Voice', icon: '🎤' },
     { id: 'emergency', title: 'Emergency', icon: '🚨' },
     { id: 'faq', title: 'FAQ', icon: '❓' },
   ];
@@ -245,52 +245,50 @@ const HelpScreen = ({ navigation }) => {
       ]}
     >
       <Text style={[styles.sectionTitle, { color: colors.text }]}>
-        Welcome to VOICE2EYE
+        Welcome
       </Text>
       <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-        VOICE2EYE is an assistive technology app designed to help users navigate 
-        their environment using voice commands and hand gestures. This guide will 
-        help you understand all the features and how to use them effectively.
+        This app helps you use voice and gestures.
       </Text>
       
       <View style={[styles.featureCard, { backgroundColor: colors.surface }]}>
         <Text style={[styles.featureTitle, { color: colors.text }]}>
-          Key Features
+          Features
         </Text>
         <View style={styles.featureList}>
           <View style={styles.featureItem}>
             <Text style={styles.featureIcon}>🎤</Text>
             <Text style={[styles.featureText, { color: colors.text }]}>
-              Voice Command Recognition
+              Voice Control
             </Text>
           </View>
           <View style={styles.featureItem}>
             <Text style={styles.featureIcon}>✋</Text>
             <Text style={[styles.featureText, { color: colors.text }]}>
-              Hand Gesture Detection
+              Gestures
             </Text>
           </View>
           <View style={styles.featureItem}>
             <Text style={styles.featureIcon}>🚨</Text>
             <Text style={[styles.featureText, { color: colors.text }]}>
-              Emergency Alert System
+              Emergency Alert
             </Text>
           </View>
           <View style={styles.featureItem}>
             <Text style={styles.featureIcon}>👥</Text>
             <Text style={[styles.featureText, { color: colors.text }]}>
-              Emergency Contact Management
+              Contacts
             </Text>
           </View>
         </View>
       </View>
       
       <AccessibleButton
-        title="Start Tutorial"
+        title="Start"
         onPress={() => setActiveSection('gestures')}
         variant="primary"
         size="large"
-        accessibilityLabel="Start the tutorial"
+        accessibilityLabel="Start"
         style={styles.actionButton}
       />
     </Animated.View>
@@ -340,11 +338,11 @@ const HelpScreen = ({ navigation }) => {
       ))}
       
       <AccessibleButton
-        title="Practice Gestures"
+        title="Practice"
         onPress={() => navigation.navigate('GestureTraining')}
         variant="primary"
         size="large"
-        accessibilityLabel="Go to gesture training"
+        accessibilityLabel="Go to practice"
         style={styles.actionButton}
       />
     </Animated.View>
@@ -494,17 +492,17 @@ const HelpScreen = ({ navigation }) => {
       
       <View style={[styles.contactCard, { backgroundColor: colors.surface }]}>
         <Text style={[styles.contactTitle, { color: colors.text }]}>
-          Need More Help?
+          Need Help?
         </Text>
         <Text style={[styles.contactText, { color: colors.textSecondary }]}>
-          If you have questions not covered here, please contact our support team.
+          Contact our support team.
         </Text>
         <AccessibleButton
-          title="Contact Support"
+          title="Email Support"
           onPress={() => Linking.openURL('mailto:support@voice2eye.com')}
           variant="primary"
           size="medium"
-          accessibilityLabel="Send email to support"
+          accessibilityLabel="Email support"
           style={styles.contactButton}
         />
       </View>
@@ -527,17 +525,17 @@ const HelpScreen = ({ navigation }) => {
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <Text style={[styles.title, { color: 'white' }]}>
-          Help & Tutorial
+          Help
         </Text>
         <Text style={[styles.subtitle, { color: 'white' }]}>
-          Learn how to use VOICE2EYE
+          How to use
         </Text>
       </View>
 
       {/* Status Indicator */}
       <StatusIndicator
         status="idle"
-        message="Help and tutorial guide"
+        message="Help guide"
         announceVoice={false}
       />
 
@@ -555,7 +553,7 @@ const HelpScreen = ({ navigation }) => {
             onPress={() => setActiveSection(section.id)}
             variant={activeSection === section.id ? 'primary' : 'outline'}
             size="small"
-            accessibilityLabel={`Go to ${section.title} section`}
+            accessibilityLabel={`Go to ${section.title}`}
             style={styles.navButton}
           />
         ))}
@@ -572,11 +570,11 @@ const HelpScreen = ({ navigation }) => {
       {/* Back Button */}
       <View style={[styles.footer, { backgroundColor: colors.surface }]}>
         <AccessibleButton
-          title="Back to Dashboard"
+          title="Home"
           onPress={() => navigation.navigate('Dashboard')}
           variant="outline"
           size="large"
-          accessibilityLabel="Return to main dashboard"
+          accessibilityLabel="Go home"
           style={styles.footerButton}
         />
       </View>

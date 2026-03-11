@@ -94,13 +94,13 @@ const CameraScreen = ({ navigation }) => {
         // Provide real-time feedback based on confidence
         let feedbackMessage = '';
         if (newGesture.confidence >= 90) {
-          feedbackMessage = `Excellent! ${newGesture.name} detected with ${newGesture.confidence}% confidence`;
+          feedbackMessage = `${newGesture.name} detected.`;
         } else if (newGesture.confidence >= 70) {
-          feedbackMessage = `Good! ${newGesture.name} detected with ${newGesture.confidence}% confidence`;
+          feedbackMessage = `${newGesture.name} detected.`;
         } else if (newGesture.confidence >= 50) {
-          feedbackMessage = `Fair! ${newGesture.name} detected with ${newGesture.confidence}% confidence`;
+          feedbackMessage = `${newGesture.name} detected.`;
         } else {
-          feedbackMessage = `Low confidence detection: ${newGesture.name} (${newGesture.confidence}%)`;
+          feedbackMessage = `Not sure. Try again.`;
         }
         
         if (settings.voiceNavigation) {
@@ -127,10 +127,10 @@ const CameraScreen = ({ navigation }) => {
         // Handle emergency gesture
         if (data.is_emergency) {
           setStatus('emergency');
-          setStatusMessage('Emergency gesture detected!');
+          setStatusMessage('Emergency detected!');
           
           if (settings.voiceNavigation) {
-            Speech.speak('Emergency gesture detected! Navigating to emergency screen.', {
+            Speech.speak('Emergency detected. Opening help.', {
               rate: settings.speechRate,
               pitch: settings.speechPitch,
             });
@@ -169,9 +169,9 @@ const CameraScreen = ({ navigation }) => {
       const { status } = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.CAMERA,
         {
-          title: 'Camera Permission',
-          message: 'This app needs access to your camera to take photos and videos.',
-          buttonNeutral: 'Ask Me Later',
+          title: 'Camera Access',
+          message: 'We need camera access to see gestures.',
+          buttonNeutral: 'Later',
           buttonNegative: 'Cancel',
           buttonPositive: 'OK',
         }
@@ -456,16 +456,16 @@ const CameraScreen = ({ navigation }) => {
       {/* Top Controls */}
       <View style={[styles.topControls, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
         <AccessibleButton
-          title={flash === 'on' ? '💡 ON' : '💡 OFF'}
+          title={flash === 'on' ? 'Flash On' : 'Flash Off'}
           onPress={toggleFlash}
           variant="outline"
           size="small"
-          accessibilityLabel={`Flash is ${flash}. Tap to toggle.`}
+          accessibilityLabel={`Flash is ${flash}. Tap to change.`}
           style={styles.controlButton}
         />
         
         <AccessibleButton
-          title="🔄 SWITCH"
+          title="Flip"
           onPress={switchCamera}
           variant="outline"
           size="small"
@@ -514,55 +514,55 @@ const CameraScreen = ({ navigation }) => {
       <View style={[styles.gestureControls, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
         {gestureConnectionStatus === 'disconnected' && (
           <AccessibleButton
-            title="🔗 CONNECT GESTURE STREAM"
+            title="Connect Stream"
             onPress={connectGestureStreaming}
             variant="primary"
             size="medium"
-            accessibilityLabel="Connect to gesture streaming service"
+            accessibilityLabel="Connect to gesture stream"
             style={styles.gestureButton}
           />
         )}
         
         {gestureConnectionStatus === 'connected' && !isGestureStreaming && (
           <AccessibleButton
-            title="▶ START GESTURE STREAMING"
+            title="Start Stream"
             onPress={startGestureStreaming}
             variant="success"
             size="medium"
-            accessibilityLabel="Start gesture streaming"
+            accessibilityLabel="Start streaming"
             style={styles.gestureButton}
           />
         )}
         
         {isGestureStreaming && (
           <AccessibleButton
-            title="⏹ STOP GESTURE STREAMING"
+            title="Stop Stream"
             onPress={stopGestureStreaming}
             variant="error"
             size="medium"
-            accessibilityLabel="Stop gesture streaming"
+            accessibilityLabel="Stop streaming"
             style={styles.gestureButton}
           />
         )}
         
         {gestureConnectionStatus === 'connected' && (
           <AccessibleButton
-            title="🚫 DISCONNECT GESTURE STREAM"
+            title="Disconnect"
             onPress={disconnectGestureStreaming}
             variant="outline"
             size="small"
-            accessibilityLabel="Disconnect from gesture streaming service"
+            accessibilityLabel="Disconnect stream"
             style={styles.gestureButton}
           />
         )}
         
         {gestureConnectionStatus === 'error' && (
           <AccessibleButton
-            title="🔁 RECONNECT GESTURE STREAM"
+            title="Reconnect"
             onPress={reconnectGestureStreaming}
             variant="warning"
             size="medium"
-            accessibilityLabel="Reconnect to gesture streaming service"
+            accessibilityLabel="Reconnect stream"
             style={styles.gestureButton}
           />
         )}
@@ -571,22 +571,22 @@ const CameraScreen = ({ navigation }) => {
       {/* Bottom Controls */}
       <View style={[styles.bottomControls, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
         <AccessibleButton
-          title={isProcessing ? "🔄 PROCESSING" : "🎯 DETECT"}
+          title={isProcessing ? "Working" : "Detect"}
           onPress={simulateGestureDetection}
           variant="primary"
           size="large"
           disabled={isProcessing}
-          accessibilityLabel={isProcessing ? "Processing gesture" : "Detect gestures"}
+          accessibilityLabel={isProcessing ? "Processing" : "Detect gestures"}
           style={styles.mainButton}
         />
         
         <AccessibleButton
-          title={isRecording ? "⏹ STOP" : "⏺ RECORD"}
+          title={isRecording ? "Stop" : "Record"}
           onPress={startTrainingCapture}
           variant={isRecording ? "error" : "accent"}
           size="large"
           disabled={isProcessing}
-          accessibilityLabel={isRecording ? "Stop recording" : "Start recording for training"}
+          accessibilityLabel={isRecording ? "Stop recording" : "Start recording"}
           style={styles.mainButton}
         />
       </View>

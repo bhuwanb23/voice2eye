@@ -41,7 +41,7 @@ const GestureDetails = ({
         {metrics && (
           <View style={[styles.accuracyContainer, { backgroundColor: colors.surface }]}>
             <Text style={[styles.accuracyTitle, { color: colors.text }]}>
-              Your Performance
+              Stats
             </Text>
             <View style={styles.accuracyRow}>
               <Text style={[styles.accuracyLabel, { color: colors.textSecondary }]}>
@@ -53,7 +53,7 @@ const GestureDetails = ({
             </View>
             <View style={styles.accuracyRow}>
               <Text style={[styles.accuracyLabel, { color: colors.textSecondary }]}>
-                Success Rate:
+                Success:
               </Text>
               <Text style={[styles.accuracyValue, { color: colors.text }]}>
                 {metrics.success}/{metrics.attempts}
@@ -64,22 +64,22 @@ const GestureDetails = ({
         
         {trainingMode === 'practice' && (
           <AccessibleButton
-            title="Start Practice"
+            title="Practice"
             onPress={onStartPractice}
             variant="primary"
             size="large"
-            accessibilityLabel="Start practicing this gesture"
+            accessibilityLabel="Practice"
             style={styles.actionButton}
           />
         )}
         
         {trainingMode === 'test' && (
           <AccessibleButton
-            title="Start Test"
+            title="Test"
             onPress={onStartTest}
             variant="accent"
             size="large"
-            accessibilityLabel="Start testing this gesture"
+            accessibilityLabel="Test"
             style={styles.actionButton}
           />
         )}

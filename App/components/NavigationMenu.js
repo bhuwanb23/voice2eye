@@ -39,7 +39,7 @@ const NavigationMenu = ({ items }) => {
       ]}
     >
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>🧭 Navigation</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>🧭 Menu</Text>
         <View style={styles.navGrid}>
           {items.map((item, index) => (
             <NavCard key={index} item={item} colors={colors} delay={index * 120} />

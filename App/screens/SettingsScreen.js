@@ -209,8 +209,8 @@ const SettingsScreen = ({ navigation }) => {
 
   const handleResetSettings = () => {
     Alert.alert(
-      'Reset Settings',
-      'Are you sure you want to reset all settings to default values?',
+      'Reset?',
+      'Reset all to default?',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
@@ -257,17 +257,17 @@ const SettingsScreen = ({ navigation }) => {
             ]}
           >
             <Text style={styles.headerTitle}>⚙️ Settings</Text>
-            <Text style={styles.headerSubtitle}>Customize your experience</Text>
+            <Text style={styles.headerSubtitle}>Options</Text>
             
             {/* Quick Stats */}
             <View style={styles.quickStats}>
               <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
                 <Text style={styles.statNumber}>{Object.keys(localSettings).filter(key => localSettings[key]).length}</Text>
-                <Text style={styles.statLabel}>Active</Text>
+                <Text style={styles.statLabel}>On</Text>
               </View>
               <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
                 <Text style={styles.statNumber}>3</Text>
-                <Text style={styles.statLabel}>Categories</Text>
+                <Text style={styles.statLabel}>Groups</Text>
               </View>
               <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
                 <Text style={styles.statNumber}>{hasUnsavedChanges ? 'UNSAVED' : 'SYNCED'}</Text>
@@ -287,7 +287,7 @@ const SettingsScreen = ({ navigation }) => {
                 color: colors.text,
                 borderColor: colors.border,
               }]}
-              placeholder="Search settings..."
+              placeholder="Search..."
               placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -302,7 +302,7 @@ const SettingsScreen = ({ navigation }) => {
           >
             {[
               { key: 'all', label: 'All', icon: '📋' },
-              { key: 'accessibility', label: 'Accessibility', icon: '♿' },
+              { key: 'accessibility', label: 'Access', icon: '♿' },
               { key: 'privacy', label: 'Privacy', icon: '🔒' },
               { key: 'emergency', label: 'Emergency', icon: '🚨' },
               { key: 'audio', label: 'Audio', icon: '🔊' }
@@ -365,12 +365,12 @@ const SettingsScreen = ({ navigation }) => {
             
             {/* Accessibility Section */}
             <View style={[styles.settingSection, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>♿ Accessibility</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>♿ Access</Text>
               
               <View style={styles.compactSettingItem}>
                 <View style={styles.settingInfo}>
-                  <Text style={[styles.settingTitle, { color: colors.text }]}>Voice Navigation</Text>
-                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Audio feedback</Text>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Voice Guide</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Spoken help</Text>
                 </View>
                 <Switch
                   value={localSettings.voiceNavigation ?? true}
@@ -383,7 +383,7 @@ const SettingsScreen = ({ navigation }) => {
               <View style={styles.compactSettingItem}>
                 <View style={styles.settingInfo}>
                   <Text style={[styles.settingTitle, { color: colors.text }]}>High Contrast</Text>
-                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Better visibility</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Easier to see</Text>
                 </View>
                 <Switch
                   value={localSettings.highContrast ?? false}
@@ -395,8 +395,8 @@ const SettingsScreen = ({ navigation }) => {
 
               <View style={styles.compactSettingItem}>
                 <View style={styles.settingInfo}>
-                  <Text style={[styles.settingTitle, { color: colors.text }]}>Haptic Feedback</Text>
-                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Vibration on touch</Text>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Vibration</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Vibrate on touch</Text>
                 </View>
                 <Switch
                   value={localSettings.hapticFeedback ?? true}
@@ -413,8 +413,8 @@ const SettingsScreen = ({ navigation }) => {
               
               <View style={styles.compactSettingItem}>
                 <View style={styles.settingInfo}>
-                  <Text style={[styles.settingTitle, { color: colors.text }]}>Usage Analytics</Text>
-                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Help improve app</Text>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Share Data</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Help us improve</Text>
                 </View>
                 <Switch
                   value={localSettings.usageAnalytics ?? true}
@@ -426,8 +426,8 @@ const SettingsScreen = ({ navigation }) => {
 
               <View style={styles.compactSettingItem}>
                 <View style={styles.settingInfo}>
-                  <Text style={[styles.settingTitle, { color: colors.text }]}>Performance Tracking</Text>
-                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Monitor performance</Text>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Track Speed</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Check speed</Text>
                 </View>
                 <Switch
                   value={localSettings.performanceTracking ?? true}
@@ -444,8 +444,8 @@ const SettingsScreen = ({ navigation }) => {
               
               <View style={styles.compactSettingItem}>
                 <View style={styles.settingInfo}>
-                  <Text style={[styles.settingTitle, { color: colors.text }]}>Emergency Mode</Text>
-                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Quick emergency access</Text>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Emergency Button</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Show button</Text>
                 </View>
                 <Switch
                   value={localSettings.emergencyMode ?? false}
@@ -473,8 +473,8 @@ const SettingsScreen = ({ navigation }) => {
               
               <View style={styles.compactSettingItem}>
                 <View style={styles.settingInfo}>
-                  <Text style={[styles.settingTitle, { color: colors.text }]}>Voice Commands</Text>
-                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Voice control</Text>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Voice Control</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Control with voice</Text>
                 </View>
                 <Switch
                   value={localSettings.voiceCommands ?? true}
@@ -486,8 +486,8 @@ const SettingsScreen = ({ navigation }) => {
 
               <View style={styles.compactSettingItem}>
                 <View style={styles.settingInfo}>
-                  <Text style={[styles.settingTitle, { color: colors.text }]}>Audio Only Mode</Text>
-                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>Audio interface only</Text>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>Audio Only</Text>
+                  <Text style={[styles.settingDesc, { color: colors.textSecondary }]}>No screen</Text>
                 </View>
                 <Switch
                   value={localSettings.audioOnlyMode ?? false}
@@ -504,7 +504,7 @@ const SettingsScreen = ({ navigation }) => {
                 style={[styles.actionButton, { backgroundColor: colors.error }]}
                 onPress={handleResetSettings}
               >
-                <Text style={styles.actionButtonText}>🔄 Reset Settings</Text>
+                <Text style={styles.actionButtonText}>🔄 Reset All</Text>
               </TouchableOpacity>
             </View>
           </View>

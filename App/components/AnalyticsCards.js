@@ -30,14 +30,14 @@ const AnalyticsCards = ({ usageStats }) => {
 
   const analyticsData = [
     { 
-      title: 'Events', 
+      title: 'Total', 
       value: usageStats?.totalEvents || 0, 
       color: colors.primary,
       icon: '📊',
       gradient: ['#667eea', '#764ba2']
     },
     { 
-      title: 'Voice Cmds', 
+      title: 'Voice', 
       value: usageStats?.voiceCommands || 0, 
       color: colors.accent,
       icon: '🎤',
@@ -51,7 +51,7 @@ const AnalyticsCards = ({ usageStats }) => {
       gradient: ['#4facfe', '#00f2fe']
     },
     { 
-      title: 'Emergencies', 
+      title: 'Alerts', 
       value: usageStats?.emergencyEvents || 0, 
       color: colors.error,
       icon: '🚨',
@@ -64,7 +64,7 @@ const AnalyticsCards = ({ usageStats }) => {
       styles.container,
       { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
     ]}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Usage Stats</Text>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>Stats</Text>
       <View style={styles.grid}>
         {analyticsData.map((item, index) => (
           <Animated.View

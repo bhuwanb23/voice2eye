@@ -377,16 +377,16 @@ const GestureTrainingScreen = ({ navigation }) => {
 
         if (newGesture.confidence >= 90) {
           feedbackType = 'correct';
-          feedbackMessage = `Excellent! You performed '${newGesture.name}' perfectly.`;
+          feedbackMessage = `Great! ${newGesture.name} detected.`;
         } else if (newGesture.confidence >= 70) {
           feedbackType = 'correct';
-          feedbackMessage = `Good job! '${newGesture.name}' was detected with high confidence.`;
+          feedbackMessage = `Good! ${newGesture.name} detected.`;
         } else if (newGesture.confidence >= 50) {
           feedbackType = 'warning';
-          feedbackMessage = `Fair attempt at '${newGesture.name}'. Try to be more precise.`;
+          feedbackMessage = `${newGesture.name} okay. Try again.`;
         } else {
           feedbackType = 'incorrect';
-          feedbackMessage = `Let's give '${newGesture.name}' another shot. Focus on clear hand positioning.`;
+          feedbackMessage = `Try ${newGesture.name} again.`;
         }
 
         setFeedback({
@@ -607,14 +607,14 @@ const GestureTrainingScreen = ({ navigation }) => {
               }
             ]}
           >
-            <Text style={styles.headerTitle}>👋 Gesture Training</Text>
-            <Text style={styles.headerSubtitle}>Master hand gestures with AI precision</Text>
+            <Text style={styles.headerTitle}>👋 Practice</Text>
+            <Text style={styles.headerSubtitle}>Learn gestures</Text>
 
             {/* Compact Stats Row */}
             <View style={styles.quickStats}>
               <View style={styles.statItem}>
                 <Text style={styles.statNumber}>{getTrainingStats().masteredGestures}</Text>
-                <Text style={styles.statText}>Mastered</Text>
+                <Text style={styles.statText}>Learned</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
@@ -650,7 +650,7 @@ const GestureTrainingScreen = ({ navigation }) => {
           {/* Detection Area */}
           <View style={[styles.detectionArea, { backgroundColor: colors.surface }]}>
             <View style={styles.detectionHeader}>
-              <Text style={[styles.detectionTitle, { color: colors.text }]}>Detection Zone</Text>
+              <Text style={[styles.detectionTitle, { color: colors.text }]}>Camera</Text>
               <View style={[styles.statusBadge, { 
                 backgroundColor: isDetecting ? colors.warning + '20' : colors.success + '20',
                 borderColor: isDetecting ? colors.warning : colors.success
@@ -658,7 +658,7 @@ const GestureTrainingScreen = ({ navigation }) => {
                 <Text style={[styles.statusBadgeText, { 
                   color: isDetecting ? colors.warning : colors.success 
                 }]}>
-                  {isDetecting ? 'Detecting...' : 'Ready'}
+                  {isDetecting ? 'Looking...' : 'Ready'}
                 </Text>
               </View>
             </View>
@@ -677,8 +677,8 @@ const GestureTrainingScreen = ({ navigation }) => {
               ) : (
                 <View style={styles.emptyDetection}>
                   <Text style={styles.handIcon}>👋</Text>
-                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Show your hand gesture</Text>
-                  <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Position your hand in front of the camera</Text>
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Show hand</Text>
+                  <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Put hand in view</Text>
                 </View>
               )}
             </View>
@@ -830,11 +830,11 @@ const GestureTrainingScreen = ({ navigation }) => {
               {isDetecting ? (
                 <>
                   <ActivityIndicator color="#FFFFFF" size="small" style={{ marginRight: 8 }} />
-                  <Text style={styles.primaryActionText}>Detecting...</Text>
+                  <Text style={styles.primaryActionText}>Working...</Text>
                 </>
               ) : (
                 <>
-                  <Text style={styles.primaryActionText}>👋 Start Detection</Text>
+                  <Text style={styles.primaryActionText}>👋 Start</Text>
                 </>
               )}
             </LinearGradient>

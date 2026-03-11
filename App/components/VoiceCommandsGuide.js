@@ -32,11 +32,11 @@ const VoiceCommandsGuide = () => {
   }, []);
 
   const commands = [
-    { icon: '🚨', text: 'Say "Emergency" or "Help"', color: colors.error },
+    { icon: '🚨', text: 'Say "Help"', color: colors.error },
     { icon: '⚙️', text: 'Say "Settings"', color: colors.primary },
     { icon: '👥', text: 'Say "Contacts"', color: colors.success },
     { icon: '📷', text: 'Say "Camera"', color: colors.accent },
-    { icon: '✋', text: 'Say "Gesture Training"', color: colors.warning },
+    { icon: '✋', text: 'Say "Practice"', color: colors.warning },
     { icon: '❓', text: 'Say "Help"', color: colors.info },
   ];
 
@@ -51,7 +51,7 @@ const VoiceCommandsGuide = () => {
       ]}
     >
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>🎤 Voice Commands</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>🎤 Voice</Text>
         <View style={styles.commandsGrid}>
           {commands.map((command, index) => (
             <CommandCard 

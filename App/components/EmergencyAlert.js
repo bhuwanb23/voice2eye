@@ -35,9 +35,9 @@ const EmergencyAlert = ({
   const [alertHistory, setAlertHistory] = useState([]);
 
   const alertTypes = [
-    { id: 'medical', label: 'Medical Emergency', icon: '🏥', color: '#f44336' },
-    { id: 'security', label: 'Security Threat', icon: '🛡️', color: '#ff9800' },
-    { id: 'general', label: 'General Emergency', icon: '🚨', color: '#2196f3' },
+    { id: 'medical', label: 'Medical', icon: '🏥', color: '#f44336' },
+    { id: 'security', label: 'Danger', icon: '🛡️', color: '#ff9800' },
+    { id: 'general', label: 'Help Needed', icon: '🚨', color: '#2196f3' },
   ];
 
   const [preventionSettings, setPreventionSettings] = useState({
@@ -95,17 +95,17 @@ const EmergencyAlert = ({
 
   const getDefaultMessage = (type) => {
     const messages = {
-      medical: 'Medical emergency - immediate assistance required',
-      security: 'Security threat - help needed immediately',
-      general: 'Emergency situation - assistance required',
+      medical: 'Medical help needed now.',
+      security: 'Danger. Help needed now.',
+      general: 'Emergency. Help needed.',
     };
-    return messages[type] || 'Emergency - assistance required';
+    return messages[type] || 'Emergency. Help needed.';
   };
 
   const scheduleEscalation = (alert) => {
     // In a real implementation, this would set up escalation timers
     setTimeout(() => {
-      Alert.alert('Escalation', 'Alert has been escalated to emergency services');
+      Alert.alert('Escalation', 'Alert escalated');
     }, 60000); // After 1 minute
   };
 
@@ -153,19 +153,19 @@ const EmergencyAlert = ({
         <View style={styles.countdownOverlay}>
           <View style={[styles.countdownCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.countdownTitle, { color: colors.error }]}>
-              Alert will trigger in
+              Sending alert in
             </Text>
             <Text style={[styles.countdownNumber, { color: colors.error }]}>
               {countdown}
             </Text>
             <Text style={[styles.countdownSubtext, { color: colors.textSecondary }]}>
-              Tap to cancel
+              Tap to stop
             </Text>
             <TouchableOpacity
               style={[styles.cancelButton, { backgroundColor: colors.error }]}
               onPress={cancelCountdown}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>Stop</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -175,7 +175,7 @@ const EmergencyAlert = ({
       {!isCounting && (
         <View style={[styles.configContainer, { backgroundColor: colors.surface }]}>
           {/* Alert Type Selector */}
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Alert Type</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Type</Text>
           <View style={styles.typeSelector}>
             {alertTypes.map(type => (
               <TouchableOpacity
@@ -196,14 +196,14 @@ const EmergencyAlert = ({
           {/* Custom Message */}
           {customizationEnabled && (
             <>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Custom Message</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Message</Text>
               <TextInput
                 style={[styles.textInput, {
                   backgroundColor: colors.background,
                   color: colors.text,
                   borderColor: colors.border,
                 }]}
-                placeholder="Enter custom message..."
+                placeholder="Type message..."
                 placeholderTextColor={colors.textSecondary}
                 value={customMessage}
                 onChangeText={setCustomMessage}
@@ -217,7 +217,7 @@ const EmergencyAlert = ({
           <View style={styles.settingsRow}>
             <View style={styles.settingItem}>
               <Text style={[styles.settingLabel, { color: colors.text }]}>
-                Include Location
+                Send Location
               </Text>
               <Switch
                 value={includeLocation}
@@ -228,7 +228,7 @@ const EmergencyAlert = ({
 
             <View style={styles.settingItem}>
               <Text style={[styles.settingLabel, { color: colors.text }]}>
-                Enable Escalation
+                Escalate if needed
               </Text>
               <Switch
                 value={escalationEnabled}
@@ -243,14 +243,14 @@ const EmergencyAlert = ({
             style={[styles.triggerButton, { backgroundColor: colors.error }]}
             onPress={preventFalseAlarm}
           >
-            <Text style={styles.triggerButtonText}>🚨 TRIGGER EMERGENCY ALERT 🚨</Text>
+            <Text style={styles.triggerButtonText}>🚨 GET HELP NOW 🚨</Text>
           </TouchableOpacity>
 
           {/* Contacts List */}
           {contacts.length > 0 && (
             <View style={styles.contactsPreview}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Will Contact ({contacts.length})
+                Notifying ({contacts.length})
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {contacts.map((contact, index) => (

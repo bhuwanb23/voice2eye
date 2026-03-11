@@ -265,7 +265,7 @@ const EmergencyScreen = ({ navigation, route }) => {
       let currentLocation = location;
       if (emergencySettings.locationTracking) {
         // In a real implementation, we would get the actual current location
-        currentLocation = "Current location being determined...";
+        currentLocation = "Finding location...";
       }
       
       try {
@@ -299,15 +299,15 @@ const EmergencyScreen = ({ navigation, route }) => {
         
         // Show offline mode notification
         Alert.alert(
-          'Emergency Activated (Offline Mode)', 
-          'Backend unavailable. Emergency will proceed with local countdown.',
+          'Offline Mode', 
+          'Backend offline. Using local timer.',
           [{ text: 'OK' }]
         );
       }
       
     } catch (error) {
       console.error('Failed to trigger emergency:', error);
-      Alert.alert('Error', 'Failed to trigger emergency. Please try again.');
+      Alert.alert('Error', 'Failed to trigger emergency. Try again.');
     } finally {
       setIsLoading(false);
     }
@@ -348,8 +348,8 @@ const EmergencyScreen = ({ navigation, route }) => {
       
       // Show confirmation message
       Alert.alert(
-        'Emergency Confirmed',
-        `Help has been contacted. ${result.messages_sent || 0} contacts notified.`,
+        'Confirmed',
+        `Help contacted. ${result.messages_sent || 0} notified.`,
         [{ text: 'OK' }]
       );
       
@@ -364,8 +364,8 @@ const EmergencyScreen = ({ navigation, route }) => {
       setContactsNotified(emergencyContacts.length);
       
       Alert.alert(
-        'Emergency Confirmed (Offline Mode)', 
-        `API unavailable. Emergency confirmed locally. ${emergencyContacts.length} contacts would be notified when online.`,
+        'Confirmed (Offline)', 
+        `API offline. ${emergencyContacts.length} would be notified.`,
         [{ text: 'OK' }]
       );
     }
@@ -384,8 +384,8 @@ const EmergencyScreen = ({ navigation, route }) => {
         
         // Show offline cancellation message
         Alert.alert(
-          'Emergency Cancelled',
-          'Your emergency alert has been cancelled.',
+          'Cancelled',
+          'Alert cancelled.',
           [{ text: 'OK' }]
         );
         
@@ -401,8 +401,8 @@ const EmergencyScreen = ({ navigation, route }) => {
       
       // Show cancellation message
       Alert.alert(
-        'Emergency Cancelled',
-        'Your emergency alert has been cancelled.',
+        'Cancelled',
+        'Alert cancelled.',
         [{ text: 'OK' }]
       );
       
@@ -414,8 +414,8 @@ const EmergencyScreen = ({ navigation, route }) => {
       setCurrentAlertId(null);
       
       Alert.alert(
-        'Emergency Cancelled',
-        'Your emergency alert has been cancelled.',
+        'Cancelled',
+        'Alert cancelled.',
         [{ text: 'OK' }]
       );
     }
@@ -439,7 +439,7 @@ const EmergencyScreen = ({ navigation, route }) => {
       }, 1000);
       
       // Voice announcement only when emergency is triggered (not on page load)
-      const message = `Emergency triggered! Help will be contacted in ${countdown} seconds. Tap stop to cancel.`;
+      const message = `Emergency triggered! Help coming in ${countdown} seconds.`;
       Speech.speak(message, {
         rate: 0.7,
         pitch: 1.2,
@@ -460,11 +460,11 @@ const EmergencyScreen = ({ navigation, route }) => {
   const getEmergencyMessage = () => {
     switch (emergencyStatus) {
       case 'triggered':
-        return `Emergency triggered! Help will be contacted in ${countdown} seconds.`;
+        return `Help coming in ${countdown} seconds.`;
       case 'confirmed':
-        return 'Emergency confirmed! Help has been contacted.';
+        return 'Help sent.';
       case 'cancelled':
-        return 'Emergency cancelled. You are safe.';
+        return 'Alert stopped.';
       default:
         return 'Emergency mode active.';
     }
@@ -548,16 +548,16 @@ const EmergencyScreen = ({ navigation, route }) => {
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.navigate('MainTabs', { screen: 'Dashboard' })}
-          accessibilityLabel="Go back to Dashboard"
+          accessibilityLabel="Back to Dashboard"
         >
           <Text style={[styles.backButtonIcon, { color: emergencyStatus === 'triggered' ? '#FFFFFF' : colors.text }]}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={[styles.emergencyTitle, { color: emergencyStatus === 'triggered' ? '#FFFFFF' : colors.text }]}>
-            {emergencyStatus === 'triggered' ? '🚨 Emergency Active' : '🛡️ Emergency Center'}
+            {emergencyStatus === 'triggered' ? 'Help Active' : 'Emergency'}
           </Text>
           <Text style={[styles.emergencySubtitle, { color: emergencyStatus === 'triggered' ? '#FFFFFF' : colors.textSecondary }]}>
-            {emergencyStatus === 'triggered' ? `Auto-confirming in ${countdown}s` : 'Ready to assist you'}
+            {emergencyStatus === 'triggered' ? `Sending alert in ${countdown}s` : 'Ready to help'}
           </Text>
         </View>
         {emergencyStatus === 'triggered' && (
@@ -575,7 +575,7 @@ const EmergencyScreen = ({ navigation, route }) => {
           onPress={() => setActiveTab('contacts')}
         >
           <Text style={[styles.tabText, { color: activeTab === 'contacts' ? colors.primary : colors.textSecondary }]}>
-            Contacts
+            People
           </Text>
           {activeTab === 'contacts' && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
         </TouchableOpacity>
@@ -585,7 +585,7 @@ const EmergencyScreen = ({ navigation, route }) => {
           onPress={() => setActiveTab('history')}
         >
           <Text style={[styles.tabText, { color: activeTab === 'history' ? colors.primary : colors.textSecondary }]}>
-            History
+            Past
           </Text>
           {activeTab === 'history' && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
         </TouchableOpacity>
@@ -595,7 +595,7 @@ const EmergencyScreen = ({ navigation, route }) => {
           onPress={() => setActiveTab('patterns')}
         >
           <Text style={[styles.tabText, { color: activeTab === 'patterns' ? colors.primary : colors.textSecondary }]}>
-            Patterns
+            Trends
           </Text>
           {activeTab === 'patterns' && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
         </TouchableOpacity>
@@ -605,7 +605,7 @@ const EmergencyScreen = ({ navigation, route }) => {
           onPress={() => setActiveTab('settings')}
         >
           <Text style={[styles.tabText, { color: activeTab === 'settings' ? colors.primary : colors.textSecondary }]}>
-            Settings
+            Setup
           </Text>
           {activeTab === 'settings' && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
         </TouchableOpacity>
@@ -667,8 +667,8 @@ const EmergencyScreen = ({ navigation, route }) => {
                   <View style={[styles.pulseDot, { backgroundColor: '#FFFFFF' }]} />
                 </View>
                 <View style={styles.statusInfo}>
-                  <Text style={styles.activeStatusTitle}>Emergency Active</Text>
-                  <Text style={styles.activeStatusSubtitle}>Contacts will be notified</Text>
+                  <Text style={styles.activeStatusTitle}>Help Active</Text>
+                  <Text style={styles.activeStatusSubtitle}>Notifying contacts</Text>
                 </View>
                 <View style={styles.timerBadge}>
                   <Text style={styles.timerBadgeNumber}>{countdown}</Text>
@@ -682,7 +682,7 @@ const EmergencyScreen = ({ navigation, route }) => {
               accessibilityLabel="Cancel emergency"
             >
               <Text style={styles.cancelButtonIcon}>✋</Text>
-              <Text style={styles.cancelButtonText}>Cancel Emergency</Text>
+              <Text style={styles.cancelButtonText}>Stop Alert</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -701,23 +701,23 @@ const EmergencyScreen = ({ navigation, route }) => {
                   <View style={styles.buttonIconContainer}>
                     <Text style={styles.buttonIcon}>🚨</Text>
                   </View>
-                  <Text style={styles.mainButtonText}>Trigger Emergency</Text>
-                  <Text style={styles.mainButtonSubtext}>Alert all contacts</Text>
+                  <Text style={styles.mainButtonText}>Get Help</Text>
+                  <Text style={styles.mainButtonSubtext}>Tell everyone</Text>
                 </>
               )}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.quickCallButton, { backgroundColor: colors.primary }]}
               onPress={() => {
-                Alert.alert('Calling 911', 'Emergency services will be contacted.');
+                Alert.alert('Calling 911', 'Contacting emergency services.');
               }}
-              accessibilityLabel="Call 911 emergency services"
+              accessibilityLabel="Call 911"
             >
               <View style={styles.buttonIconContainer}>
                 <Text style={styles.buttonIcon}>📞</Text>
               </View>
               <Text style={styles.quickCallText}>Call 911</Text>
-              <Text style={styles.quickCallSubtext}>Direct call</Text>
+              <Text style={styles.quickCallSubtext}>Call now</Text>
             </TouchableOpacity>
           </View>
         )}
