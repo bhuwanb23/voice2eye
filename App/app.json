@@ -54,10 +54,12 @@
       ],
       "expo-av",
       "expo-audio",
-      "react-native-vision-camera",
-      {
-        "cameraPermissionText": "We need camera access to detect hand gestures"
-      }
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "We need camera access to detect hand gestures"
+        }
+      ]
     ]
   }
 }
