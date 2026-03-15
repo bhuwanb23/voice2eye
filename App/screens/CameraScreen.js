@@ -29,10 +29,11 @@ import GestureStreamingService from '../services/GestureStreamingService';
 import GestureOverlay from '../components/GestureOverlay';
 import AccessibleButton from '../components/AccessibleButton';
 
+import { GestureCamera } from '../components/GestureCamera';
+
 const CameraScreen = ({ navigation }) => {
   // --- State Management ---
   const cameraRef = useRef(null);
-  const [permission, requestPermission] = useCameraPermissions();
   const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions();
   const [appState, setAppState] = useState(AppState.currentState);
   const [isCameraActive, setIsCameraActive] = useState(true);
@@ -86,13 +87,10 @@ const CameraScreen = ({ navigation }) => {
 
   // Initial Permission Check
   useEffect(() => {
-    if (!permission?.granted) {
-      requestPermission();
-    }
     if (!mediaLibraryPermission?.granted) {
       requestMediaLibraryPermission();
     }
-  }, [permission, mediaLibraryPermission]);
+  }, [mediaLibraryPermission]);
 
   // --- Camera Operations ---
 
@@ -219,29 +217,6 @@ const CameraScreen = ({ navigation }) => {
 
   // --- Render ---
 
-  if (!permission) {
-    return <View style={styles.container} />;
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={styles.permissionContainer}>
-        <Text style={styles.permissionText}>We need your permission to show the camera</Text>
-        <AccessibleButton
-          title="Grant Permission"
-          onPress={requestPermission}
-          variant="primary"
-        />
-        <AccessibleButton
-          title="Open Settings"
-          onPress={Linking.openSettings}
-          variant="outline"
-          style={{ marginTop: 10 }}
-        />
-      </View>
-    );
-  }
-
   // Preview Mode (After capturing photo)
   if (capturedImage) {
     return (
@@ -268,17 +243,23 @@ const CameraScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {isCameraActive && (
-        <CameraView
-          ref={cameraRef}
-          style={styles.camera}
-          facing={facing}
-          flash={flash}
-          zoom={zoom}
-          onCameraReady={() => setCameraReady(true)}
-          onMountError={(error) => Alert.alert('Camera Error', error.message)}
-        >
-          {/* Gesture Overlay */}
-          {mode === 'gesture' && (
+        <View style={styles.camera}>
+          {mode === 'gesture' ? (
+            <GestureCamera />
+          ) : (
+            <CameraView
+              ref={cameraRef}
+              style={StyleSheet.absoluteFill}
+              facing={facing}
+              flash={flash}
+              zoom={zoom}
+              onCameraReady={() => setCameraReady(true)}
+              onMountError={(error) => Alert.alert('Camera Error', error.message)}
+            />
+          )}
+
+          {/* Gesture Overlay (Old one for non-GestureCamera modes if needed) */}
+          {mode === 'gesture' && !GestureCamera && (
             <GestureOverlay
               detectedGestures={streamingGestures}
               connectionStatus={gestureConnectionStatus}
@@ -340,7 +321,7 @@ const CameraScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
-        </CameraView>
+        </View>
       )}
     </SafeAreaView>
   );
