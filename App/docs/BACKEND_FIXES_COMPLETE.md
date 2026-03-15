@@ -29,7 +29,7 @@
 
 **Solution**: 
 - Updated API_BASE_URL in `App/api/services/apiService.js`
-- Changed from `192.168.1.100` to `192.168.31.67` (actual local IP)
+- Changed from `192.168.1.100` to `192.168.1.8` (actual local IP)
 - All API endpoints now accessible from frontend
 
 ## Test Results ✅ ALL PASSING
@@ -38,7 +38,7 @@
 ============================================================
  VOICE2EYE API Integration Test
 ============================================================
-Testing against: http://192.168.31.67:8000/api
+Testing against: http://192.168.1.8:8000/api
 Time: 2025-10-26 14:11:52
 
 ============================================================
