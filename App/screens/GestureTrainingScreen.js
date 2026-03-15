@@ -57,36 +57,37 @@ const CameraPreview = ({ onGestureDetected }) => {
         const photo = await cameraRef.current.takePhoto({
           qualityPrioritization: 'speed',
           flash: 'off',
+          enableShutterSound: false,
         });
 
-        // Read as base64
-        const base64 = await fetch(`file://${photo.path}`)
-          .then(r => r.blob())
-          .then(blob => new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(',')[1]);
-            reader.readAsDataURL(blob);
-          }));
+        // Resize before sending using fetch + blob
+        const response = await fetch(`file://${photo.path}`);
+        const blob = await response.blob();
+        const base64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.readAsDataURL(blob);
+        });
 
-        // Send to backend
-        const response = await fetch('http://192.168.31.67:8000/api/gestures/detect', {
+        const res = await fetch('http://192.168.31.67:8000/api/gestures/detect', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ frame: base64 }),
         });
-        if (response.ok) {
-          const data = await response.json();
-          console.log('GESTURE DATA:', JSON.stringify(data));  // ← add this
+
+        if (res.ok) {
+          const data = await res.json();
+          console.log('GESTURE DATA:', JSON.stringify(data));
           if (onGestureDetected) {
             onGestureDetected(data);
           }
         }
       } catch (e) {
-        // silent fail
+        console.warn('Frame error:', e.message);
       } finally {
         isProcessing.current = false;
       }
-    }, 500); // send a frame every 500ms
+    }, 800); // slower interval — wait for backend to finish
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -658,11 +659,13 @@ const GestureTrainingScreen = ({ navigation }) => {
 
             <View style={[styles.detectionZone, { borderColor: colors.border, overflow: 'hidden' }]}>
               <CameraPreview onGestureDetected={(result) => {
-                setLastDetectedGesture({
-                  name: result.label,
-                  confidence: Math.round(result.confidence * 100),
-                  emoji: getGestureEmoji(result.label),
-                });
+                if (result.label && result.label !== 'unknown') {
+                  setLastDetectedGesture({
+                    name: result.label,
+                    confidence: Math.round(result.confidence * 100),
+                    emoji: getGestureEmoji(result.label),
+                  });
+                }
               }} />
               {lastDetectedGesture ? (
                 <View style={styles.detectedGesture}>

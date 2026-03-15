@@ -118,11 +118,11 @@ def detect_gesture(payload: FramePayload):
             print("ERROR: Could not decode image")
             return {"label": "unknown", "confidence": 0.0, "error": "Could not decode image"}
 
-        # Resize large images — MediaPipe works best at 640x480
+        # Resize large images — 320x240 is enough for hand detection
         h, w = img.shape[:2]
         print(f"Original image shape: {img.shape}")
-        if w > 640 or h > 640:
-            scale = 640 / max(w, h)
+        if w > 320 or h > 320:
+            scale = 320 / max(w, h)
             new_w = int(w * scale)
             new_h = int(h * scale)
             img = cv2.resize(img, (new_w, new_h))
