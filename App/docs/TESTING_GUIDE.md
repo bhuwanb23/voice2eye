@@ -8,7 +8,7 @@ cd backend
 python -m uvicorn api.server:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Verify it's running: http://localhost:8000/api/docs
+Verify it's running: http://192.168.31.67:8000/api/docs
 
 ### 2. Test API Health
 ```javascript
@@ -83,7 +83,7 @@ apiService.checkHealth().then(data => {
 
 ### Issue: "Network request failed"
 **Solution**: 
-- Check backend is running: `curl http://localhost:8000/api`
+- Check backend is running: `curl http://192.168.31.67:8000/api`
 - Update IP in apiService.js to match your local IP
 - For Android emulator, use `10.0.2.2:8000`
 

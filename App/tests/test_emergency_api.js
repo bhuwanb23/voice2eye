@@ -53,7 +53,7 @@ describe('Emergency API Integration', () => {
     const result = await apiService.triggerEmergency(triggerData);
 
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:8000/api/emergency/trigger',
+      'http://192.168.31.67:8000/api/emergency/trigger',
       {
         method: 'POST',
         headers: {
@@ -81,7 +81,7 @@ describe('Emergency API Integration', () => {
     const result = await apiService.confirmEmergency('test-alert-123');
 
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:8000/api/emergency/confirm',
+      'http://192.168.31.67:8000/api/emergency/confirm',
       {
         method: 'POST',
         headers: {
@@ -109,7 +109,7 @@ describe('Emergency API Integration', () => {
     const result = await apiService.cancelEmergency('test-alert-123', 'Test cancellation');
 
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:8000/api/emergency/cancel',
+      'http://192.168.31.67:8000/api/emergency/cancel',
       {
         method: 'POST',
         headers: {
@@ -141,7 +141,7 @@ describe('Emergency API Integration', () => {
     const result = await apiService.getEmergencyStatus('test-alert-123');
 
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:8000/api/emergency/status/test-alert-123'
+      'http://192.168.31.67:8000/api/emergency/status/test-alert-123'
     );
 
     expect(result.alert_id).toBe('test-alert-123');
@@ -168,7 +168,7 @@ describe('Emergency API Integration', () => {
     const result = await apiService.getEmergencyHistory(30, 50);
 
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:8000/api/emergency/history?days=30&limit=50'
+      'http://192.168.31.67:8000/api/emergency/history?days=30&limit=50'
     );
 
     expect(result.alerts).toHaveLength(1);
