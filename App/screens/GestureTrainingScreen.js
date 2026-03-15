@@ -583,6 +583,23 @@ const GestureTrainingScreen = ({ navigation }) => {
     );
   };
 
+  const lastSpokenGesture = useRef(null);
+  const speakGesture = (gestureName) => {
+    if (lastSpokenGesture.current === gestureName) return;
+    
+    Speech.speak(`${gestureName} detected`, {
+      language: 'en',
+      pitch: 1.0,
+      rate: 1.0,
+      onDone: () => {
+        // Optional: clear last spoken to allow repeat after a delay
+        // lastSpokenGesture.current = null;
+      }
+    });
+    lastSpokenGesture.current = gestureName;
+  };
+
+  // Replace existing CameraPreview usage in GestureTrainingScreen
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
@@ -660,11 +677,16 @@ const GestureTrainingScreen = ({ navigation }) => {
             <View style={[styles.detectionZone, { borderColor: colors.border, overflow: 'hidden' }]}>
               <CameraPreview onGestureDetected={(result) => {
                 if (result.label && result.label !== 'unknown') {
+                  const gestureName = result.label.replace('_', ' ');
                   setLastDetectedGesture({
-                    name: result.label,
+                    name: gestureName,
                     confidence: Math.round(result.confidence * 100),
                     emoji: getGestureEmoji(result.label),
                   });
+                  speakGesture(gestureName);
+                } else {
+                  // Reset last spoken when unknown/no hand detected to allow re-speaking
+                  lastSpokenGesture.current = null;
                 }
               }} />
               {lastDetectedGesture ? (

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,17 @@ import {
   Camera,
   useCameraDevice,
 } from 'react-native-vision-camera';
+import * as Speech from 'expo-speech';
 
 export function GestureCamera() {
   const device = useCameraDevice('front');  // changed to back camera
   const [hasPermission, setHasPermission] = useState(false);
   const [status, setStatus] = useState('Starting...');
+  const [gestureResult, setGestureResult] = useState(null);
+  const cameraRef = useRef(null);
+  const isProcessing = useRef(false);
+  const intervalRef = useRef(null);
+  const lastSpokenGesture = useRef(null);
 
   useEffect(() => {
     setStatus('Requesting permission...');
@@ -23,6 +29,73 @@ export function GestureCamera() {
       setHasPermission(s === 'granted');
     });
   }, []);
+
+  const speakGesture = (gestureName) => {
+    if (lastSpokenGesture.current === gestureName) return;
+    
+    Speech.speak(`${gestureName} detected`, {
+      language: 'en',
+      pitch: 1.0,
+      rate: 1.0,
+    });
+    lastSpokenGesture.current = gestureName;
+  };
+
+  useEffect(() => {
+    if (hasPermission && device) {
+      intervalRef.current = setInterval(async () => {
+        if (isProcessing.current || !cameraRef.current) return;
+        isProcessing.current = true;
+
+        try {
+          const photo = await cameraRef.current.takePhoto({
+            qualityPrioritization: 'speed',
+            flash: 'off',
+            enableShutterSound: false,
+          });
+
+          // Resize before sending using fetch + blob
+          const response = await fetch(`file://${photo.path}`);
+          const blob = await response.blob();
+          const base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(blob);
+          });
+
+          const res = await fetch('http://192.168.31.67:8000/api/gestures/detect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ frame: base64 }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            console.log('GESTURE DATA (GestureCamera):', JSON.stringify(data));
+            if (data.label && data.label !== 'unknown') {
+              const gestureName = data.label.replace('_', ' ');
+              setGestureResult({
+                label: gestureName,
+                confidence: data.confidence,
+              });
+              speakGesture(gestureName);
+            } else {
+              lastSpokenGesture.current = null;
+              setGestureResult(null);
+            }
+          }
+        } catch (e) {
+          console.warn('Frame error (GestureCamera):', e.message);
+        } finally {
+          isProcessing.current = false;
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [hasPermission, device]);
 
   useEffect(() => {
     console.log('Device:', device);
@@ -51,12 +124,23 @@ export function GestureCamera() {
   return (
     <View style={styles.container}>
       <Camera
+        ref={cameraRef}
         style={StyleSheet.absoluteFill}
         device={device}
         isActive={true}
+        photo={true}
       />
       <View style={styles.badge}>
-        <Text style={styles.hintText}>Camera working ✓ — no gesture yet</Text>
+        {gestureResult ? (
+          <>
+            <Text style={styles.gestureLabel}>{gestureResult.label}</Text>
+            <Text style={styles.confidenceText}>
+              {Math.round(gestureResult.confidence * 100)}% confidence
+            </Text>
+          </>
+        ) : (
+          <Text style={styles.hintText}>Show a gesture ✋</Text>
+        )}
       </View>
     </View>
   );
@@ -83,4 +167,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   hintText: { color: '#fff', fontSize: 16 },
+  gestureLabel: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: '700',
+    textTransform: 'capitalize',
+  },
+  confidenceText: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 12,
+    marginTop: 4,
+  },
 });
