@@ -3,8 +3,9 @@
  * Provides consistent navigation across all screens
  */
 import React, { useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAccessibility } from './AccessibilityProvider';
 
 const BottomNavigationBar = ({ navigation, state }) => {
@@ -15,25 +16,25 @@ const BottomNavigationBar = ({ navigation, state }) => {
   const navItems = [
     { 
       name: 'Dashboard', 
-      icon: '\ud83c\udfe0',
+      icon: 'home-outline',
       accessibilityLabel: 'Home',
       accessibilityHint: 'Go home'
     },
     { 
       name: 'Contacts', 
-      icon: '\ud83d\udc65',
+      icon: 'people-outline',
       accessibilityLabel: 'Contacts',
       accessibilityHint: 'Go to contacts'
     },
     { 
       name: 'GestureTraining', 
-      icon: '\u270b',
+      icon: 'hand-left-outline',
       accessibilityLabel: 'Practice',
       accessibilityHint: 'Go to practice'
     },
     { 
       name: 'Settings', 
-      icon: '\u2699\ufe0f',
+      icon: 'settings-outline',
       accessibilityLabel: 'Settings',
       accessibilityHint: 'Go to settings'
     },
@@ -107,14 +108,11 @@ const BottomNavigationBar = ({ navigation, state }) => {
                 },
               ]}
             >
-              <Text
-                style={[
-                  styles.navIcon,
-                  { color: isActive ? '#FFFFFF' : colors.primary },
-                ]}
-              >
-                {item.icon}
-              </Text>
+              <Ionicons
+                name={item.icon}
+                size={24}
+                color={isActive ? '#FFFFFF' : colors.textSecondary || '#666666'}
+              />
             </Animated.View>
           </TouchableOpacity>
         );
@@ -128,7 +126,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    height: 60,
+    height: 60 + 20, // Extra height for safe area padding
     borderTopWidth: 1,
     elevation: 8,
     shadowColor: '#000',
@@ -148,9 +146,10 @@ const styles = StyleSheet.create({
   iconWrapper: {
     padding: 8,
     borderRadius: 999,
-  },
-  navIcon: {
-    fontSize: 20,
+    minWidth: 40,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

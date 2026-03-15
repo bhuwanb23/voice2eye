@@ -350,6 +350,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   controlsContainer: {
+    ...StyleSheet.absoluteFillObject, 
     flex: 1,
     justifyContent: 'space-between',
     padding: 20,
