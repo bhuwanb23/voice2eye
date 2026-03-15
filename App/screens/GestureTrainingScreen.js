@@ -16,7 +16,8 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CameraView } from 'expo-camera';
+// import { CameraView } from 'expo-camera';
+import { Camera as VisionCamera, useCameraDevice } from 'react-native-vision-camera';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import * as Speech from 'expo-speech';
@@ -337,7 +338,7 @@ const GestureTrainingScreen = ({ navigation }) => {
     setFeedback(null);
     // In a real implementation, we would just ensure the camera is active and streaming
     // The actual detection happens in the background via the streaming service
-    
+
     // For now, we simulate a successful start
     setTimeout(() => {
       setIsDetecting(false); // Stop "loading" state, but keep camera active
@@ -558,24 +559,26 @@ const GestureTrainingScreen = ({ navigation }) => {
           <View style={[styles.detectionArea, { backgroundColor: colors.surface }]}>
             <View style={styles.detectionHeader}>
               <Text style={[styles.detectionTitle, { color: colors.text }]}>Camera</Text>
-              <View style={[styles.statusBadge, { 
+              <View style={[styles.statusBadge, {
                 backgroundColor: isDetecting ? colors.warning + '20' : colors.success + '20',
                 borderColor: isDetecting ? colors.warning : colors.success
               }]}>
-                <Text style={[styles.statusBadgeText, { 
-                  color: isDetecting ? colors.warning : colors.success 
+                <Text style={[styles.statusBadgeText, {
+                  color: isDetecting ? colors.warning : colors.success
                 }]}>
                   {isDetecting ? 'Looking...' : 'Ready'}
                 </Text>
               </View>
             </View>
-            
+
             <View style={[styles.detectionZone, { borderColor: colors.border, overflow: 'hidden' }]}>
-               {/* Use CameraView directly for preview */}
-               <CameraView
+              {cameraDevice ? (
+                <VisionCamera
                   style={StyleSheet.absoluteFill}
-                  facing="front"
-               />
+                  device={cameraDevice}
+                  isActive={true}
+                />
+              ) : null}
               {lastDetectedGesture ? (
                 <View style={styles.detectedGesture}>
                   <Text style={styles.gestureEmoji}>{lastDetectedGesture.emoji}</Text>
@@ -588,25 +591,26 @@ const GestureTrainingScreen = ({ navigation }) => {
                 </View>
               ) : (
                 <View style={styles.emptyDetection}>
-                  <Text style={[styles.emptyText, { color: 'white', fontWeight: 'bold' }]}>Camera Active</Text>
+                  {/* <Text style={[styles.emptyText, { color: 'white', fontWeight: 'bold' }]}>Camera Active</Text> */}
+                  <Text style={[styles.emptyText, { color: 'white', fontWeight: 'bold' }]}>Show a gesture ✋</Text>
                 </View>
               )}
             </View>
-            
+
             {/* Feedback */}
             {feedback && (
               <View style={[styles.feedbackContainer, {
-                backgroundColor: feedback.type === 'correct' ? colors.success + '15' : 
-                                feedback.type === 'warning' ? colors.warning + '15' : colors.error + '15',
-                borderColor: feedback.type === 'correct' ? colors.success : 
-                            feedback.type === 'warning' ? colors.warning : colors.error
+                backgroundColor: feedback.type === 'correct' ? colors.success + '15' :
+                  feedback.type === 'warning' ? colors.warning + '15' : colors.error + '15',
+                borderColor: feedback.type === 'correct' ? colors.success :
+                  feedback.type === 'warning' ? colors.warning : colors.error
               }]}>
                 <Text style={styles.feedbackEmoji}>
                   {feedback.type === 'correct' ? '✅' : feedback.type === 'warning' ? '⚠️' : '❌'}
                 </Text>
                 <Text style={[styles.feedbackText, {
-                  color: feedback.type === 'correct' ? colors.success : 
-                         feedback.type === 'warning' ? colors.warning : colors.error
+                  color: feedback.type === 'correct' ? colors.success :
+                    feedback.type === 'warning' ? colors.warning : colors.error
                 }]}>
                   {feedback.message}
                 </Text>
@@ -624,8 +628,8 @@ const GestureTrainingScreen = ({ navigation }) => {
                   <Text style={[styles.practiceName, { color: colors.text }]}>{gesture.name}</Text>
                   <View style={[styles.practiceProgress, { backgroundColor: colors.primary + '20' }]}>
                     <Text style={[styles.practiceProgressText, { color: colors.primary }]}>
-                      {getGestureStats(gesture.id).attempts > 0 ? 
-                        `${Math.round((getGestureStats(gesture.id).successes / getGestureStats(gesture.id).attempts) * 100)}%` : 
+                      {getGestureStats(gesture.id).attempts > 0 ?
+                        `${Math.round((getGestureStats(gesture.id).successes / getGestureStats(gesture.id).attempts) * 100)}%` :
                         'New'
                       }
                     </Text>
@@ -643,7 +647,7 @@ const GestureTrainingScreen = ({ navigation }) => {
                 const stats = getGestureStats(gesture.id);
                 const successRate = stats.attempts > 0 ? Math.round((stats.successes / stats.attempts) * 100) : 0;
                 const isMastered = stats.successes >= 5 && stats.averageConfidence >= 80;
-                
+
                 return (
                   <TouchableOpacity key={gesture.id || index} style={[styles.gestureCard, { backgroundColor: colors.surface }]}>
                     <View style={styles.gestureCardHeader}>
@@ -663,11 +667,11 @@ const GestureTrainingScreen = ({ navigation }) => {
                     <View style={styles.gestureCardFooter}>
                       <View style={[styles.difficultyChip, {
                         backgroundColor: gesture.difficulty === 'Easy' ? colors.success + '20' :
-                                        gesture.difficulty === 'Medium' ? colors.warning + '20' : colors.error + '20'
+                          gesture.difficulty === 'Medium' ? colors.warning + '20' : colors.error + '20'
                       }]}>
                         <Text style={[styles.difficultyChipText, {
                           color: gesture.difficulty === 'Easy' ? colors.success :
-                                gesture.difficulty === 'Medium' ? colors.warning : colors.error
+                            gesture.difficulty === 'Medium' ? colors.warning : colors.error
                         }]}>
                           {gesture.difficulty}
                         </Text>
@@ -700,7 +704,7 @@ const GestureTrainingScreen = ({ navigation }) => {
                   />
                 </View>
               </View>
-              
+
               <View style={styles.statsRow}>
                 <View style={[styles.statBox, { backgroundColor: colors.surface }]}>
                   <Text style={[styles.statBoxNumber, { color: colors.text }]}>{getTrainingStats().totalAttempts}</Text>
@@ -727,7 +731,7 @@ const GestureTrainingScreen = ({ navigation }) => {
           >
             <Text style={[styles.actionBtnText, { color: colors.text }]}>← Back</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.primaryActionBtn, { opacity: isDetecting ? 0.7 : 1 }]}
             onPress={startGestureDetection}
@@ -897,7 +901,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   detectionZone: {
-    height: 120,
+    height: 240,
     borderRadius: 12,
     borderWidth: 2,
     borderStyle: 'dashed',
