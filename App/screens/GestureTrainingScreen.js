@@ -36,11 +36,50 @@ const gestureSequences = [];
 // Add this BEFORE: const GestureTrainingScreen = ({ navigation }) => {
 const CameraPreview = () => {
   const device = useCameraDevice('front');
-  if (!device) return (
+  const [hasPermission, setHasPermission] = React.useState(false);
+  const [permissionChecked, setPermissionChecked] = React.useState(false);
+
+  React.useEffect(() => {
+    async function requestPermission() {
+      try {
+        // Try vision camera permission first
+        const status = await VisionCamera.requestCameraPermission();
+        console.log('VisionCamera permission:', status);
+        setHasPermission(status === 'granted');
+      } catch (e) {
+        console.warn('Permission request error:', e.message);
+        // Fallback — assume granted if manually set
+        setHasPermission(true);
+      } finally {
+        setPermissionChecked(true);
+      }
+    }
+    requestPermission();
+  }, []);
+
+  if (!permissionChecked) return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
-      <Text style={{ color: 'white' }}>No camera found</Text>
+      <ActivityIndicator color="white" />
     </View>
   );
+
+  if (!hasPermission) return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111', padding: 16 }}>
+      <Text style={{ color: 'white', textAlign: 'center', marginBottom: 8 }}>
+        Camera permission denied.
+      </Text>
+      <Text style={{ color: '#aaa', textAlign: 'center', fontSize: 12 }}>
+        Go to Settings → Apps → App → Permissions → Camera → Allow
+      </Text>
+    </View>
+  );
+
+  if (!device) return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+      <Text style={{ color: 'white' }}>No camera device found</Text>
+    </View>
+  );
+
   return (
     <VisionCamera
       style={StyleSheet.absoluteFill}
