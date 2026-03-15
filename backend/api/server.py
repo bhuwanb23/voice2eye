@@ -162,7 +162,6 @@ def detect_gesture(payload: FramePayload):
         if len(landmarks) != 63:
             return {"label": "unknown", "confidence": 0.0, "error": f"Expected 63 landmarks, got {len(landmarks)}"}
 
-        # Classify
         # Classify using TFLite interpreter
         x = np.array(landmarks, dtype=np.float32).reshape(1, -1)
         input_details = _gesture_model.get_input_details()
@@ -171,10 +170,13 @@ def detect_gesture(payload: FramePayload):
         _gesture_model.invoke()
         scores = _gesture_model.get_tensor(output_details[0]['index'])[0]
         idx = int(np.argmax(scores))
+        confidence = float(scores[idx])
+
+        print(f"Predicted: {_gesture_labels[idx]} ({confidence:.2f})")
 
         return {
             "label": _gesture_labels[idx],
-            "confidence": float(scores[idx]),
+            "confidence": round(confidence, 3),
             "source": "backend"
         }
     except Exception as e:
