@@ -74,10 +74,10 @@ const CameraPreview = ({ onGestureDetected }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ frame: base64 }),
         });
-
         if (response.ok) {
           const data = await response.json();
-          if (data.label && data.label !== 'unknown' && onGestureDetected) {
+          console.log('GESTURE DATA:', JSON.stringify(data));  // ← add this
+          if (onGestureDetected) {
             onGestureDetected(data);
           }
         }
@@ -323,6 +323,7 @@ const GestureTrainingScreen = ({ navigation }) => {
     const emojiMap = {
       'open_hand': '✋',
       'fist': '✊',
+      'peace': '✌️',
       'two_fingers': '✌️',
       'thumbs_up': '👍',
       'thumbs_down': '👎',
