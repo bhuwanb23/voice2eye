@@ -115,12 +115,42 @@ def detect_gesture(payload: FramePayload):
         img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
         
         if img is None:
+            print("ERROR: Could not decode image")
             return {"label": "unknown", "confidence": 0.0, "error": "Could not decode image"}
 
-        # Run MediaPipe
+        # Resize large images — MediaPipe works best at 640x480
+        h, w = img.shape[:2]
+        print(f"Original image shape: {img.shape}")
+        if w > 640 or h > 640:
+            scale = 640 / max(w, h)
+            new_w = int(w * scale)
+            new_h = int(h * scale)
+            img = cv2.resize(img, (new_w, new_h))
+            print(f"Resized to: {img.shape}")
+
+        # Fix rotation — front camera images are often rotated 90 degrees
+        # Try original first, then rotated if no landmarks found
         rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
         result = _hand_detector.detect(mp_image)
+
+        # If no landmarks, try rotating 90 degrees
+        if not result.hand_landmarks:
+            img_rotated = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+            rgb_rotated = cv2.cvtColor(img_rotated, cv2.COLOR_BGR2RGB)
+            mp_image_rotated = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_rotated)
+            result = _hand_detector.detect(mp_image_rotated)
+            print(f"After 90° rotation — landmarks: {len(result.hand_landmarks) if result.hand_landmarks else 0}")
+
+        # If still no landmarks, try 270 degrees
+        if not result.hand_landmarks:
+            img_rotated2 = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            rgb_rotated2 = cv2.cvtColor(img_rotated2, cv2.COLOR_BGR2RGB)
+            mp_image_rotated2 = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_rotated2)
+            result = _hand_detector.detect(mp_image_rotated2)
+            print(f"After 270° rotation — landmarks: {len(result.hand_landmarks) if result.hand_landmarks else 0}")
+
+        print(f"Final landmarks found: {len(result.hand_landmarks) if result.hand_landmarks else 0}")
 
         if not result.hand_landmarks:
             return {"label": "unknown", "confidence": 0.0}
