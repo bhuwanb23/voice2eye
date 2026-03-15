@@ -33,6 +33,23 @@ const gestureData = [];
 // Gesture sequences for advanced training - will be populated from backend
 const gestureSequences = [];
 
+// Add this BEFORE: const GestureTrainingScreen = ({ navigation }) => {
+const CameraPreview = () => {
+  const device = useCameraDevice('front');
+  if (!device) return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+      <Text style={{ color: 'white' }}>No camera found</Text>
+    </View>
+  );
+  return (
+    <VisionCamera
+      style={StyleSheet.absoluteFill}
+      device={device}
+      isActive={true}
+    />
+  );
+};
+
 const GestureTrainingScreen = ({ navigation }) => {
   const { settings, getThemeColors } = useAccessibility();
   const colors = getThemeColors();
@@ -572,13 +589,7 @@ const GestureTrainingScreen = ({ navigation }) => {
             </View>
 
             <View style={[styles.detectionZone, { borderColor: colors.border, overflow: 'hidden' }]}>
-              {cameraDevice ? (
-                <VisionCamera
-                  style={StyleSheet.absoluteFill}
-                  device={cameraDevice}
-                  isActive={true}
-                />
-              ) : null}
+              <CameraPreview />
               {lastDetectedGesture ? (
                 <View style={styles.detectedGesture}>
                   <Text style={styles.gestureEmoji}>{lastDetectedGesture.emoji}</Text>
