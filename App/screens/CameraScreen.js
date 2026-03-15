@@ -49,7 +49,7 @@ const CameraScreen = ({ navigation }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null); // Preview captured image
-  
+
   // Gesture Streaming State
   const [isGestureStreaming, setIsGestureStreaming] = useState(false);
   const [gestureConnectionStatus, setGestureConnectionStatus] = useState('disconnected');
@@ -156,7 +156,7 @@ const CameraScreen = ({ navigation }) => {
         const connected = await GestureStreamingService.connect();
         if (!connected) throw new Error('Failed to connect');
       }
-      
+
       const success = await GestureStreamingService.startStreaming();
       if (success) {
         setIsGestureStreaming(true);
@@ -245,7 +245,9 @@ const CameraScreen = ({ navigation }) => {
       {isCameraActive && (
         <View style={styles.camera}>
           {mode === 'gesture' ? (
-            <GestureCamera />
+            <View style={StyleSheet.absoluteFill}>
+              <GestureCamera />
+            </View>
           ) : (
             <CameraView
               ref={cameraRef}
@@ -315,7 +317,7 @@ const CameraScreen = ({ navigation }) => {
                   </TouchableOpacity>
                 )}
               </View>
-              
+
               <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Text style={styles.backText}>Back</Text>
               </TouchableOpacity>

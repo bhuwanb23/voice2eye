@@ -11,7 +11,7 @@ import {
 } from 'react-native-vision-camera';
 
 export function GestureCamera() {
-  const device = useCameraDevice('back');  // changed to back camera
+  const device = useCameraDevice('front');  // changed to back camera
   const [hasPermission, setHasPermission] = useState(false);
   const [status, setStatus] = useState('Starting...');
 
