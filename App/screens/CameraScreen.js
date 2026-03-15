@@ -28,11 +28,12 @@ import apiService from '../api/services/apiService';
 import GestureStreamingService from '../services/GestureStreamingService';
 import GestureOverlay from '../components/GestureOverlay';
 import AccessibleButton from '../components/AccessibleButton';
-
+import { Camera as VisionCamera, useCameraDevice } from 'react-native-vision-camera';
 import { GestureCamera } from '../components/GestureCamera';
 
 const CameraScreen = ({ navigation }) => {
   // --- State Management ---
+  const useDevice = useCameraDevice('back');
   const cameraRef = useRef(null);
   const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions();
   const [appState, setAppState] = useState(AppState.currentState);
@@ -246,7 +247,11 @@ const CameraScreen = ({ navigation }) => {
         <View style={styles.camera}>
           {mode === 'gesture' ? (
             <View style={StyleSheet.absoluteFill}>
-              <GestureCamera />
+              <Camera
+                style={StyleSheet.absoluteFill}
+                device={useDevice}
+                isActive={true}
+              />
             </View>
           ) : (
             <CameraView
@@ -350,7 +355,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   controlsContainer: {
-    ...StyleSheet.absoluteFillObject, 
+    ...StyleSheet.absoluteFillObject,
     flex: 1,
     justifyContent: 'space-between',
     padding: 20,

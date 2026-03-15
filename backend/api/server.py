@@ -108,10 +108,18 @@ def detect_gesture(payload: LandmarkPayload):
 
 # Setup CORS
 if FASTAPI_AVAILABLE:
-    # Add CORS middleware
+    # Add CORS middleware - Allow all origins for development
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=[
+            "http://localhost:8081",
+            "http://localhost:8082",
+            "http://192.168.31.67:8081",
+            "http://192.168.31.67:8082",
+            "exp://192.168.31.67:8081",
+            "exp://192.168.31.67:8082",
+            "*"  # Allow all for mobile app
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -177,7 +185,8 @@ async def global_exception_handler(request, exc):
 if __name__ == "__main__":
     # Get port from environment or default to 8000
     port = int(os.getenv("API_PORT", 8000))
-    host = os.getenv("API_HOST", "127.0.0.1")
+    # Listen on all network interfaces (0.0.0.0) to allow mobile connections
+    host = os.getenv("API_HOST", "0.0.0.0")
     
     # Production settings
     reload = os.getenv("API_RELOAD", "True").lower() == "true"
@@ -185,6 +194,8 @@ if __name__ == "__main__":
     
     print(f"Starting VOICE2EYE API server on {host}:{port}")
     print(f"Reload: {reload}, Workers: {workers}")
+    print(f"Access the API at: http://192.168.31.67:{port}")
+    print(f"Health check: http://192.168.31.67:{port}/api/health")
 
     if FASTAPI_AVAILABLE:
         uvicorn.run(
