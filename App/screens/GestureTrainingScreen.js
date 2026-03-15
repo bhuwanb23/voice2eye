@@ -17,7 +17,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import { CameraView } from 'expo-camera';
-import { Camera as VisionCamera, useCameraDevice } from 'react-native-vision-camera';
+import { Camera as VisionCamera, useCameraDevice, useFrameProcessor } from 'react-native-vision-camera';
+import { useHandLandmarker } from 'react-native-mediapipe';
+import { runOnJS } from 'react-native-reanimated';
+import { useGestureDetector } from '../hooks/useGestureDetector';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import * as Speech from 'expo-speech';
@@ -34,57 +37,46 @@ const gestureData = [];
 const gestureSequences = [];
 
 // Add this BEFORE: const GestureTrainingScreen = ({ navigation }) => {
-const CameraPreview = () => {
+const CameraPreview = ({ onGestureDetected }) => {
   const device = useCameraDevice('front');
   const [hasPermission, setHasPermission] = React.useState(false);
-  const [permissionChecked, setPermissionChecked] = React.useState(false);
+  const { detectHandLandmarks } = useHandLandmarker({
+    numHands: 1,
+    minHandDetectionConfidence: 0.5,
+    minHandPresenceConfidence: 0.5,
+    minTrackingConfidence: 0.5,
+  });
+  const { detect, ready } = useGestureDetector();
 
   React.useEffect(() => {
-    async function requestPermission() {
-      try {
-        // Try vision camera permission first
-        const status = await VisionCamera.requestCameraPermission();
-        console.log('VisionCamera permission:', status);
-        setHasPermission(status === 'granted');
-      } catch (e) {
-        console.warn('Permission request error:', e.message);
-        // Fallback — assume granted if manually set
-        setHasPermission(true);
-      } finally {
-        setPermissionChecked(true);
-      }
-    }
-    requestPermission();
+    VisionCamera.requestCameraPermission().then(s => setHasPermission(s === 'granted'));
   }, []);
 
-  if (!permissionChecked) return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
-      <ActivityIndicator color="white" />
-    </View>
-  );
+  const handleLandmarks = React.useCallback(async (landmarks) => {
+    if (!ready) return;
+    const result = await detect(landmarks);
+    if (result && result.label !== 'unknown' && onGestureDetected) {
+      onGestureDetected(result);
+    }
+  }, [detect, ready, onGestureDetected]);
 
-  if (!hasPermission) return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111', padding: 16 }}>
-      <Text style={{ color: 'white', textAlign: 'center', marginBottom: 8 }}>
-        Camera permission denied.
-      </Text>
-      <Text style={{ color: '#aaa', textAlign: 'center', fontSize: 12 }}>
-        Go to Settings → Apps → App → Permissions → Camera → Allow
-      </Text>
-    </View>
-  );
+  const frameProcessor = useFrameProcessor((frame) => {
+    'worklet';
+    const landmarks = detectHandLandmarks(frame);
+    if (landmarks && landmarks.length === 63) {
+      runOnJS(handleLandmarks)(landmarks);
+    }
+  }, [handleLandmarks]);
 
-  if (!device) return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
-      <Text style={{ color: 'white' }}>No camera device found</Text>
-    </View>
-  );
+  if (!hasPermission || !device) return null;
 
   return (
     <VisionCamera
       style={StyleSheet.absoluteFill}
       device={device}
       isActive={true}
+      frameProcessor={frameProcessor}
+      frameProcessorFps={15}
     />
   );
 };
@@ -628,7 +620,13 @@ const GestureTrainingScreen = ({ navigation }) => {
             </View>
 
             <View style={[styles.detectionZone, { borderColor: colors.border, overflow: 'hidden' }]}>
-              <CameraPreview />
+              <CameraPreview onGestureDetected={(result) => {
+                setLastDetectedGesture({
+                  name: result.label,
+                  confidence: Math.round(result.confidence * 100),
+                  emoji: getGestureEmoji(result.label),
+                });
+              }} />
               {lastDetectedGesture ? (
                 <View style={styles.detectedGesture}>
                   <Text style={styles.gestureEmoji}>{lastDetectedGesture.emoji}</Text>
