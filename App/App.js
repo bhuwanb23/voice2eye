@@ -7,6 +7,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View } from 'react-native';
 import { AccessibilityProvider } from './components/AccessibilityProvider';
 import 'react-native-gesture-handler';
@@ -52,68 +53,70 @@ export default function App() {
   const [translationModalVisible, setTranslationModalVisible] = useState(false);
 
   return (
-    <AccessibilityProvider>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <View style={{ flex: 1 }}>
-          <Stack.Navigator
-            initialRouteName="MainTabs"
-            screenOptions={{
-              headerShown: false,
-              gestureEnabled: true,
-              animationEnabled: true,
-            }}
-          >
-            <Stack.Screen
-              name="MainTabs"
-              component={TabNavigator}
-              options={{
-                title: 'VOICE2EYE',
+    <SafeAreaProvider>
+      <AccessibilityProvider>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <View style={{ flex: 1 }}>
+            <Stack.Navigator
+              initialRouteName="MainTabs"
+              screenOptions={{
+                headerShown: false,
+                gestureEnabled: true,
+                animationEnabled: true,
               }}
+            >
+              <Stack.Screen
+                name="MainTabs"
+                component={TabNavigator}
+                options={{
+                  title: 'VOICE2EYE',
+                }}
+              />
+              <Stack.Screen
+                name="Emergency"
+                component={EmergencyScreen}
+                options={{
+                  title: 'Emergency Mode',
+                  gestureEnabled: false,
+                }}
+              />
+              <Stack.Screen
+                name="ContactForm"
+                component={ContactForm}
+                options={{
+                  title: 'Contact Form',
+                }}
+              />
+              <Stack.Screen
+                name="Help"
+                component={HelpScreen}
+                options={{
+                  title: 'Help & Tutorial',
+                }}
+              />
+              <Stack.Screen
+                name="Camera"
+                component={CameraScreen}
+                options={{
+                  title: 'Camera View',
+                }}
+              />
+            </Stack.Navigator>
+            
+            {/* Translation Floating Button - Available on all screens */}
+            <TranslationFloatingButton 
+              onPress={() => setTranslationModalVisible(true)} 
             />
-            <Stack.Screen
-              name="Emergency"
-              component={EmergencyScreen}
-              options={{
-                title: 'Emergency Mode',
-                gestureEnabled: false,
-              }}
+            
+            {/* Translation Modal */}
+            <TranslationModal 
+              visible={translationModalVisible} 
+              onClose={() => setTranslationModalVisible(false)} 
             />
-            <Stack.Screen
-              name="ContactForm"
-              component={ContactForm}
-              options={{
-                title: 'Contact Form',
-              }}
-            />
-            <Stack.Screen
-              name="Help"
-              component={HelpScreen}
-              options={{
-                title: 'Help & Tutorial',
-              }}
-            />
-            <Stack.Screen
-              name="Camera"
-              component={CameraScreen}
-              options={{
-                title: 'Camera View',
-              }}
-            />
-          </Stack.Navigator>
-          
-          {/* Translation Floating Button - Available on all screens */}
-          <TranslationFloatingButton 
-            onPress={() => setTranslationModalVisible(true)} 
-          />
-          
-          {/* Translation Modal */}
-          <TranslationModal 
-            visible={translationModalVisible} 
-            onClose={() => setTranslationModalVisible(false)} 
-          />
-        </View>
-      </NavigationContainer>
-    </AccessibilityProvider>
+          </View>
+        </NavigationContainer>
+      </AccessibilityProvider>
+    </SafeAreaProvider>
   );
 }

@@ -3,12 +3,14 @@
  * Provides consistent navigation across all screens
  */
 import React, { useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAccessibility } from './AccessibilityProvider';
 
-const BottomNavigationBar = ({ navigation, currentRoute }) => {
+const BottomNavigationBar = ({ navigation, state }) => {
   const { getThemeColors } = useAccessibility();
   const colors = getThemeColors();
+  const insets = useSafeAreaInsets();
 
   const navItems = [
     { 
@@ -40,7 +42,13 @@ const BottomNavigationBar = ({ navigation, currentRoute }) => {
   const scalesRef = useRef({});
 
   const handleNavigation = (screenName) => {
-    if (currentRoute !== screenName) {
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: screenName,
+      canPreventDefault: true,
+    });
+
+    if (!event.defaultPrevented) {
       navigation.navigate(screenName);
     }
   };
@@ -70,9 +78,9 @@ const BottomNavigationBar = ({ navigation, currentRoute }) => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+    <View style={[styles.container, { paddingBottom: insets.bottom, backgroundColor: colors.surface, borderTopColor: colors.border }]}>
       {navItems.map((item) => {
-        const isActive = currentRoute === item.name;
+        const isActive = state.routes[state.index]?.name === item.name;
         if (!scalesRef.current[item.name]) {
           scalesRef.current[item.name] = new Animated.Value(1);
         }
