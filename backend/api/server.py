@@ -4,7 +4,11 @@ REST API for mobile app integration
 """
 import os
 import sys
+import json
 from pathlib import Path
+import numpy as np
+import tensorflow as tf
+from pydantic import BaseModel
 
 # Add backend to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -46,6 +50,61 @@ app = FastAPI(
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json"
 )
+
+# Load gesture model and labels
+_MODEL_DIR = os.path.join(os.path.dirname(__file__), "model")
+_gesture_model = None
+_gesture_labels = []
+
+try:
+    _gesture_model_path = os.path.join(_MODEL_DIR, "saved_gesture_model")
+    _gesture_labels_path = os.path.join(_MODEL_DIR, "labels.json")
+    
+    if os.path.exists(_gesture_model_path):
+        _gesture_model = tf.keras.models.load_model(_gesture_model_path)
+    
+    if os.path.exists(_gesture_labels_path):
+        with open(_gesture_labels_path) as f:
+            _gesture_labels = json.load(f)
+except Exception as e:
+    print(f"Error loading gesture model: {e}")
+
+class LandmarkPayload(BaseModel):
+    landmarks: list
+
+@app.post("/api/gestures/detect")
+def detect_gesture(payload: LandmarkPayload):
+    if not _gesture_model or not _gesture_labels:
+        return {
+            "error": "Gesture model not loaded on backend",
+            "label": "unknown",
+            "confidence": 0.0
+        }
+        
+    if len(payload.landmarks) != 63:
+        return {
+            "error": f"Expected exactly 63 landmark values (21 points x 3), got {len(payload.landmarks)}",
+            "label": "unknown",
+            "confidence": 0.0
+        }
+
+    try:
+        x = np.array(payload.landmarks, dtype=np.float32).reshape(1, -1)
+        scores = _gesture_model.predict(x, verbose=0)[0]
+        best_index = int(np.argmax(scores))
+
+        return {
+            "label": _gesture_labels[best_index],
+            "confidence": float(scores[best_index]),
+            "source": "backend"
+        }
+    except Exception as e:
+        return {
+            "error": f"Inference error: {str(e)}",
+            "label": "unknown",
+            "confidence": 0.0
+        }
+
 
 # Setup CORS
 if FASTAPI_AVAILABLE:
