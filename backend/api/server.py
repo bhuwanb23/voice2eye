@@ -5,10 +5,15 @@ REST API for mobile app integration
 import os
 import sys
 import json
+import base64
+import cv2
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
 from pydantic import BaseModel
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 
 # Add backend to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -55,10 +60,12 @@ app = FastAPI(
 _MODEL_DIR = os.path.join(os.path.dirname(__file__), "model")
 _gesture_model = None
 _gesture_labels = []
+_hand_detector = None
 
 try:
     _gesture_model_path = os.path.join(_MODEL_DIR, "saved_gesture_model")
     _gesture_labels_path = os.path.join(_MODEL_DIR, "labels.json")
+    _hand_landmarker_path = os.path.join(_MODEL_DIR, "hand_landmarker.task")
     
     if os.path.exists(_gesture_model_path):
         _gesture_model = tf.keras.models.load_model(_gesture_model_path)
@@ -66,44 +73,67 @@ try:
     if os.path.exists(_gesture_labels_path):
         with open(_gesture_labels_path) as f:
             _gesture_labels = json.load(f)
-except Exception as e:
-    print(f"Error loading gesture model: {e}")
 
-class LandmarkPayload(BaseModel):
-    landmarks: list
+    # MediaPipe setup
+    if os.path.exists(_hand_landmarker_path):
+        _mp_base_options = python.BaseOptions(model_asset_path=_hand_landmarker_path)
+        _mp_options = vision.HandLandmarkerOptions(
+            base_options=_mp_base_options,
+            num_hands=1
+        )
+        _hand_detector = vision.HandLandmarker.create_from_options(_mp_options)
+except Exception as e:
+    print(f"Error loading gesture model or MediaPipe: {e}")
+
+class FramePayload(BaseModel):
+    frame: str  # base64 encoded image
 
 @app.post("/api/gestures/detect")
-def detect_gesture(payload: LandmarkPayload):
-    if not _gesture_model or not _gesture_labels:
+def detect_gesture(payload: FramePayload):
+    if not _gesture_model or not _gesture_labels or not _hand_detector:
         return {
-            "error": "Gesture model not loaded on backend",
+            "error": "Gesture model or MediaPipe not loaded on backend",
             "label": "unknown",
             "confidence": 0.0
         }
         
-    if len(payload.landmarks) != 63:
-        return {
-            "error": f"Expected exactly 63 landmark values (21 points x 3), got {len(payload.landmarks)}",
-            "label": "unknown",
-            "confidence": 0.0
-        }
-
     try:
-        x = np.array(payload.landmarks, dtype=np.float32).reshape(1, -1)
+        # Decode base64 image
+        img_bytes = base64.b64decode(payload.frame)
+        img_array = np.frombuffer(img_bytes, dtype=np.uint8)
+        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        
+        if img is None:
+            return {"label": "unknown", "confidence": 0.0, "error": "Could not decode image"}
+
+        # Run MediaPipe
+        rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        result = _hand_detector.detect(mp_image)
+
+        if not result.hand_landmarks:
+            return {"label": "unknown", "confidence": 0.0}
+
+        # Extract landmarks
+        hand = result.hand_landmarks[0]
+        landmarks = [v for p in hand for v in (p.x, p.y, p.z)]
+
+        if len(landmarks) != 63:
+            return {"label": "unknown", "confidence": 0.0, "error": f"Expected 63 landmarks, got {len(landmarks)}"}
+
+        # Classify
+        x = np.array(landmarks, dtype=np.float32).reshape(1, -1)
         scores = _gesture_model.predict(x, verbose=0)[0]
-        best_index = int(np.argmax(scores))
+        idx = int(np.argmax(scores))
 
         return {
-            "label": _gesture_labels[best_index],
-            "confidence": float(scores[best_index]),
+            "label": _gesture_labels[idx],
+            "confidence": float(scores[idx]),
             "source": "backend"
         }
     except Exception as e:
-        return {
-            "error": f"Inference error: {str(e)}",
-            "label": "unknown",
-            "confidence": 0.0
-        }
+        return {"label": "unknown", "confidence": 0.0, "error": str(e)}
+
 
 
 # Setup CORS

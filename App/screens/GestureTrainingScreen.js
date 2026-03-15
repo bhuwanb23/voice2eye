@@ -17,10 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import { CameraView } from 'expo-camera';
-import { Camera as VisionCamera, useCameraDevice, useFrameProcessor } from 'react-native-vision-camera';
-import { useHandLandmarker } from 'react-native-mediapipe';
-import { runOnJS } from 'react-native-reanimated';
-import { useGestureDetector } from '../hooks/useGestureDetector';
+import { Camera as VisionCamera, useCameraDevice } from 'react-native-vision-camera';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import * as Speech from 'expo-speech';
@@ -40,43 +37,82 @@ const gestureSequences = [];
 const CameraPreview = ({ onGestureDetected }) => {
   const device = useCameraDevice('front');
   const [hasPermission, setHasPermission] = React.useState(false);
-  const { detectHandLandmarks } = useHandLandmarker({
-    numHands: 1,
-    minHandDetectionConfidence: 0.5,
-    minHandPresenceConfidence: 0.5,
-    minTrackingConfidence: 0.5,
-  });
-  const { detect, ready } = useGestureDetector();
+  const cameraRef = React.useRef(null);
+  const isProcessing = React.useRef(false);
+  const intervalRef = React.useRef(null);
 
   React.useEffect(() => {
-    VisionCamera.requestCameraPermission().then(s => setHasPermission(s === 'granted'));
+    VisionCamera.requestCameraPermission().then((status) => {
+      setHasPermission(status === 'granted');
+    });
   }, []);
 
-  const handleLandmarks = React.useCallback(async (landmarks) => {
-    if (!ready) return;
-    const result = await detect(landmarks);
-    if (result && result.label !== 'unknown' && onGestureDetected) {
-      onGestureDetected(result);
-    }
-  }, [detect, ready, onGestureDetected]);
+  // Start sending frames when camera is ready
+  const onCameraReady = React.useCallback(() => {
+    intervalRef.current = setInterval(async () => {
+      if (isProcessing.current || !cameraRef.current) return;
+      isProcessing.current = true;
 
-  const frameProcessor = useFrameProcessor((frame) => {
-    'worklet';
-    const landmarks = detectHandLandmarks(frame);
-    if (landmarks && landmarks.length === 63) {
-      runOnJS(handleLandmarks)(landmarks);
-    }
-  }, [handleLandmarks]);
+      try {
+        const photo = await cameraRef.current.takePhoto({
+          qualityPrioritization: 'speed',
+          flash: 'off',
+        });
 
-  if (!hasPermission || !device) return null;
+        // Read as base64
+        const base64 = await fetch(`file://${photo.path}`)
+          .then(r => r.blob())
+          .then(blob => new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(blob);
+          }));
+
+        // Send to backend
+        const response = await fetch('http://192.168.31.67:8000/api/gestures/detect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ frame: base64 }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.label && data.label !== 'unknown' && onGestureDetected) {
+            onGestureDetected(data);
+          }
+        }
+      } catch (e) {
+        // silent fail
+      } finally {
+        isProcessing.current = false;
+      }
+    }, 500); // send a frame every 500ms
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [onGestureDetected]);
+
+  React.useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  if (!hasPermission || !device) return (
+    <View style={{ flex: 1, backgroundColor: '#111', justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={{ color: 'white', fontSize: 13 }}>Camera permission required</Text>
+    </View>
+  );
 
   return (
     <VisionCamera
+      ref={cameraRef}
       style={StyleSheet.absoluteFill}
       device={device}
       isActive={true}
-      frameProcessor={frameProcessor}
-      frameProcessorFps={15}
+      photo={true}
+      onInitialized={onCameraReady}
     />
   );
 };
