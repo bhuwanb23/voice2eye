@@ -63,18 +63,27 @@ _gesture_labels = []
 _hand_detector = None
 
 try:
-    _gesture_model_path = os.path.join(_MODEL_DIR, "saved_gesture_model")
+    _gesture_model_path = os.path.join(_MODEL_DIR, "custom_gestures.tflite")
     _gesture_labels_path = os.path.join(_MODEL_DIR, "labels.json")
     _hand_landmarker_path = os.path.join(_MODEL_DIR, "hand_landmarker.task")
-    
+
+    print(f"Loading model from: {_gesture_model_path}")
+    print(f"Model exists: {os.path.exists(_gesture_model_path)}")
+    print(f"Labels exists: {os.path.exists(_gesture_labels_path)}")
+    print(f"Landmarker exists: {os.path.exists(_hand_landmarker_path)}")
+
     if os.path.exists(_gesture_model_path):
-        _gesture_model = tf.keras.models.load_model(_gesture_model_path)
-    
+        # Load TFLite model
+        interpreter = tf.lite.Interpreter(model_path=_gesture_model_path)
+        interpreter.allocate_tensors()
+        _gesture_model = interpreter
+        print("TFLite model loaded successfully")
+
     if os.path.exists(_gesture_labels_path):
         with open(_gesture_labels_path) as f:
             _gesture_labels = json.load(f)
+        print(f"Labels loaded: {_gesture_labels}")
 
-    # MediaPipe setup
     if os.path.exists(_hand_landmarker_path):
         _mp_base_options = python.BaseOptions(model_asset_path=_hand_landmarker_path)
         _mp_options = vision.HandLandmarkerOptions(
@@ -82,6 +91,8 @@ try:
             num_hands=1
         )
         _hand_detector = vision.HandLandmarker.create_from_options(_mp_options)
+        print("MediaPipe hand detector loaded successfully")
+
 except Exception as e:
     print(f"Error loading gesture model or MediaPipe: {e}")
 
@@ -122,8 +133,13 @@ def detect_gesture(payload: FramePayload):
             return {"label": "unknown", "confidence": 0.0, "error": f"Expected 63 landmarks, got {len(landmarks)}"}
 
         # Classify
+        # Classify using TFLite interpreter
         x = np.array(landmarks, dtype=np.float32).reshape(1, -1)
-        scores = _gesture_model.predict(x, verbose=0)[0]
+        input_details = _gesture_model.get_input_details()
+        output_details = _gesture_model.get_output_details()
+        _gesture_model.set_tensor(input_details[0]['index'], x)
+        _gesture_model.invoke()
+        scores = _gesture_model.get_tensor(output_details[0]['index'])[0]
         idx = int(np.argmax(scores))
 
         return {
