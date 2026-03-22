@@ -25,7 +25,20 @@ import { useAccessibility } from './AccessibilityProvider';
 
 const TranslationModal = ({ visible, onClose }) => {
   const { settings, getThemeColors } = useAccessibility();
-  const colors = getThemeColors();
+  const colors = getThemeColors() || {
+    // Fallback colors in case getThemeColors returns undefined
+    primary: '#7E22CE',
+    secondary: '#9333EA',
+    background: '#FAF5FF',
+    surface: '#FFFFFF',
+    text: '#3B0764',
+    textSecondary: '#6B21A8',
+    accent: '#D8B4FE',
+    error: '#DC3545',
+    success: '#28A745',
+    warning: '#FFC107',
+    border: '#E9D5FF',
+  };
   
   // Debug colors on mount
   useEffect(() => {
@@ -47,30 +60,14 @@ const TranslationModal = ({ visible, onClose }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
-  // Animate modal on open
+  // Animate modal on open - SIMPLIFIED APPROACH
   useEffect(() => {
-    console.log('TranslationModal visible state changed:', visible);
+    console.log('Animation effect triggered, visible:', visible);
     if (visible) {
-      // Reset animations first
-      fadeAnim.setValue(0);
-      slideAnim.setValue(50);
-      
-      // Then start animations after a small delay to ensure modal is rendered
-      setTimeout(() => {
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.spring(slideAnim, {
-            toValue: 0,
-            tension: 50,
-            friction: 7,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      }, 50);
+      // Set animations to END state immediately for first render
+      fadeAnim.setValue(1);
+      slideAnim.setValue(0);
+      console.log('Modal set to visible (no animation for now)');
     } else {
       fadeAnim.setValue(0);
       slideAnim.setValue(50);
@@ -385,12 +382,11 @@ const TranslationModal = ({ visible, onClose }) => {
       statusBarTranslucent={true}
     >
       <View style={styles.modalOverlay}>
-        {console.log('Rendering TranslationModal, visible:', visible, 'fadeAnim:', fadeAnim._value)}
         <Animated.View
           style={[
             styles.modalContent,
             {
-              backgroundColor: colors.surface,
+              backgroundColor: colors.surface || '#FFFFFF',
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
             },
