@@ -44,6 +44,7 @@ const TranslationModal = ({ visible, onClose }) => {
 
   // Animate modal on open
   useEffect(() => {
+    console.log('TranslationModal visible state changed:', visible);
     if (visible) {
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -66,6 +67,7 @@ const TranslationModal = ({ visible, onClose }) => {
 
   // Load supported languages on mount
   useEffect(() => {
+    console.log('Loading languages, visible:', visible);
     if (visible) {
       loadLanguages();
     }
@@ -77,24 +79,25 @@ const TranslationModal = ({ visible, onClose }) => {
       if (Voice) {
         try {
           Voice.removeAllListeners();
+          Voice.destroy();
         } catch (err) {
           console.warn('Error removing voice listeners on unmount:', err);
         }
-        
-        Voice.destroy().catch(err => {
-          console.warn('Error destroying voice recognition on unmount:', err);
-        });
       }
     };
   }, []);
 
   const loadLanguages = async () => {
+    console.log('Loading supported languages...');
     setIsLoadingLanguages(true);
     try {
       const response = await apiService.getSupportedLanguages();
+      console.log('Languages response:', response);
       if (response && response.languages) {
         setSupportedLanguages(response.languages);
+        console.log('Languages loaded:', Object.keys(response.languages).length);
       } else {
+        console.warn('No languages in response, using fallback');
         // Fallback languages
         setSupportedLanguages({
           en: 'English',
@@ -131,6 +134,7 @@ const TranslationModal = ({ visible, onClose }) => {
       Alert.alert('Warning', 'Could not load languages from server. Using default list.');
     } finally {
       setIsLoadingLanguages(false);
+      console.log('Language loading complete, isLoadingLanguages:', false);
     }
   };
 
@@ -141,6 +145,7 @@ const TranslationModal = ({ visible, onClose }) => {
       return;
     }
 
+    // Set up voice recognition listeners only once
     Voice.onSpeechStart = () => {
       console.log('Speech recognition started');
       setIsListening(true);
@@ -173,19 +178,14 @@ const TranslationModal = ({ visible, onClose }) => {
       }
     };
 
+    // Cleanup function to prevent memory leaks
     return () => {
       if (Voice) {
-        // Properly cleanup voice recognition listeners
         try {
           Voice.removeAllListeners();
         } catch (err) {
           console.warn('Error removing voice listeners:', err);
         }
-        
-        // Destroy voice recognition instance
-        Voice.destroy().catch(err => {
-          console.warn('Error destroying voice recognition:', err);
-        });
       }
     };
   }, []);
@@ -197,21 +197,15 @@ const TranslationModal = ({ visible, onClose }) => {
         return;
       }
 
-      // Stop any existing recognition
+      // Stop any existing recognition and cleanup
       try {
         await Voice.stop();
+        Voice.removeAllListeners();
       } catch (e) {
         // Ignore if not started
       }
-      
-      // Clean up any existing listeners
-      try {
-        Voice.removeAllListeners();
-      } catch (e) {
-        // Ignore errors
-      }
 
-      // Set up voice recognition listeners
+      // Re-set up voice recognition listeners
       Voice.onSpeechStart = () => {
         console.log('Speech recognition started');
         setIsListening(true);
@@ -343,10 +337,8 @@ const TranslationModal = ({ visible, onClose }) => {
     // Stop voice recognition if active
     if (Voice) {
       try {
+        Voice.stop();
         Voice.removeAllListeners();
-        Voice.destroy().catch(err => {
-          console.warn('Error destroying voice recognition in reset:', err);
-        });
       } catch (err) {
         console.warn('Error cleaning up voice recognition in reset:', err);
       }
@@ -357,10 +349,8 @@ const TranslationModal = ({ visible, onClose }) => {
     // Stop voice recognition if active
     if (Voice) {
       try {
+        Voice.stop();
         Voice.removeAllListeners();
-        Voice.destroy().catch(err => {
-          console.warn('Error destroying voice recognition in close:', err);
-        });
       } catch (err) {
         console.warn('Error cleaning up voice recognition in close:', err);
       }
