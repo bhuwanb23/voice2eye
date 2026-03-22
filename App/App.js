@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View } from 'react-native';
 import { AccessibilityProvider } from './components/AccessibilityProvider';
@@ -39,6 +39,7 @@ function TabNavigator() {
       tabBar={(props) => <BottomNavigationBar {...props} />}
       screenOptions={{
         headerShown: false,
+        tabBarStyle: { paddingTop: 0 },
       }}
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
@@ -56,7 +57,7 @@ export default function App() {
     <SafeAreaProvider>
       <AccessibilityProvider>
         <NavigationContainer>
-          <StatusBar barStyle="light-content" />
+          <StatusBar barStyle="light-content" backgroundColor="#5B21B6" translucent={false} />
           {/* Purple background for entire app including status bar area */}
           <View style={{ flex: 1, backgroundColor: '#5B21B6' }}>
             <Stack.Navigator

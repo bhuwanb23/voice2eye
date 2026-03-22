@@ -106,8 +106,7 @@ const BottomNavigationBar = ({ navigation, state }) => {
 
   return (
     <View style={[styles.container, { 
-      backgroundColor: PURPLE_THEME.primary800, 
-      borderTopColor: PURPLE_THEME.primary700,
+      backgroundColor: PURPLE_THEME.primary800,
       paddingBottom: insets.bottom > 0 ? insets.bottom : 10
     }]}>
       {navItems.map((item) => {
@@ -158,7 +157,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     minHeight: 60,
-    borderTopWidth: 1,
+    paddingTop: 0,
+    borderTopWidth: 0,
     elevation: 8,
     shadowColor: PURPLE_THEME.shadowDark,
     shadowOffset: {
