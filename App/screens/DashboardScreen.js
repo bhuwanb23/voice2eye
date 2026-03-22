@@ -456,11 +456,13 @@ const DashboardScreen = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <StatusBar 
+        barStyle="light-content" 
+      />
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Compact Header */}
+        {/* Beautiful Header with Gradient */}
         <LinearGradient
-          colors={PURPLE_THEME.gradientPrimary}
+          colors={[colors.primary, colors.primary + 'E6', colors.primary + 'CC']}
           style={styles.header}
         >
           <Animated.View
@@ -692,21 +694,19 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     paddingTop: 24,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
   },
   headerContent: {
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: 'white',
     textAlign: 'center',
     opacity: 0.9,
@@ -725,21 +725,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statNumber: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
   },
   statText: {
-    fontSize: 9,
+    fontSize: 10,
     color: 'white',
     opacity: 0.8,
     marginTop: 2,
   },
   statDivider: {
     width: 1,
-    height: 20,
+    height: 24,
     backgroundColor: 'rgba(255,255,255,0.3)',
-    marginHorizontal: 10,
+    marginHorizontal: 12,
   },
   // Content Styles
   scrollView: {
