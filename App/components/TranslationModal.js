@@ -80,8 +80,9 @@ const TranslationModal = ({ visible, onClose }) => {
         try {
           Voice.removeAllListeners();
           Voice.destroy();
+          console.log('Voice recognition cleaned up on unmount');
         } catch (err) {
-          console.warn('Error removing voice listeners on unmount:', err);
+          console.log('Voice already cleaned up:', err.message);
         }
       }
     };
@@ -178,13 +179,14 @@ const TranslationModal = ({ visible, onClose }) => {
       }
     };
 
-    // Cleanup function to prevent memory leaks
+    // Cleanup function to prevent memory leaks (but NOT destroy - that's done on unmount)
     return () => {
       if (Voice) {
         try {
           Voice.removeAllListeners();
+          console.log('Voice listeners removed (component cleanup)');
         } catch (err) {
-          console.warn('Error removing voice listeners:', err);
+          console.log('Voice listeners already cleaned:', err.message);
         }
       }
     };
@@ -339,8 +341,9 @@ const TranslationModal = ({ visible, onClose }) => {
       try {
         Voice.stop();
         Voice.removeAllListeners();
+        console.log('Voice reset complete');
       } catch (err) {
-        console.warn('Error cleaning up voice recognition in reset:', err);
+        console.log('Voice reset note:', err.message);
       }
     }
   };
@@ -351,8 +354,9 @@ const TranslationModal = ({ visible, onClose }) => {
       try {
         Voice.stop();
         Voice.removeAllListeners();
+        console.log('Voice stopped before close');
       } catch (err) {
-        console.warn('Error cleaning up voice recognition in close:', err);
+        console.log('Voice stop note:', err.message);
       }
     }
     
