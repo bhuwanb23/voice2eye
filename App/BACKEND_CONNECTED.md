@@ -3,7 +3,7 @@
 ## Summary
 All frontend API connections have been successfully updated to point to your backend server.
 
-### Backend URL: `http://192.168.1.8:8000`
+### Backend URL: `http://192.168.31.67:8000`
 
 ---
 
@@ -12,7 +12,7 @@ All frontend API connections have been successfully updated to point to your bac
 ### 1. ✅ apiService.js
 **File:** `App/api/services/apiService.js`
 - **Status:** UPDATED ✓
-- **Configuration:** All API endpoints now use `http://192.168.1.8:8000/api`
+- **Configuration:** All API endpoints now use `http://192.168.31.67:8000/api`
 - **Endpoints connected:**
   - Settings management
   - Emergency alerts
@@ -24,14 +24,14 @@ All frontend API connections have been successfully updated to point to your bac
 ### 2. ✅ useGestureDetector.js
 **File:** `App/hooks/useGestureDetector.js`
 - **Status:** Already configured ✓
-- **Backend URL:** `http://192.168.1.8:8000/api/gestures/detect`
+- **Backend URL:** `http://192.168.31.67:8000/api/gestures/detect`
 - This hook was already pointing to the correct IP!
 
 ### 3. ✅ GestureStreamingService.js
 **File:** `App/services/GestureStreamingService.js`
 - **Status:** Auto-updated via apiService ✓
 - Uses `apiService.connectGestureStream()` which automatically uses the updated base URL
-- WebSocket endpoint: `ws://192.168.1.8:8000/api/gestures/analyze/stream`
+- WebSocket endpoint: `ws://192.168.31.67:8000/api/gestures/analyze/stream`
 
 ---
 
@@ -93,7 +93,7 @@ All frontend API connections have been successfully updated to point to your bac
 ## Network Configuration
 
 ### Your Setup:
-- **Backend PC IP:** `192.168.1.8`
+- **Backend PC IP:** `192.168.31.67`
 - **Backend Port:** `8000`
 - **Protocol:** HTTP (development)
 
@@ -117,14 +117,14 @@ Or manually:
 
 **Check 1: Is backend running?**
 ```bash
-curl http://192.168.1.8:8000/
+curl http://192.168.31.67:8000/
 ```
 Should return: `{"status": "ok", ...}`
 
 **Check 2: Same network?**
-- PC IP: `192.168.1.8`
+- PC IP: `192.168.31.67`
 - Mobile should be on `192.168.31.x` network
-- Try pinging: `ping 192.168.1.8`
+- Try pinging: `ping 192.168.31.67`
 
 **Check 3: Firewall blocking?**
 - Temporarily disable Windows Firewall to test
@@ -133,11 +133,11 @@ Should return: `{"status": "ok", ...}`
 **Check 4: Wrong IP?**
 - Run `ipconfig` on your PC
 - Find IPv4 Address under your active network adapter
-- Update API URLs if different from `192.168.1.8`
+- Update API URLs if different from `192.168.31.67`
 
 ### ❌ WebSocket Not Connecting?
 
-- WebSocket URL format: `ws://192.168.1.8:8000/api/...`
+- WebSocket URL format: `ws://192.168.31.67:8000/api/...`
 - Check backend logs for WebSocket connection attempts
 - Ensure CORS is enabled in backend settings
 
@@ -181,6 +181,6 @@ Should return: `{"status": "ok", ...}`
 
 **Status:** ✅ ALL SYSTEMS CONNECTED  
 **Date:** March 14, 2026  
-**Backend IP:** 192.168.1.8:8000  
+**Backend IP:** 192.168.31.67:8000  
 
 🎉 Your VOICE2EYE app is now fully connected to your backend!

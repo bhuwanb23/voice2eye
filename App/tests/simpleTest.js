@@ -11,7 +11,7 @@ async function runSimpleTest() {
   // Test 1: API Health Check
   console.log('\n📝 Test 1: API Health Check');
   try {
-    const response = await fetch('http://192.168.1.8:8000/api/');
+    const response = await fetch('http://192.168.31.67:8000/api/');
     if (response.ok) {
       const data = await response.json();
       console.log('✅ API Health Check PASSED');

@@ -27,5 +27,5 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", @"
 "@
 
 Write-Host "  Both terminals launched!" -ForegroundColor Green
-Write-Host "  Expo: App/  |  FastAPI: http://192.168.1.8:8000" -ForegroundColor Gray
+Write-Host "  Expo: App/  |  FastAPI: http://192.168.31.67:8000" -ForegroundColor Gray
 Write-Host ""

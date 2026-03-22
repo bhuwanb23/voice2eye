@@ -7,7 +7,7 @@ import json
 import time
 from datetime import datetime
 
-BASE_URL = "http://192.168.1.8:8000/api"
+BASE_URL = "http://192.168.31.67:8000/api"
 
 def print_section(title):
     print(f"\n{'='*60}")

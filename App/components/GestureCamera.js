@@ -63,7 +63,7 @@ export function GestureCamera() {
             reader.readAsDataURL(blob);
           });
 
-          const res = await fetch('http://192.168.1.8:8000/api/gestures/detect', {
+          const res = await fetch('http://192.168.31.67:8000/api/gestures/detect', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ frame: base64 }),

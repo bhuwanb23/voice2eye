@@ -6,7 +6,7 @@ import { Asset } from 'expo-asset';
 import NetInfo from '@react-native-community/netinfo'; 
  
 // EDIT THIS — replace with your actual backend URL 
-const BACKEND_URL = 'http://192.168.1.8:8000/api/gestures/detect'; 
+const BACKEND_URL = 'http://192.168.31.67:8000/api/gestures/detect'; 
  
 // How confident the on-device model must be before we trust it 
 // If below this number, we send to the backend instead 
