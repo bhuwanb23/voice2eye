@@ -5,8 +5,34 @@
 import React, { useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Home, Users, Hand, Settings } from 'lucide-react-native';
 import { useAccessibility } from './AccessibilityProvider';
+
+// Purple Theme Color Palette - Matching DashboardScreen
+const PURPLE_THEME = {
+  primary50: '#F5F3FF',
+  primary100: '#EDE9FE',
+  primary200: '#DDD6FE',
+  primary300: '#C4B5FD',
+  primary400: '#A78BFA',
+  primary500: '#8B5CF6',
+  primary600: '#7C3AED',
+  primary700: '#6D28D9',
+  primary800: '#5B21B6',
+  primary900: '#4C1D95',
+  accent500: '#C084FC',
+  accent600: '#A855F7',
+  accent700: '#9333EA',
+  accent800: '#7E22CE',
+  accent900: '#6B21A8',
+  background: '#FAF5FF',
+  surface: '#FFFFFF',
+  textPrimary: '#2E1065',
+  textSecondary: '#6B21A8',
+  shadowLight: 'rgba(139, 92, 246, 0.1)',
+  shadowMedium: 'rgba(139, 92, 246, 0.15)',
+  shadowDark: 'rgba(109, 40, 217, 0.2)',
+};
 
 const BottomNavigationBar = ({ navigation, state }) => {
   const { getThemeColors } = useAccessibility();
@@ -16,25 +42,25 @@ const BottomNavigationBar = ({ navigation, state }) => {
   const navItems = [
     { 
       name: 'Dashboard', 
-      icon: 'home-outline',
+      icon: Home,
       accessibilityLabel: 'Home',
       accessibilityHint: 'Go home'
     },
     { 
       name: 'Contacts', 
-      icon: 'people-outline',
+      icon: Users,
       accessibilityLabel: 'Contacts',
       accessibilityHint: 'Go to contacts'
     },
     { 
       name: 'GestureTraining', 
-      icon: 'hand-left-outline',
+      icon: Hand,
       accessibilityLabel: 'Practice',
       accessibilityHint: 'Go to practice'
     },
     { 
       name: 'Settings', 
-      icon: 'settings-outline',
+      icon: Settings,
       accessibilityLabel: 'Settings',
       accessibilityHint: 'Go to settings'
     },
@@ -79,13 +105,14 @@ const BottomNavigationBar = ({ navigation, state }) => {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom, backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+    <View style={[styles.container, { paddingBottom: insets.bottom, backgroundColor: PURPLE_THEME.primary800, borderTopColor: PURPLE_THEME.primary700 }]}>
       {navItems.map((item) => {
         const isActive = state.routes[state.index]?.name === item.name;
         if (!scalesRef.current[item.name]) {
           scalesRef.current[item.name] = new Animated.Value(1);
         }
         const scale = scalesRef.current[item.name];
+        const IconComponent = item.icon;
 
         return (
           <TouchableOpacity
@@ -103,15 +130,15 @@ const BottomNavigationBar = ({ navigation, state }) => {
               style={[
                 styles.iconWrapper,
                 {
-                  backgroundColor: isActive ? colors.primary : 'transparent',
+                  backgroundColor: isActive ? PURPLE_THEME.accent600 : 'transparent',
                   transform: [{ scale }],
                 },
               ]}
             >
-              <Ionicons
-                name={item.icon}
+              <IconComponent
                 size={24}
-                color={isActive ? '#FFFFFF' : colors.textSecondary || '#666666'}
+                strokeWidth={2}
+                color={isActive ? '#FFFFFF' : PURPLE_THEME.primary200}
               />
             </Animated.View>
           </TouchableOpacity>
@@ -126,15 +153,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    height: 60 + 20, // Extra height for safe area padding
+    height: 60 + 40, // Extra height for safe area padding
     borderTopWidth: 1,
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: PURPLE_THEME.shadowDark,
     shadowOffset: {
       width: 0,
       height: -2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   navItem: {
