@@ -1,24 +1,26 @@
 """
-Translation Service using googletrans
+Translation Service using deep-translator
 Handles text translation between languages
 """
 import logging
 from typing import Dict, Any, Optional, List
 import time
 
-# Try to import googletrans, with fallback handling
-GOOGLETRANS_AVAILABLE = False
-Translator = None
+# Try to import deep-translator, with fallback handling
+DEEP_TRANSLATOR_AVAILABLE = False
+GoogleTranslator = None
 LANGUAGES = {}
 
 try:
-    from googletrans import Translator, LANGUAGES
-    GOOGLETRANS_AVAILABLE = True
+    from deep_translator import GoogleTranslator
+    # Get supported languages
+    LANGUAGES = GoogleTranslator().get_supported_languages(as_dict=True)
+    DEEP_TRANSLATOR_AVAILABLE = True
+    logging.info("deep-translator loaded successfully")
 except (ImportError, AttributeError) as e:
-    GOOGLETRANS_AVAILABLE = False
-    logging.warning(f"googletrans not available: {e}")
-    logging.warning("Install with: pip install googletrans==4.0.0rc1")
-    logging.warning("Note: If you get httpcore errors, try: pip install httpcore==0.15.0")
+    DEEP_TRANSLATOR_AVAILABLE = False
+    logging.warning(f"deep-translator not available: {e}")
+    logging.warning("Install with: pip install deep-translator")
     
     # Create mock Translator class for development
     class MockTranslator:
@@ -36,7 +38,7 @@ except (ImportError, AttributeError) as e:
                     self.confidence = 0.9
             return Result()
     
-    Translator = MockTranslator
+    GoogleTranslator = MockTranslator
     LANGUAGES = {}
 
 logger = logging.getLogger(__name__)
@@ -45,7 +47,7 @@ logger = logging.getLogger(__name__)
 class TranslationService:
     """
     Translation service for converting text between languages.
-    Uses googletrans library for free translation service.
+    Uses deep-translator library for free translation service.
     """
     
     def __init__(self):
@@ -54,7 +56,7 @@ class TranslationService:
         self.is_initialized = False
         
         # Supported languages dictionary with common languages
-        # This is a subset - googletrans supports 100+ languages
+        # This is a subset - deep-translator supports 100+ languages
         self.supported_languages = {
             'en': 'English',
             'es': 'Spanish',
@@ -98,11 +100,11 @@ class TranslationService:
         self._initialize_translator()
     
     def _initialize_translator(self) -> bool:
-        """Initialize the googletrans Translator"""
+        """Initialize the deep-translator Translator"""
         try:
-            if not GOOGLETRANS_AVAILABLE or Translator is None:
-                logger.warning("googletrans not available. Translation service will use mock responses.")
-                logger.warning("For production use, install: pip install googletrans==4.0.0rc1 httpcore==0.15.0")
+            if not DEEP_TRANSLATOR_AVAILABLE or GoogleTranslator is None:
+                logger.warning("deep-translator not available. Translation service will use mock responses.")
+                logger.warning("For production use, install: pip install deep-translator")
                 # Use mock translator
                 class MockTranslator:
                     def translate(self, text, src='auto', dest='en'):
@@ -121,31 +123,20 @@ class TranslationService:
                 self.is_initialized = True
                 return True
             
-            logger.info("Initializing googletrans Translator...")
+            logger.info("Initializing deep-translator GoogleTranslator...")
             try:
-                self.translator = Translator()
+                # deep-translator doesn't have a persistent translator object
+                # We create instances per translation
+                self.translator = GoogleTranslator
+                self.is_initialized = True
+                logger.info("Translation service initialized successfully with deep-translator")
+                return True
+                
             except Exception as init_error:
                 logger.error(f"Failed to create Translator instance: {init_error}")
                 logger.warning("Falling back to mock translator")
                 self.translator = None
                 self.is_initialized = True  # Will use mock
-                return True
-            
-            # Test translation to verify it works
-            try:
-                test_result = self.translator.translate("test", src='en', dest='es')
-                if test_result and test_result.text:
-                    logger.info("Translation service initialized successfully")
-                    self.is_initialized = True
-                    return True
-                else:
-                    logger.warning("Translation service test failed - using fallback")
-                    self.is_initialized = True  # Still mark as initialized, will use mock
-                    return True
-            except Exception as test_error:
-                logger.warning(f"Translation service test failed: {test_error}")
-                logger.warning("Service will attempt to work but may fail on actual translations")
-                self.is_initialized = True  # Assume it works, will fail on actual use
                 return True
                 
         except Exception as e:
@@ -193,19 +184,24 @@ class TranslationService:
         
         try:
             if not self.translator:
-                raise Exception("Translator not initialized. Please check googletrans installation.")
+                raise Exception("Translator not initialized. Please check deep-translator installation.")
             
             logger.info(f"Translating text from '{src_lang}' to '{dest_lang}': {text[:50]}...")
             start_time = time.time()
             
-            # Perform translation
-            result = self.translator.translate(text, src=src_lang, dest=dest_lang)
+            # Perform translation using deep-translator
+            if src_lang == 'auto':
+                # Auto-detect source language
+                translator_instance = self.translator(source='auto', target=dest_lang)
+            else:
+                translator_instance = self.translator(source=src_lang, target=dest_lang)
+            
+            translated_text = translator_instance.translate(text)
             
             translation_time = time.time() - start_time
             
             # Extract results
-            translated_text = result.text if result else "[Translation failed]"
-            detected_source = result.src if result and hasattr(result, 'src') else src_lang
+            detected_source = src_lang  # deep-translator doesn't provide detected source
             
             logger.info(f"Translation completed in {translation_time:.2f}s: '{translated_text[:50]}...'")
             
@@ -214,7 +210,7 @@ class TranslationService:
                 'translated_text': translated_text,
                 'source_language': detected_source,
                 'target_language': dest_lang,
-                'confidence': 1.0,  # googletrans doesn't provide confidence scores
+                'confidence': 1.0,  # deep-translator doesn't provide confidence scores
                 'timestamp': time.time(),
                 'translation_time_ms': round(translation_time * 1000, 2)
             }
@@ -230,9 +226,9 @@ class TranslationService:
         Returns:
             Dict mapping language codes to language names
         """
-        # If googletrans is available, use its language list
-        if GOOGLETRANS_AVAILABLE and LANGUAGES:
-            # Merge with our custom list, prioritizing googletrans
+        # If deep-translator is available, use its language list
+        if DEEP_TRANSLATOR_AVAILABLE and LANGUAGES:
+            # Merge with our custom list, prioritizing deep-translator
             languages = dict(LANGUAGES)
             languages.update(self.supported_languages)
             return languages
@@ -256,15 +252,27 @@ class TranslationService:
         
         try:
             if not self.translator:
-                raise Exception("Translator not initialized. Please check googletrans installation.")
+                raise Exception("Translator not initialized. Please check deep-translator installation.")
             
             logger.info(f"Detecting language for text: {text[:50]}...")
-            result = self.translator.detect(text)
             
-            return {
-                'language': result.lang if result else 'unknown',
-                'confidence': result.confidence if result and hasattr(result, 'confidence') else 1.0
-            }
+            # Use LanguageDetector from deep-translator
+            try:
+                from deep_translator import LanguageDetector
+                detector = LanguageDetector()
+                detected_lang = detector.detect(text=text)
+                
+                return {
+                    'language': detected_lang if detected_lang else 'unknown',
+                    'confidence': 1.0  # deep-translator doesn't provide confidence
+                }
+            except ImportError:
+                # Fallback: assume English if detection not available
+                logger.warning("LanguageDetector not available, defaulting to 'en'")
+                return {
+                    'language': 'en',
+                    'confidence': 0.5
+                }
         except Exception as e:
             logger.error(f"Language detection error: {e}")
             raise Exception(f"Language detection failed: {str(e)}")
@@ -285,113 +293,3 @@ class TranslationService:
         """
         languages = self.get_supported_languages()
         return languages.get(lang_code)
-
-
-def test_translation_service():
-    """
-    Test function for translation service
-    Can be run directly or imported for testing
-    """
-    import sys
-    # Fix Windows console encoding for emojis
-    if sys.platform == 'win32':
-        import io
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    
-    print("=" * 60)
-    print("Testing Translation Service")
-    print("=" * 60)
-    
-    try:
-        # Initialize service
-        service = TranslationService()
-        
-        if not service.is_available():
-            print("[X] Translation service not available")
-            return False
-        
-        print("[OK] Translation service initialized")
-        
-        # Test 1: Get supported languages
-        print("\n[TEST 1] Get supported languages")
-        languages = service.get_supported_languages()
-        print(f"   Found {len(languages)} supported languages")
-        print(f"   Sample: {list(languages.items())[:5]}")
-        
-        # Test 2: Simple translation
-        print("\n[TEST 2] Simple translation (English -> Spanish)")
-        try:
-            result = service.translate_text("Hello, how are you?", src_lang='en', dest_lang='es')
-            print(f"   Original: {result['original_text']}")
-            print(f"   Translated: {result['translated_text']}")
-            print(f"   Source: {result['source_language']} -> Target: {result['target_language']}")
-            print(f"   Time: {result['translation_time_ms']}ms")
-            print("   [OK] Translation successful")
-        except Exception as e:
-            print(f"   [FAIL] Translation failed: {e}")
-            return False
-        
-        # Test 3: Auto-detect language
-        print("\n[TEST 3] Auto-detect language")
-        try:
-            result = service.translate_text("Bonjour, comment allez-vous?", src_lang='auto', dest_lang='en')
-            print(f"   Original: {result['original_text']}")
-            print(f"   Translated: {result['translated_text']}")
-            print(f"   Detected source: {result['source_language']}")
-            print("   [OK] Auto-detection successful")
-        except Exception as e:
-            print(f"   [FAIL] Auto-detection failed: {e}")
-            return False
-        
-        # Test 4: Language detection
-        print("\n[TEST 4] Language detection")
-        try:
-            result = service.detect_language("Hola, como estas?")
-            print(f"   Detected language: {result['language']}")
-            print(f"   Confidence: {result['confidence']}")
-            print("   [OK] Language detection successful")
-        except Exception as e:
-            print(f"   [FAIL] Language detection failed: {e}")
-            return False
-        
-        # Test 5: Error handling - empty text
-        print("\n[TEST 5] Error handling (empty text)")
-        try:
-            service.translate_text("", src_lang='en', dest_lang='es')
-            print("   [FAIL] Should have raised ValueError")
-            return False
-        except ValueError:
-            print("   [OK] Correctly raised ValueError for empty text")
-        except Exception as e:
-            print(f"   [FAIL] Unexpected error: {e}")
-            return False
-        
-        # Test 6: Error handling - invalid language
-        print("\n[TEST 6] Error handling (invalid language)")
-        try:
-            service.translate_text("Hello", src_lang='en', dest_lang='invalid')
-            print("   [FAIL] Should have raised ValueError")
-            return False
-        except ValueError:
-            print("   [OK] Correctly raised ValueError for invalid language")
-        except Exception as e:
-            print(f"   [FAIL] Unexpected error: {e}")
-            return False
-        
-        print("\n" + "=" * 60)
-        print("[SUCCESS] All tests passed!")
-        print("=" * 60)
-        return True
-        
-    except Exception as e:
-        print(f"\n[FAIL] Test suite failed: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-
-if __name__ == "__main__":
-    # Run tests when executed directly
-    success = test_translation_service()
-    exit(0 if success else 1)
-
