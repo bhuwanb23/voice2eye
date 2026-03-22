@@ -78,14 +78,11 @@ const TranslationModal = ({ visible, onClose }) => {
   useEffect(() => {
     if (visible) {
       loadLanguages();
-      // Entrance animation
-      Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.spring(slideAnim, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }),
-      ]).start();
+      // Fade in content
+      Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }).start();
     } else {
       fadeAnim.setValue(0);
-      slideAnim.setValue(30);
+      slideAnim.setValue(0);
     }
   }, [visible]);
 
@@ -252,7 +249,7 @@ const TranslationModal = ({ visible, onClose }) => {
           {Object.entries(languages)
             .filter(([code]) => code !== excludeCode)
             .map(([code, name]) => (
-              <Picker.Item key={code} label={name} value={code} color={colors.text} />
+              <Picker.Item key={code} label={name} value={code} color="#000000" style={{ backgroundColor: '#FFFFFF' }} />
             ))}
         </Picker>
       </View>
@@ -262,22 +259,23 @@ const TranslationModal = ({ visible, onClose }) => {
   return (
     <Modal
       visible={visible}
-      animationType="none"
+      animationType="slide"
       transparent
       onRequestClose={handleClose}
       statusBarTranslucent
     >
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={styles.overlay}>
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose} />
 
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
         <Animated.View
           style={[
             styles.modal,
             { backgroundColor: colors.surface },
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+            { opacity: fadeAnim },
           ]}
         >
           {/* ── Handle bar ── */}
@@ -427,7 +425,8 @@ const TranslationModal = ({ visible, onClose }) => {
             <View style={{ height: 24 }} />
           </ScrollView>
         </Animated.View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };
@@ -436,14 +435,19 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'transparent',
+  },
+  keyboardView: {
+    width: '100%',
   },
   modal: {
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
+    minHeight: 520,
     maxHeight: '90%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
