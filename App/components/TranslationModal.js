@@ -26,6 +26,11 @@ import { useAccessibility } from './AccessibilityProvider';
 const TranslationModal = ({ visible, onClose }) => {
   const { settings, getThemeColors } = useAccessibility();
   const colors = getThemeColors();
+  
+  // Debug colors on mount
+  useEffect(() => {
+    console.log('Translation colors:', colors);
+  }, []);
 
   // State management
   const [sourceLanguage, setSourceLanguage] = useState('en');
@@ -46,19 +51,26 @@ const TranslationModal = ({ visible, onClose }) => {
   useEffect(() => {
     console.log('TranslationModal visible state changed:', visible);
     if (visible) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      // Reset animations first
+      fadeAnim.setValue(0);
+      slideAnim.setValue(50);
+      
+      // Then start animations after a small delay to ensure modal is rendered
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            tension: 50,
+            friction: 7,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }, 50);
     } else {
       fadeAnim.setValue(0);
       slideAnim.setValue(50);
@@ -367,11 +379,13 @@ const TranslationModal = ({ visible, onClose }) => {
   return (
     <Modal
       visible={visible}
-      animationType="none"
+      animationType="slide"
       transparent={true}
       onRequestClose={handleClose}
+      statusBarTranslucent={true}
     >
       <View style={styles.modalOverlay}>
+        {console.log('Rendering TranslationModal, visible:', visible, 'fadeAnim:', fadeAnim._value)}
         <Animated.View
           style={[
             styles.modalContent,
