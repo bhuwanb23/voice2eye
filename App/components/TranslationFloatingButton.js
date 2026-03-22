@@ -100,7 +100,7 @@ const TranslationFloatingButton = ({ onPress }) => {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 130,
     right: 20,
     zIndex: 1000,
   },

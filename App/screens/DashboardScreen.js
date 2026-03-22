@@ -22,6 +22,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAccessibility } from '../components/AccessibilityProvider';
 import * as Speech from 'expo-speech';
 import apiService from '../api/services/apiService';
+import { Mic, Hand, AlertTriangle, Settings, Users, HelpCircle, Activity } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -80,9 +81,9 @@ const DashboardScreen = ({ navigation }) => {
       { day: 'Sun', count: 1 }
     ],
     triggerType: [
-      { type: 'voice', count: 12, color: '#007AFF' },
-      { type: 'gesture', count: 5, color: '#FF9500' },
-      { type: 'manual', count: 3, color: '#FF3B30' }
+      { type: 'voice', count: 12, color: '#9333EA' },
+      { type: 'gesture', count: 5, color: '#C084FC' },
+      { type: 'manual', count: 3, color: '#7E22CE' }
     ],
     avgResponseTime: 5.2,
     totalEmergencies: 22
@@ -178,9 +179,9 @@ const DashboardScreen = ({ navigation }) => {
             percentage: (timePatterns[hour] / (emergencyData.triggered_count || 1)) * 100
           })),
           triggerType: [
-            { type: 'voice', count: triggerTypes.voice || 0, color: '#007AFF' },
-            { type: 'gesture', count: triggerTypes.gesture || 0, color: '#FF9500' },
-            { type: 'manual', count: triggerTypes.manual || 0, color: '#FF3B30' }
+            { type: 'voice', count: triggerTypes.voice || 0, color: '#9333EA' },
+            { type: 'gesture', count: triggerTypes.gesture || 0, color: '#C084FC' },
+            { type: 'manual', count: triggerTypes.manual || 0, color: '#7E22CE' }
           ],
           totalEmergencies: emergencyData.triggered_count || 0,
           avgResponseTime: 5.2 // Not in API response
@@ -327,8 +328,8 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'Listen',
       subtitle: 'Start listening',
-      icon: '🎤',
-      gradient: ['#667eea', '#764ba2'],
+      icon: <Mic color="#7E22CE" size={24} strokeWidth={2} />,
+      gradient: ['#A855F7', '#7E22CE'],
       onPress: startVoiceRecognition,
       variant: 'primary',
       accessibilityLabel: 'Start listening',
@@ -337,8 +338,8 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'See Gestures',
       subtitle: 'Start camera',
-      icon: '✋',
-      gradient: ['#f093fb', '#f5576c'],
+      icon: <Hand color="#9333EA" size={24} strokeWidth={2} />,
+      gradient: ['#C084FC', '#9333EA'],
       onPress: startGestureDetection,
       variant: 'secondary',
       accessibilityLabel: 'Start camera',
@@ -347,8 +348,8 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'Help',
       subtitle: 'Call for help',
-      icon: '🚨',
-      gradient: ['#ff6b6b', '#ee5a24'],
+      icon: <AlertTriangle color="#6B21A8" size={24} strokeWidth={2} />,
+      gradient: ['#9333EA', '#6B21A8'],
       onPress: triggerEmergency,
       variant: 'error',
       accessibilityLabel: 'Call for help',
@@ -360,7 +361,7 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'Settings',
       subtitle: 'Change settings',
-      icon: '⚙️',
+      icon: <Settings color="#7E22CE" size={24} strokeWidth={2} />,
       color: colors.primary,
       onPress: () => navigation.navigate('Settings'),
       accessibilityLabel: 'Settings',
@@ -368,7 +369,7 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'Contacts',
       subtitle: 'Edit contacts',
-      icon: '👥',
+      icon: <Users color="#9333EA" size={24} strokeWidth={2} />,
       color: colors.success,
       onPress: () => navigation.navigate('Contacts'),
       accessibilityLabel: 'Contacts',
@@ -376,7 +377,7 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'Practice',
       subtitle: 'Learn gestures',
-      icon: '✋',
+      icon: <Hand color="#A855F7" size={24} strokeWidth={2} />,
       color: colors.accent,
       onPress: () => navigation.navigate('GestureTraining'),
       accessibilityLabel: 'Practice gestures',
@@ -384,7 +385,7 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'Help',
       subtitle: 'How to use',
-      icon: '❓',
+      icon: <HelpCircle color="#C084FC" size={24} strokeWidth={2} />,
       color: colors.warning,
       onPress: () => navigation.navigate('Help'),
       accessibilityLabel: 'Open help',
@@ -453,7 +454,7 @@ const DashboardScreen = ({ navigation }) => {
           {apiError && (
             <View style={[styles.errorBanner, { backgroundColor: colors.warning }]}>
               <Text style={[styles.errorText, { color: 'white' }]}>
-                ⚠️ {apiError}
+                {apiError}
               </Text>
             </View>
           )}
@@ -462,8 +463,8 @@ const DashboardScreen = ({ navigation }) => {
           {currentStatus !== 'idle' && (
             <View style={[styles.statusCard, { backgroundColor: colors.surface }]}>
               <Text style={[styles.statusTitle, { color: colors.text }]}>
-                {currentStatus === 'listening' ? '🎤 Listening...' : 
-                 currentStatus === 'processing' ? '⚙️ Processing...' : 'Status'}
+                {currentStatus === 'listening' ? 'Listening...' : 
+                 currentStatus === 'processing' ? 'Processing...' : 'Status'}
               </Text>
               <Text style={[styles.statusMessage, { color: colors.textSecondary }]}>{statusMessage}</Text>
             </View>
@@ -481,7 +482,7 @@ const DashboardScreen = ({ navigation }) => {
                   style={[styles.actionCard, { backgroundColor: colors.background }]}
                   onPress={action.onPress}
                 >
-                  <Text style={styles.actionIcon}>{action.icon}</Text>
+                  <View style={styles.actionIconContainer}>{action.icon}</View>
                   <Text style={[styles.actionTitle, { color: colors.text }]}>{action.title}</Text>
                   <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
                     {action.subtitle}
@@ -538,7 +539,7 @@ const DashboardScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.chartLegend}>
                   <Text style={[styles.legendText, { color: colors.textSecondary }]}>
-                    📊 Live Data
+                    Live Data
                   </Text>
                 </View>
               </View>
@@ -602,7 +603,7 @@ const DashboardScreen = ({ navigation }) => {
                   style={[styles.navItem, { backgroundColor: colors.background }]}
                   onPress={item.onPress}
                 >
-                  <Text style={styles.navIcon}>{item.icon}</Text>
+                  <View style={styles.navIconContainer}>{item.icon}</View>
                   <Text style={[styles.navTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
                   <Text style={[styles.navSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
                     {item.subtitle}
@@ -715,7 +716,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     padding: 12,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: '#3B0764',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -735,7 +736,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     padding: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: '#3B0764',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -769,9 +770,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  actionIcon: {
-    fontSize: 20,
+  actionIconContainer: {
     marginBottom: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionTitle: {
     fontSize: 11,
@@ -835,9 +837,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  navIcon: {
-    fontSize: 18,
+  navIconContainer: {
     marginBottom: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   navTitle: {
     fontSize: 12,

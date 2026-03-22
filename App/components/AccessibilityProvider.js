@@ -208,49 +208,49 @@ export const AccessibilityProvider = ({ children }) => {
   const getThemeColors = () => {
     if (settings.highContrast) {
       return {
-        primary: '#000000',
+        primary: '#3B0764',
         secondary: '#FFFFFF',
         background: '#FFFFFF',
         surface: '#F5F5F5',
-        text: '#000000',
-        textSecondary: '#333333',
-        accent: '#FF0000',
+        text: '#2E1065',
+        textSecondary: '#4C1D95',
+        accent: '#7E22CE',
         error: '#FF0000',
         success: '#00AA00',
         warning: '#FFAA00',
-        border: '#000000',
+        border: '#3B0764',
       };
     }
 
     if (settings.theme === 'dark') {
       return {
-        primary: '#BB86FC',
-        secondary: '#03DAC6',
-        background: '#121212',
-        surface: '#1E1E1E',
-        text: '#FFFFFF',
-        textSecondary: '#B3B3B3',
-        accent: '#FF6B6B',
+        primary: '#C084FC',
+        secondary: '#E9D5FF',
+        background: '#2E1065',
+        surface: '#3B0764',
+        text: '#FAF5FF',
+        textSecondary: '#D8B4FE',
+        accent: '#A855F7',
         error: '#CF6679',
         success: '#4CAF50',
         warning: '#FF9800',
-        border: '#333333',
+        border: '#581C87',
       };
     }
 
     // Light theme
     return {
-      primary: '#4A90E2',
-      secondary: '#2E7D32',
-      background: '#FFFFFF',
-      surface: '#F8F9FA',
-      text: '#212529',
-      textSecondary: '#6C757D',
-      accent: '#FF6B6B',
+      primary: '#7E22CE',
+      secondary: '#9333EA',
+      background: '#FAF5FF',
+      surface: '#FFFFFF',
+      text: '#3B0764',
+      textSecondary: '#6B21A8',
+      accent: '#D8B4FE',
       error: '#DC3545',
       success: '#28A745',
       warning: '#FFC107',
-      border: '#DEE2E6',
+      border: '#E9D5FF',
     };
   };
 
