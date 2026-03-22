@@ -56,7 +56,7 @@ export default function App() {
     <SafeAreaProvider>
       <AccessibilityProvider>
         <NavigationContainer>
-          <StatusBar style="auto" />
+          <StatusBar style="light" backgroundColor="#5B21B6" />
           <View style={{ flex: 1 }}>
             <Stack.Navigator
               initialRouteName="MainTabs"

@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    height: 60 + 40, // Extra height for safe area padding
+    height: 100,
     borderTopWidth: 1,
     elevation: 8,
     shadowColor: PURPLE_THEME.shadowDark,
