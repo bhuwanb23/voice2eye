@@ -240,12 +240,14 @@ const SettingsScreen = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <StatusBar 
+        barStyle="light-content" 
+      />
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Compact Modern Header */}
+        {/* Beautiful Header with Gradient */}
         <LinearGradient
-          colors={[colors.primary, colors.primary + 'DD', colors.primary + '99']}
-          style={styles.compactHeader}
+          colors={[colors.primary, colors.primary + 'E6', colors.primary + 'CC']}
+          style={styles.header}
         >
           <Animated.View 
             style={[
@@ -261,17 +263,19 @@ const SettingsScreen = ({ navigation }) => {
             
             {/* Quick Stats */}
             <View style={styles.quickStats}>
-              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+              <View style={styles.statItem}>
                 <Text style={styles.statNumber}>{Object.keys(localSettings).filter(key => localSettings[key]).length}</Text>
-                <Text style={styles.statLabel}>On</Text>
+                <Text style={styles.statText}>On</Text>
               </View>
-              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
                 <Text style={styles.statNumber}>3</Text>
-                <Text style={styles.statLabel}>Groups</Text>
+                <Text style={styles.statText}>Groups</Text>
               </View>
-              <View style={[styles.statCard, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
                 <Text style={styles.statNumber}>{hasUnsavedChanges ? 'UNSAVED' : 'SYNCED'}</Text>
-                <Text style={styles.statLabel}>Status</Text>
+                <Text style={styles.statText}>Status</Text>
               </View>
             </View>
           </Animated.View>
@@ -530,26 +534,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  compactHeader: {
-    height: 160,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 10,
+  // Header Styles
+  header: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingTop: 24,
   },
   headerContent: {
-    padding: 16,
     alignItems: 'center',
-    width: '100%',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
     marginBottom: 6,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: 'white',
     textAlign: 'center',
     opacity: 0.9,
@@ -557,30 +559,36 @@ const styles = StyleSheet.create({
   },
   quickStats: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginTop: 8,
-  },
-  statCard: {
-    padding: 12,
-    borderRadius: 10,
-    minWidth: 70,
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
   },
   statNumber: {
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
   },
-  statLabel: {
+  statText: {
     fontSize: 10,
-    marginTop: 2,
     color: 'white',
     opacity: 0.8,
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginHorizontal: 12,
   },
   searchContainer: {
     padding: 12,
-    marginTop: -8,
+    marginTop: 8,
     marginHorizontal: 12,
     borderRadius: 12,
     shadowColor: '#000',
