@@ -105,7 +105,11 @@ const BottomNavigationBar = ({ navigation, state }) => {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom, backgroundColor: PURPLE_THEME.primary800, borderTopColor: PURPLE_THEME.primary700 }]}>
+    <View style={[styles.container, { 
+      backgroundColor: PURPLE_THEME.primary800, 
+      borderTopColor: PURPLE_THEME.primary700,
+      paddingBottom: insets.bottom > 0 ? insets.bottom : 10
+    }]}>
       {navItems.map((item) => {
         const isActive = state.routes[state.index]?.name === item.name;
         if (!scalesRef.current[item.name]) {
@@ -153,7 +157,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    height: 100,
+    minHeight: 60,
     borderTopWidth: 1,
     elevation: 8,
     shadowColor: PURPLE_THEME.shadowDark,

@@ -56,8 +56,9 @@ export default function App() {
     <SafeAreaProvider>
       <AccessibilityProvider>
         <NavigationContainer>
-          <StatusBar style="light" backgroundColor="#5B21B6" />
-          <View style={{ flex: 1 }}>
+          <StatusBar barStyle="light-content" />
+          {/* Purple background for entire app including status bar area */}
+          <View style={{ flex: 1, backgroundColor: '#5B21B6' }}>
             <Stack.Navigator
               initialRouteName="MainTabs"
               screenOptions={{
