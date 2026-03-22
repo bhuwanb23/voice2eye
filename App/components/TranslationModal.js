@@ -1,8 +1,8 @@
 /**
- * Translation Modal - Clean Implementation
- * Simple, working translation interface
+ * Translation Modal - Beautiful & Fully Functional
+ * Fixed: iOS picker, button text color, language swap, visual polish
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,11 +13,38 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  Platform,
+  ActionSheetIOS,
+  Animated,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import * as Speech from 'expo-speech';
 import apiService from '../api/services/apiService';
 import { useAccessibility } from './AccessibilityProvider';
+
+const FALLBACK_LANGUAGES = {
+  en: 'English',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  it: 'Italian',
+  pt: 'Portuguese',
+  ru: 'Russian',
+  ja: 'Japanese',
+  ko: 'Korean',
+  zh: 'Chinese',
+  ar: 'Arabic',
+  hi: 'Hindi',
+  ta: 'Tamil',
+  te: 'Telugu',
+  ml: 'Malayalam',
+  bn: 'Bengali',
+  tr: 'Turkish',
+  nl: 'Dutch',
+  pl: 'Polish',
+  sv: 'Swedish',
+};
 
 const TranslationModal = ({ visible, onClose }) => {
   const { getThemeColors } = useAccessibility();
@@ -36,199 +63,371 @@ const TranslationModal = ({ visible, onClose }) => {
   const [inputText, setInputText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [languages, setLanguages] = useState({});
+  const [languages, setLanguages] = useState(FALLBACK_LANGUAGES);
   const [isLoading, setIsLoading] = useState(false);
-  const [languageDropdownVisible, setLanguageDropdownVisible] = useState({ from: false, to: false });
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const swapAnim = useRef(new Animated.Value(1)).current;
+  const resultAnim = useRef(new Animated.Value(0)).current;
+
+  const getLanguageName = (code) => languages[code] || code.toUpperCase();
 
   useEffect(() => {
     if (visible) {
       loadLanguages();
+      // Entrance animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.spring(slideAnim, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }),
+      ]).start();
+    } else {
+      fadeAnim.setValue(0);
+      slideAnim.setValue(30);
     }
   }, [visible]);
 
+  // Animate result in when it appears
+  useEffect(() => {
+    if (translatedText) {
+      resultAnim.setValue(0);
+      Animated.spring(resultAnim, {
+        toValue: 1,
+        tension: 80,
+        friction: 10,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [translatedText]);
+
   const loadLanguages = async () => {
-    console.log('Loading languages...');
     setIsLoading(true);
     try {
       const response = await apiService.getSupportedLanguages();
-      console.log('Languages API response:', response);
-      
-      if (response && response.languages) {
+      if (response && response.languages && Object.keys(response.languages).length > 0) {
         setLanguages(response.languages);
-        console.log('Languages loaded:', Object.keys(response.languages).length);
       } else {
-        console.warn('No languages in response, using fallback');
-        setLanguages({
-          en: 'English', es: 'Spanish', fr: 'French', de: 'German',
-          it: 'Italian', pt: 'Portuguese', ru: 'Russian', ja: 'Japanese',
-          ko: 'Korean', zh: 'Chinese', ar: 'Arabic', hi: 'Hindi',
-        });
+        setLanguages(FALLBACK_LANGUAGES);
       }
     } catch (error) {
-      console.error('Could not load languages:', error);
-      setLanguages({
-        en: 'English', es: 'Spanish', fr: 'French', de: 'German',
-        it: 'Italian', pt: 'Portuguese', ru: 'Russian', ja: 'Japanese',
-        ko: 'Korean', zh: 'Chinese', ar: 'Arabic', hi: 'Hindi',
-      });
-      Alert.alert('Warning', 'Could not load languages from server. Using default list.');
+      setLanguages(FALLBACK_LANGUAGES);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ── iOS Language Picker via ActionSheet ──────────────────────────────────
+  const openIOSPicker = (current, setter, exclude) => {
+    const entries = Object.entries(languages).filter(([code]) => code !== exclude);
+    const options = entries.map(([, name]) => name);
+    options.push('Cancel');
+
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex: options.length - 1,
+        title: 'Select Language',
+      },
+      (buttonIndex) => {
+        if (buttonIndex < entries.length) {
+          setter(entries[buttonIndex][0]);
+          // Clear translation when language changes
+          setTranslatedText('');
+        }
+      }
+    );
+  };
+
+  // ── Language Swap ────────────────────────────────────────────────────────
+  const handleSwapLanguages = () => {
+    Animated.sequence([
+      Animated.timing(swapAnim, { toValue: 0.7, duration: 100, useNativeDriver: true }),
+      Animated.spring(swapAnim, { toValue: 1, tension: 150, friction: 5, useNativeDriver: true }),
+    ]).start();
+
+    const prevSource = sourceLanguage;
+    const prevTarget = targetLanguage;
+    setSourceLanguage(prevTarget);
+    setTargetLanguage(prevSource);
+
+    // Swap text too if we have a translation
+    if (translatedText) {
+      setInputText(translatedText);
+      setTranslatedText('');
+    }
+  };
+
+  // ── Translation ──────────────────────────────────────────────────────────
   const handleTranslate = async () => {
     if (!inputText.trim()) {
-      Alert.alert('Error', 'Please enter some text to translate');
+      Alert.alert('Nothing to translate', 'Please enter some text first.');
+      return;
+    }
+    if (sourceLanguage === targetLanguage) {
+      Alert.alert('Same language', 'Please select different source and target languages.');
       return;
     }
 
-    console.log('Starting translation:', { 
-      text: inputText, 
-      from: sourceLanguage, 
-      to: targetLanguage 
-    });
-    
     setIsProcessing(true);
+    setTranslatedText('');
     try {
       const result = await apiService.translateText(inputText, sourceLanguage, targetLanguage);
-      console.log('Translation result:', result);
-      
       if (result && result.translated_text) {
         setTranslatedText(result.translated_text);
-        Speech.speak('Translation complete', { rate: 0.9 });
       } else {
-        Alert.alert('Warning', 'Received empty translation response');
-        throw new Error('No translation received');
+        throw new Error('No translation received from server.');
       }
     } catch (error) {
-      console.error('Translation error:', error);
-      Alert.alert('Translation Error', error.message || 'Translation failed. Backend may be using mock responses.');
+      Alert.alert('Translation Failed', error.message || 'Something went wrong. Please try again.');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handlePlayAudio = () => {
-    if (!translatedText) return;
-    Speech.speak(translatedText, { language: targetLanguage, rate: 0.9 });
+  // ── Text-to-Speech ───────────────────────────────────────────────────────
+  const handlePlayAudio = async () => {
+    if (!translatedText || isSpeaking) return;
+    setIsSpeaking(true);
+    try {
+      await Speech.speak(translatedText, {
+        language: targetLanguage,
+        rate: 0.85,
+        onDone: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false),
+      });
+    } catch {
+      setIsSpeaking(false);
+    }
+  };
+
+  const handleStopAudio = () => {
+    Speech.stop();
+    setIsSpeaking(false);
   };
 
   const handleClose = () => {
+    Speech.stop();
     setInputText('');
     setTranslatedText('');
+    setIsSpeaking(false);
     onClose();
+  };
+
+  // ── Language Selector Component ──────────────────────────────────────────
+  const LanguageSelector = ({ label, selectedCode, onSelect, excludeCode }) => {
+    if (Platform.OS === 'ios') {
+      return (
+        <TouchableOpacity
+          style={[styles.langSelector, { backgroundColor: colors.background, borderColor: colors.border }]}
+          onPress={() => openIOSPicker(selectedCode, onSelect, excludeCode)}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.langLabel, { color: colors.textSecondary }]}>{label}</Text>
+          <View style={styles.langValueRow}>
+            <Text style={[styles.langValue, { color: colors.text }]} numberOfLines={1}>
+              {getLanguageName(selectedCode)}
+            </Text>
+            <Text style={[styles.chevron, { color: colors.primary }]}>›</Text>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+
+    // Android: native Picker
+    return (
+      <View style={[styles.langSelector, { backgroundColor: colors.background, borderColor: colors.border }]}>
+        <Text style={[styles.langLabel, { color: colors.textSecondary }]}>{label}</Text>
+        <Picker
+          selectedValue={selectedCode}
+          onValueChange={(value) => {
+            onSelect(value);
+            setTranslatedText('');
+          }}
+          style={[styles.androidPicker, { color: colors.text }]}
+          dropdownIconColor={colors.primary}
+          mode="dropdown"
+        >
+          {Object.entries(languages)
+            .filter(([code]) => code !== excludeCode)
+            .map(([code, name]) => (
+              <Picker.Item key={code} label={name} value={code} color={colors.text} />
+            ))}
+        </Picker>
+      </View>
+    );
   };
 
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      transparent={true}
+      animationType="none"
+      transparent
       onRequestClose={handleClose}
+      statusBarTranslucent
     >
-      <View style={styles.overlay}>
-        <View style={[styles.modal, { backgroundColor: colors.surface }]}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>🌐 Translate</Text>
-            <TouchableOpacity onPress={handleClose}>
-              <Text style={[styles.closeBtn, { color: colors.primary }]}>✕</Text>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose} />
+
+        <Animated.View
+          style={[
+            styles.modal,
+            { backgroundColor: colors.surface },
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
+          {/* ── Handle bar ── */}
+          <View style={styles.handleBar}>
+            <View style={[styles.handle, { backgroundColor: colors.border }]} />
+          </View>
+
+          {/* ── Header ── */}
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <View style={styles.headerLeft}>
+              <View style={[styles.iconBadge, { backgroundColor: colors.primary + '18' }]}>
+                <Text style={styles.headerIcon}>🌐</Text>
+              </View>
+              <Text style={[styles.title, { color: colors.text }]}>Translate</Text>
+            </View>
+            <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.background }]} onPress={handleClose}>
+              <Text style={[styles.closeIcon, { color: colors.textSecondary }]}>✕</Text>
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {/* Language Selection */}
-            <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>From:</Text>
-              <View style={[styles.pickerBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                <Picker 
-                  selectedValue={sourceLanguage} 
-                  onValueChange={(value) => {
-                    console.log('Source language changed to:', value);
-                    setSourceLanguage(value);
-                  }} 
-                  style={styles.picker}
-                  dropdownIconColor={colors.text}
-                >
-                  {Object.entries(languages).map(([code, name]) => (
-                    <Picker.Item key={code} label={name} value={code} />
-                  ))}
-                </Picker>
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ── Language Pair Row ── */}
+            <View style={styles.langRow}>
+              <View style={styles.langSelectorWrapper}>
+                <LanguageSelector
+                  label="FROM"
+                  selectedCode={sourceLanguage}
+                  onSelect={setSourceLanguage}
+                  excludeCode={targetLanguage}
+                />
               </View>
 
-              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>To:</Text>
-              <View style={[styles.pickerBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                <Picker 
-                  selectedValue={targetLanguage} 
-                  onValueChange={(value) => {
-                    console.log('Target language changed to:', value);
-                    setTargetLanguage(value);
-                  }} 
-                  style={styles.picker}
-                  dropdownIconColor={colors.text}
+              {/* Swap button */}
+              <Animated.View style={{ transform: [{ scale: swapAnim }] }}>
+                <TouchableOpacity
+                  style={[styles.swapButton, { backgroundColor: colors.primary }]}
+                  onPress={handleSwapLanguages}
+                  activeOpacity={0.8}
                 >
-                  {Object.entries(languages).map(([code, name]) => (
-                    <Picker.Item key={code} label={name} value={code} />
-                  ))}
-                </Picker>
+                  <Text style={styles.swapIcon}>⇄</Text>
+                </TouchableOpacity>
+              </Animated.View>
+
+              <View style={styles.langSelectorWrapper}>
+                <LanguageSelector
+                  label="TO"
+                  selectedCode={targetLanguage}
+                  onSelect={setTargetLanguage}
+                  excludeCode={sourceLanguage}
+                />
               </View>
             </View>
 
-            {/* Input Text */}
-            <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Enter Text:</Text>
+            {/* ── Input ── */}
+            <View style={[styles.inputCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
               <TextInput
-                style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+                style={[styles.textInput, { color: colors.text }]}
                 value={inputText}
-                onChangeText={setInputText}
-                placeholder="Type or speak..."
-                placeholderTextColor={colors.textSecondary}
+                onChangeText={(t) => {
+                  setInputText(t);
+                  if (!t) setTranslatedText('');
+                }}
+                placeholder={`Type in ${getLanguageName(sourceLanguage)}…`}
+                placeholderTextColor={colors.textSecondary + '80'}
                 multiline
                 editable={!isProcessing}
+                textAlignVertical="top"
+                maxLength={1000}
               />
+              <View style={styles.inputFooter}>
+                <Text style={[styles.charCount, { color: colors.textSecondary }]}>
+                  {inputText.length}/1000
+                </Text>
+                {inputText.length > 0 && (
+                  <TouchableOpacity onPress={() => { setInputText(''); setTranslatedText(''); }}>
+                    <Text style={[styles.clearText, { color: colors.primary }]}>Clear</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
 
-            {/* Translate Button */}
+            {/* ── Translate Button ── */}
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: isProcessing ? colors.textSecondary : colors.primary }]}
+              style={[
+                styles.translateButton,
+                { backgroundColor: isProcessing ? colors.secondary : colors.primary },
+              ]}
               onPress={handleTranslate}
-              disabled={isProcessing}
+              disabled={isProcessing || !inputText.trim()}
+              activeOpacity={0.85}
             >
               {isProcessing ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <View style={styles.loadingRow}>
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                  <Text style={styles.translateButtonText}>Translating…</Text>
+                </View>
               ) : (
-                <Text style={styles.buttonText}>🔄 Translate</Text>
+                <Text style={styles.translateButtonText}>Translate →</Text>
               )}
             </TouchableOpacity>
 
-            {/* Translated Output */}
+            {/* ── Result ── */}
             {translatedText ? (
-              <View style={styles.section}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Translation:</Text>
-                <View style={[styles.output, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                  <Text style={[styles.outputText, { color: colors.text }]}>{translatedText}</Text>
+              <Animated.View
+                style={[
+                  styles.resultCard,
+                  { backgroundColor: colors.primary + '0D', borderColor: colors.primary + '40' },
+                  {
+                    opacity: resultAnim,
+                    transform: [{ translateY: resultAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
+                  },
+                ]}
+              >
+                <View style={styles.resultHeader}>
+                  <Text style={[styles.resultLang, { color: colors.primary }]}>
+                    {getLanguageName(targetLanguage)}
+                  </Text>
+                  <View style={styles.resultActions}>
+                    <TouchableOpacity
+                      style={[
+                        styles.audioButton,
+                        { backgroundColor: isSpeaking ? colors.primary : colors.surface, borderColor: colors.primary },
+                      ]}
+                      onPress={isSpeaking ? handleStopAudio : handlePlayAudio}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.audioIcon, { color: isSpeaking ? '#fff' : colors.primary }]}>
+                        {isSpeaking ? '⏹' : '🔊'}
+                      </Text>
+                      <Text style={[styles.audioLabel, { color: isSpeaking ? '#fff' : colors.primary }]}>
+                        {isSpeaking ? 'Stop' : 'Play'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
-                <View style={styles.buttonRow}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: colors.secondary }]}
-                    onPress={handlePlayAudio}
-                  >
-                    <Text style={styles.buttonText}>🔊 Play</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.primary }]}
-                    onPress={() => { setInputText(''); setTranslatedText(''); }}
-                  >
-                    <Text style={[styles.buttonText, { color: colors.primary }]}>Clear</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+                <Text style={[styles.resultText, { color: colors.text }]}>{translatedText}</Text>
+              </Animated.View>
             ) : null}
+
+            {/* Bottom spacing */}
+            <View style={{ height: 24 }} />
           </ScrollView>
-        </View>
-      </View>
+        </Animated.View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -236,89 +435,239 @@ const TranslationModal = ({ visible, onClose }) => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
   modal: {
-    maxHeight: '85%',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 100,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    maxHeight: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 24,
+  },
+  handleBar: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  iconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerIcon: {
+    fontSize: 20,
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.3,
   },
-  closeBtn: {
-    fontSize: 28,
-    fontWeight: '600',
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  content: {
-    padding: 20,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  label: {
+  closeIcon: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 8,
   },
-  pickerBox: {
-    borderRadius: 12,
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    gap: 14,
+  },
+
+  // Language Row
+  langRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 4,
+  },
+  langSelectorWrapper: {
+    flex: 1,
+  },
+  langSelector: {
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: Platform.OS === 'ios' ? 10 : 0,
+    minHeight: 70,
+    justifyContent: 'center',
+  },
+  langLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  langValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  langValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    flex: 1,
+  },
+  chevron: {
+    fontSize: 22,
+    fontWeight: '300',
+    marginLeft: 4,
+  },
+  androidPicker: {
+    marginTop: -8,
+    marginBottom: -4,
+    marginHorizontal: -4,
+  },
+  swapButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  swapIcon: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+
+  // Input
+  inputCard: {
+    borderRadius: 16,
     borderWidth: 1,
     overflow: 'hidden',
   },
-  picker: {
-    height: 50,
-  },
-  input: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 16,
+  textInput: {
     fontSize: 16,
+    lineHeight: 24,
+    padding: 16,
     minHeight: 120,
     textAlignVertical: 'top',
   },
-  button: {
-    borderRadius: 12,
-    padding: 16,
+  inputFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(0,0,0,0.06)',
   },
-  buttonText: {
-    color: '#000000',
-    fontSize: 16,
+  charCount: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  clearText: {
+    fontSize: 12,
     fontWeight: '600',
-    // borderWidth: 1,
   },
-  output: {
-    borderRadius: 12,
+
+  // Translate Button
+  translateButton: {
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#7E22CE',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  translateButtonText: {
+    color: '#FFFFFF',           // ← Fixed: was #000000 (black on purple = unreadable)
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+
+  // Result
+  resultCard: {
+    borderRadius: 16,
     borderWidth: 1,
     padding: 16,
-    minHeight: 100,
+    gap: 12,
   },
-  outputText: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  buttonRow: {
+  resultHeader: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
-  },
-  actionButton: {
-    flex: 1,
-    borderRadius: 12,
-    padding: 14,
+    justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  resultLang: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  resultActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  audioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  audioIcon: {
+    fontSize: 14,
+  },
+  audioLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  resultText: {
+    fontSize: 17,
+    lineHeight: 26,
+    fontWeight: '400',
   },
 });
 
