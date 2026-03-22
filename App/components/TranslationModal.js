@@ -221,7 +221,7 @@ const TranslationModal = ({ visible, onClose }) => {
                     style={[styles.actionButton, { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.primary }]}
                     onPress={() => { setInputText(''); setTranslatedText(''); }}
                   >
-                    <Text style={[styles.buttonText, { color: colors.primary }]}>🗑️ Clear</Text>
+                    <Text style={[styles.buttonText, { color: colors.primary }]}>Clear</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -294,9 +294,10 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 16,
     fontWeight: '600',
+    // borderWidth: 1,
   },
   output: {
     borderRadius: 12,
