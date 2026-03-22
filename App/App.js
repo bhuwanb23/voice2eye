@@ -107,19 +107,13 @@ export default function App() {
             
             {/* Translation Floating Button - Available on all screens */}
             <TranslationFloatingButton 
-              onPress={() => {
-                console.log('Translation button pressed');
-                setTranslationModalVisible(true);
-              }} 
+              onPress={() => setTranslationModalVisible(true)} 
             />
             
             {/* Translation Modal */}
             <TranslationModal 
               visible={translationModalVisible} 
-              onClose={() => {
-                console.log('Closing translation modal');
-                setTranslationModalVisible(false);
-              }} 
+              onClose={() => setTranslationModalVisible(false)} 
             />
           </View>
         </NavigationContainer>

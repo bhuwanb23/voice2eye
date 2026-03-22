@@ -1,99 +1,26 @@
 /**
- * Translation Floating Button Component
- * Displays translation icon in bottom-right corner with animations and accessibility
+ * Translation Floating Button - Clean Implementation
  */
-import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, StyleSheet, Text, Animated, Vibration, Platform } from 'react-native';
+import React from 'react';
+import { TouchableOpacity, StyleSheet, Text, View } from 'react-native';
 import { useAccessibility } from './AccessibilityProvider';
 
 const TranslationFloatingButton = ({ onPress }) => {
-  const { settings, getThemeColors } = useAccessibility();
-  const colors = getThemeColors();
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  // Pulse animation for attention
-  useEffect(() => {
-    const pulseAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    pulseAnimation.start();
-
-    return () => pulseAnimation.stop();
-  }, []);
-
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.9,
-      useNativeDriver: true,
-      friction: 5,
-      tension: 150,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-      friction: 5,
-      tension: 150,
-    }).start();
-  };
-
-  const handlePress = () => {
-    // Haptic feedback if enabled
-    if (settings.hapticFeedback && Platform.OS !== 'web') {
-      Vibration.vibrate(50);
-    }
-    
-    if (onPress) {
-      onPress();
-    }
-  };
+  const { getThemeColors } = useAccessibility();
+  const colors = getThemeColors() || { primary: '#7E22CE' };
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          transform: [{ scale: pulseAnim }],
-        },
-      ]}
-    >
+    <View style={styles.container}>
       <TouchableOpacity
         style={[styles.button, { backgroundColor: colors.primary }]}
-        onPress={handlePress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+        onPress={onPress}
         activeOpacity={0.8}
-        accessibilityRole="button"
         accessibilityLabel="Open translation"
-        accessibilityHint="Tap to open translation feature for speech-to-text translation between languages"
-        accessibilityState={{ disabled: false }}
+        accessibilityHint="Tap to open translation feature"
       >
-        <Animated.View
-          style={[
-            styles.iconContainer,
-            {
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <Text style={styles.icon}>🌐</Text>
-        </Animated.View>
+        <Text style={styles.icon}>🌐</Text>
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -105,26 +32,19 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   button: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  iconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   icon: {
-    fontSize: 24,
+    fontSize: 28,
   },
 });
 
