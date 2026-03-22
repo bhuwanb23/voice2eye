@@ -38,6 +38,7 @@ const TranslationModal = ({ visible, onClose }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [languages, setLanguages] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [languageDropdownVisible, setLanguageDropdownVisible] = useState({ from: false, to: false });
 
   useEffect(() => {
     if (visible) {
@@ -46,12 +47,17 @@ const TranslationModal = ({ visible, onClose }) => {
   }, [visible]);
 
   const loadLanguages = async () => {
+    console.log('Loading languages...');
     setIsLoading(true);
     try {
       const response = await apiService.getSupportedLanguages();
+      console.log('Languages API response:', response);
+      
       if (response && response.languages) {
         setLanguages(response.languages);
+        console.log('Languages loaded:', Object.keys(response.languages).length);
       } else {
+        console.warn('No languages in response, using fallback');
         setLanguages({
           en: 'English', es: 'Spanish', fr: 'French', de: 'German',
           it: 'Italian', pt: 'Portuguese', ru: 'Russian', ja: 'Japanese',
@@ -59,12 +65,13 @@ const TranslationModal = ({ visible, onClose }) => {
         });
       }
     } catch (error) {
-      console.warn('Could not load languages:', error);
+      console.error('Could not load languages:', error);
       setLanguages({
         en: 'English', es: 'Spanish', fr: 'French', de: 'German',
         it: 'Italian', pt: 'Portuguese', ru: 'Russian', ja: 'Japanese',
         ko: 'Korean', zh: 'Chinese', ar: 'Arabic', hi: 'Hindi',
       });
+      Alert.alert('Warning', 'Could not load languages from server. Using default list.');
     } finally {
       setIsLoading(false);
     }
@@ -76,17 +83,27 @@ const TranslationModal = ({ visible, onClose }) => {
       return;
     }
 
+    console.log('Starting translation:', { 
+      text: inputText, 
+      from: sourceLanguage, 
+      to: targetLanguage 
+    });
+    
     setIsProcessing(true);
     try {
       const result = await apiService.translateText(inputText, sourceLanguage, targetLanguage);
+      console.log('Translation result:', result);
+      
       if (result && result.translated_text) {
         setTranslatedText(result.translated_text);
         Speech.speak('Translation complete', { rate: 0.9 });
       } else {
+        Alert.alert('Warning', 'Received empty translation response');
         throw new Error('No translation received');
       }
     } catch (error) {
-      Alert.alert('Translation Error', error.message || 'Translation failed');
+      console.error('Translation error:', error);
+      Alert.alert('Translation Error', error.message || 'Translation failed. Backend may be using mock responses.');
     } finally {
       setIsProcessing(false);
     }
@@ -125,7 +142,15 @@ const TranslationModal = ({ visible, onClose }) => {
             <View style={styles.section}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>From:</Text>
               <View style={[styles.pickerBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                <Picker selectedValue={sourceLanguage} onValueChange={setSourceLanguage} style={styles.picker}>
+                <Picker 
+                  selectedValue={sourceLanguage} 
+                  onValueChange={(value) => {
+                    console.log('Source language changed to:', value);
+                    setSourceLanguage(value);
+                  }} 
+                  style={styles.picker}
+                  dropdownIconColor={colors.text}
+                >
                   {Object.entries(languages).map(([code, name]) => (
                     <Picker.Item key={code} label={name} value={code} />
                   ))}
@@ -134,7 +159,15 @@ const TranslationModal = ({ visible, onClose }) => {
 
               <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>To:</Text>
               <View style={[styles.pickerBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                <Picker selectedValue={targetLanguage} onValueChange={setTargetLanguage} style={styles.picker}>
+                <Picker 
+                  selectedValue={targetLanguage} 
+                  onValueChange={(value) => {
+                    console.log('Target language changed to:', value);
+                    setTargetLanguage(value);
+                  }} 
+                  style={styles.picker}
+                  dropdownIconColor={colors.text}
+                >
                   {Object.entries(languages).map(([code, name]) => (
                     <Picker.Item key={code} label={name} value={code} />
                   ))}
@@ -210,7 +243,7 @@ const styles = StyleSheet.create({
     maxHeight: '85%',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingBottom: 20,
+    paddingBottom: 100,
   },
   header: {
     flexDirection: 'row',
