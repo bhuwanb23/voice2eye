@@ -24,7 +24,57 @@ import * as Speech from 'expo-speech';
 import apiService from '../api/services/apiService';
 import { Mic, Hand, AlertTriangle, Settings, Users, HelpCircle, Activity } from 'lucide-react-native';
 
-const { width, height } = Dimensions.get('window');
+// Purple Theme Color Palette - WCAG 2.1 Compliant
+const PURPLE_THEME = {
+  // Primary purples
+  primary50: '#F5F3FF',
+  primary100: '#EDE9FE',
+  primary200: '#DDD6FE',
+  primary300: '#C4B5FD',
+  primary400: '#A78BFA',
+  primary500: '#8B5CF6',
+  primary600: '#7C3AED',
+  primary700: '#6D28D9',
+  primary800: '#5B21B6',
+  primary900: '#4C1D95',
+  
+  // Accent purples
+  accent500: '#C084FC',
+  accent600: '#A855F7',
+  accent700: '#9333EA',
+  accent800: '#7E22CE',
+  accent900: '#6B21A8',
+  
+  // Surface colors
+  background: '#FAF5FF',
+  surface: '#FFFFFF',
+  surfaceElevated: '#FFFFFF',
+  
+  // Text colors
+  textPrimary: '#2E1065',
+  textSecondary: '#6B21A8',
+  textTertiary: '#A78BFA',
+  
+  // Status colors (purple-tinted)
+  success: '#7C3AED',
+  successLight: '#DDD6FE',
+  error: '#DC2626',
+  errorLight: '#FEE2E2',
+  warning: '#D97706',
+  warningLight: '#FEF3C7',
+  
+  // Gradients
+  gradientPrimary: ['#8B5CF6', '#6D28D9'],
+  gradientSecondary: ['#A78BFA', '#7C3AED'],
+  gradientAccent: ['#C084FC', '#9333EA'],
+  gradientSuccess: ['#A78BFA', '#6D28D9'],
+  gradientError: ['#F87171', '#DC2626'],
+  
+  // Shadows
+  shadowLight: 'rgba(139, 92, 246, 0.1)',
+  shadowMedium: 'rgba(139, 92, 246, 0.15)',
+  shadowDark: 'rgba(109, 40, 217, 0.2)',
+};
 
 const DashboardScreen = ({ navigation }) => {
   const { settings, getThemeColors } = useAccessibility();
@@ -81,9 +131,9 @@ const DashboardScreen = ({ navigation }) => {
       { day: 'Sun', count: 1 }
     ],
     triggerType: [
-      { type: 'voice', count: 12, color: '#9333EA' },
-      { type: 'gesture', count: 5, color: '#C084FC' },
-      { type: 'manual', count: 3, color: '#7E22CE' }
+      { type: 'voice', count: 12, color: PURPLE_THEME.accent700 },
+      { type: 'gesture', count: 5, color: PURPLE_THEME.accent500 },
+      { type: 'manual', count: 3, color: PURPLE_THEME.accent800 }
     ],
     avgResponseTime: 5.2,
     totalEmergencies: 22
@@ -179,9 +229,9 @@ const DashboardScreen = ({ navigation }) => {
             percentage: (timePatterns[hour] / (emergencyData.triggered_count || 1)) * 100
           })),
           triggerType: [
-            { type: 'voice', count: triggerTypes.voice || 0, color: '#9333EA' },
-            { type: 'gesture', count: triggerTypes.gesture || 0, color: '#C084FC' },
-            { type: 'manual', count: triggerTypes.manual || 0, color: '#7E22CE' }
+            { type: 'voice', count: triggerTypes.voice || 0, color: PURPLE_THEME.accent700 },
+            { type: 'gesture', count: triggerTypes.gesture || 0, color: PURPLE_THEME.accent500 },
+            { type: 'manual', count: triggerTypes.manual || 0, color: PURPLE_THEME.accent800 }
           ],
           totalEmergencies: emergencyData.triggered_count || 0,
           avgResponseTime: 5.2 // Not in API response
@@ -328,8 +378,8 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'Listen',
       subtitle: 'Start listening',
-      icon: <Mic color="#7E22CE" size={24} strokeWidth={2} />,
-      gradient: ['#A855F7', '#7E22CE'],
+      icon: <Mic color={PURPLE_THEME.primary700} size={24} strokeWidth={2} />,
+      gradient: PURPLE_THEME.gradientSecondary,
       onPress: startVoiceRecognition,
       variant: 'primary',
       accessibilityLabel: 'Start listening',
@@ -338,8 +388,8 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'See Gestures',
       subtitle: 'Start camera',
-      icon: <Hand color="#9333EA" size={24} strokeWidth={2} />,
-      gradient: ['#C084FC', '#9333EA'],
+      icon: <Hand color={PURPLE_THEME.accent700} size={24} strokeWidth={2} />,
+      gradient: PURPLE_THEME.gradientAccent,
       onPress: startGestureDetection,
       variant: 'secondary',
       accessibilityLabel: 'Start camera',
@@ -348,8 +398,8 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'Help',
       subtitle: 'Call for help',
-      icon: <AlertTriangle color="#6B21A8" size={24} strokeWidth={2} />,
-      gradient: ['#9333EA', '#6B21A8'],
+      icon: <AlertTriangle color={PURPLE_THEME.accent900} size={24} strokeWidth={2} />,
+      gradient: PURPLE_THEME.gradientAccent,
       onPress: triggerEmergency,
       variant: 'error',
       accessibilityLabel: 'Call for help',
@@ -361,32 +411,32 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'Settings',
       subtitle: 'Change settings',
-      icon: <Settings color="#7E22CE" size={24} strokeWidth={2} />,
-      color: colors.primary,
+      icon: <Settings color={PURPLE_THEME.primary700} size={24} strokeWidth={2} />,
+      color: PURPLE_THEME.primary600,
       onPress: () => navigation.navigate('Settings'),
       accessibilityLabel: 'Settings',
     },
     {
       title: 'Contacts',
       subtitle: 'Edit contacts',
-      icon: <Users color="#9333EA" size={24} strokeWidth={2} />,
-      color: colors.success,
+      icon: <Users color={PURPLE_THEME.accent700} size={24} strokeWidth={2} />,
+      color: PURPLE_THEME.success,
       onPress: () => navigation.navigate('Contacts'),
       accessibilityLabel: 'Contacts',
     },
     {
       title: 'Practice',
       subtitle: 'Learn gestures',
-      icon: <Hand color="#A855F7" size={24} strokeWidth={2} />,
-      color: colors.accent,
+      icon: <Hand color={PURPLE_THEME.accent600} size={24} strokeWidth={2} />,
+      color: PURPLE_THEME.accent500,
       onPress: () => navigation.navigate('GestureTraining'),
       accessibilityLabel: 'Practice gestures',
     },
     {
       title: 'Help',
       subtitle: 'How to use',
-      icon: <HelpCircle color="#C084FC" size={24} strokeWidth={2} />,
-      color: colors.warning,
+      icon: <HelpCircle color={PURPLE_THEME.accent400} size={24} strokeWidth={2} />,
+      color: PURPLE_THEME.warning,
       onPress: () => navigation.navigate('Help'),
       accessibilityLabel: 'Open help',
     },
@@ -410,7 +460,7 @@ const DashboardScreen = ({ navigation }) => {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Compact Header */}
         <LinearGradient
-          colors={[colors.primary, colors.primary + 'E6', colors.primary + 'CC']}
+          colors={PURPLE_THEME.gradientPrimary}
           style={styles.header}
         >
           <Animated.View
@@ -452,7 +502,7 @@ const DashboardScreen = ({ navigation }) => {
         >
           {/* Error Banner */}
           {apiError && (
-            <View style={[styles.errorBanner, { backgroundColor: colors.warning }]}>
+            <View style={[styles.errorBanner, { backgroundColor: PURPLE_THEME.warning }]}>
               <Text style={[styles.errorText, { color: 'white' }]}>
                 {apiError}
               </Text>
@@ -461,30 +511,30 @@ const DashboardScreen = ({ navigation }) => {
 
           {/* Status Indicator - Only show when active */}
           {currentStatus !== 'idle' && (
-            <View style={[styles.statusCard, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.statusTitle, { color: colors.text }]}>
+            <View style={[styles.statusCard, { backgroundColor: PURPLE_THEME.surface, borderLeftWidth: 4, borderLeftColor: PURPLE_THEME.primary500 }]}>
+              <Text style={[styles.statusTitle, { color: PURPLE_THEME.textPrimary }]}>
                 {currentStatus === 'listening' ? 'Listening...' : 
                  currentStatus === 'processing' ? 'Processing...' : 'Status'}
               </Text>
-              <Text style={[styles.statusMessage, { color: colors.textSecondary }]}>{statusMessage}</Text>
+              <Text style={[styles.statusMessage, { color: PURPLE_THEME.textSecondary }]}>{statusMessage}</Text>
             </View>
           )}
 
           {/* Consolidated Quick Actions & Stats */}
-          <View style={[styles.mainCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Actions</Text>
+          <View style={[styles.mainCard, { backgroundColor: PURPLE_THEME.surface, shadowColor: PURPLE_THEME.shadowDark }]}>
+            <Text style={[styles.sectionTitle, { color: PURPLE_THEME.textPrimary }]}>Actions</Text>
             
             {/* Action Buttons Grid */}
             <View style={styles.actionsGrid}>
               {quickActions.map((action, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={[styles.actionCard, { backgroundColor: colors.background }]}
+                  style={[styles.actionCard, { backgroundColor: PURPLE_THEME.background, borderWidth: 1, borderColor: PURPLE_THEME.primary100 }]}
                   onPress={action.onPress}
                 >
                   <View style={styles.actionIconContainer}>{action.icon}</View>
-                  <Text style={[styles.actionTitle, { color: colors.text }]}>{action.title}</Text>
-                  <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
+                  <Text style={[styles.actionTitle, { color: PURPLE_THEME.textPrimary }]}>{action.title}</Text>
+                  <Text style={[styles.actionSubtitle, { color: PURPLE_THEME.textSecondary }]} numberOfLines={1}>
                     {action.subtitle}
                   </Text>
                 </TouchableOpacity>
@@ -493,32 +543,32 @@ const DashboardScreen = ({ navigation }) => {
 
             {/* Performance Metrics */}
             <View style={styles.metricsSection}>
-              <Text style={[styles.subsectionTitle, { color: colors.text }]}>System Info</Text>
+              <Text style={[styles.subsectionTitle, { color: PURPLE_THEME.textPrimary }]}>System Info</Text>
               <View style={styles.metricsRow}>
-                <View style={[styles.metricItem, { backgroundColor: colors.background }]}>
-                  <Text style={[styles.metricValue, { color: colors.primary }]}>{metrics.latency}ms</Text>
-                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Speed</Text>
+                <View style={[styles.metricItem, { backgroundColor: PURPLE_THEME.background, borderWidth: 1, borderColor: PURPLE_THEME.primary100 }]}>
+                  <Text style={[styles.metricValue, { color: PURPLE_THEME.primary600 }]}>{metrics.latency}ms</Text>
+                  <Text style={[styles.metricLabel, { color: PURPLE_THEME.textSecondary }]}>Speed</Text>
                 </View>
-                <View style={[styles.metricItem, { backgroundColor: colors.background }]}>
-                  <Text style={[styles.metricValue, { color: colors.success }]}>{metrics.uptime}%</Text>
-                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Active</Text>
+                <View style={[styles.metricItem, { backgroundColor: PURPLE_THEME.background, borderWidth: 1, borderColor: PURPLE_THEME.primary100 }]}>
+                  <Text style={[styles.metricValue, { color: PURPLE_THEME.success }]}>{metrics.uptime}%</Text>
+                  <Text style={[styles.metricLabel, { color: PURPLE_THEME.textSecondary }]}>Active</Text>
                 </View>
-                <View style={[styles.metricItem, { backgroundColor: colors.background }]}>
-                  <Text style={[styles.metricValue, { color: colors.accent }]}>{patterns.totalEmergencies}</Text>
-                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Alerts</Text>
+                <View style={[styles.metricItem, { backgroundColor: PURPLE_THEME.background, borderWidth: 1, borderColor: PURPLE_THEME.primary100 }]}>
+                  <Text style={[styles.metricValue, { color: PURPLE_THEME.accent600 }]}>{patterns.totalEmergencies}</Text>
+                  <Text style={[styles.metricLabel, { color: PURPLE_THEME.textSecondary }]}>Alerts</Text>
                 </View>
               </View>
             </View>
           </View>
 
           {/* Real-time Charts */}
-          <View style={[styles.chartsCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Stats</Text>
+          <View style={[styles.chartsCard, { backgroundColor: PURPLE_THEME.surface, shadowColor: PURPLE_THEME.shadowDark }]}>
+            <Text style={[styles.sectionTitle, { color: PURPLE_THEME.textPrimary }]}>Stats</Text>
             
             {/* Usage Chart */}
             <View style={styles.chartSection}>
-              <Text style={[styles.chartTitle, { color: colors.text }]}>Weekly Usage</Text>
-              <View style={[styles.chartContainer, { backgroundColor: colors.background }]}>
+              <Text style={[styles.chartTitle, { color: PURPLE_THEME.textPrimary }]}>Weekly Usage</Text>
+              <View style={[styles.chartContainer, { backgroundColor: PURPLE_THEME.background, borderWidth: 1, borderColor: PURPLE_THEME.primary100 }]}>
                 <View style={styles.chartBars}>
                   {chartData.map((height, index) => (
                     <Animated.View key={index} style={styles.barContainer}>
@@ -527,18 +577,18 @@ const DashboardScreen = ({ navigation }) => {
                           styles.chartBar, 
                           { 
                             height: `${height}%`,
-                            backgroundColor: index === 6 ? colors.primary : colors.primary + '60'
+                            backgroundColor: index === 6 ? PURPLE_THEME.primary500 : PURPLE_THEME.primary300
                           }
                         ]} 
                       />
-                      <Text style={[styles.barLabel, { color: colors.textSecondary }]}>
+                      <Text style={[styles.barLabel, { color: PURPLE_THEME.textSecondary }]}>
                         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
                       </Text>
                     </Animated.View>
                   ))}
                 </View>
                 <View style={styles.chartLegend}>
-                  <Text style={[styles.legendText, { color: colors.textSecondary }]}>
+                  <Text style={[styles.legendText, { color: PURPLE_THEME.textSecondary, fontWeight: '600' }]}>
                     Live Data
                   </Text>
                 </View>
@@ -547,43 +597,41 @@ const DashboardScreen = ({ navigation }) => {
 
             {/* Performance Trends */}
             <View style={styles.chartSection}>
-              <Text style={[styles.chartTitle, { color: colors.text }]}>System Health</Text>
-              <View style={[styles.trendContainer, { backgroundColor: colors.background }]}>
+              <Text style={[styles.chartTitle, { color: PURPLE_THEME.textPrimary }]}>System Health</Text>
+              <View style={[styles.trendContainer, { backgroundColor: PURPLE_THEME.background, borderWidth: 1, borderColor: PURPLE_THEME.primary100 }]}>
                 <View style={styles.trendRow}>
                   <View style={styles.trendItem}>
-                    <Text style={[styles.trendValue, { color: colors.success }]}>↑ {metrics.accuracy}%</Text>
-                    <Text style={[styles.trendLabel, { color: colors.textSecondary }]}>Accuracy</Text>
+                    <Text style={[styles.trendValue, { color: PURPLE_THEME.success }]}>↑ {metrics.accuracy}%</Text>
+                    <Text style={[styles.trendLabel, { color: PURPLE_THEME.textSecondary }]}>Accuracy</Text>
                   </View>
                   <View style={styles.trendItem}>
-                    <Text style={[styles.trendValue, { color: colors.primary }]}>↓ {metrics.latency}ms</Text>
-                    <Text style={[styles.trendLabel, { color: colors.textSecondary }]}>Speed</Text>
+                    <Text style={[styles.trendValue, { color: PURPLE_THEME.primary600 }]}>↓ {metrics.latency}ms</Text>
+                    <Text style={[styles.trendLabel, { color: PURPLE_THEME.textSecondary }]}>Speed</Text>
                   </View>
                 </View>
                 <View style={styles.progressIndicators}>
                   <View style={styles.progressItem}>
-                    <Text style={[styles.progressLabel, { color: colors.textSecondary }]}>
-                      Voice ({Math.round(performanceData.voiceAccuracy)}%)
+                    <Text style={[styles.progressLabel, { color: PURPLE_THEME.textSecondary }]}>  Voice ({Math.round(performanceData.voiceAccuracy)}%)
                     </Text>
-                    <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+                    <View style={[styles.progressBar, { backgroundColor: PURPLE_THEME.primary200 }]}>
                       <Animated.View style={[
                         styles.progressFill, 
                         { 
                           width: `${performanceData.voiceAccuracy}%`, 
-                          backgroundColor: colors.success 
+                          backgroundColor: PURPLE_THEME.success 
                         }
                       ]} />
                     </View>
                   </View>
                   <View style={styles.progressItem}>
-                    <Text style={[styles.progressLabel, { color: colors.textSecondary }]}>
-                      Gestures ({Math.round(performanceData.gestureAccuracy)}%)
+                    <Text style={[styles.progressLabel, { color: PURPLE_THEME.textSecondary }]}>  Gestures ({Math.round(performanceData.gestureAccuracy)}%)
                     </Text>
-                    <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+                    <View style={[styles.progressBar, { backgroundColor: PURPLE_THEME.primary200 }]}>
                       <Animated.View style={[
                         styles.progressFill, 
                         { 
                           width: `${performanceData.gestureAccuracy}%`, 
-                          backgroundColor: colors.accent 
+                          backgroundColor: PURPLE_THEME.accent600 
                         }
                       ]} />
                     </View>
@@ -594,18 +642,18 @@ const DashboardScreen = ({ navigation }) => {
           </View>
 
           {/* Navigation Menu - Fixed 2x2 Grid */}
-          <View style={[styles.navCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Menu</Text>
+          <View style={[styles.navCard, { backgroundColor: PURPLE_THEME.surface, shadowColor: PURPLE_THEME.shadowDark }]}>
+            <Text style={[styles.sectionTitle, { color: PURPLE_THEME.textPrimary }]}>Menu</Text>
             <View style={styles.navGrid}>
               {navigationItems.map((item, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={[styles.navItem, { backgroundColor: colors.background }]}
+                  style={[styles.navItem, { backgroundColor: PURPLE_THEME.background, borderWidth: 1, borderColor: PURPLE_THEME.primary100 }]}
                   onPress={item.onPress}
                 >
                   <View style={styles.navIconContainer}>{item.icon}</View>
-                  <Text style={[styles.navTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
-                  <Text style={[styles.navSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
+                  <Text style={[styles.navTitle, { color: PURPLE_THEME.textPrimary }]} numberOfLines={1}>{item.title}</Text>
+                  <Text style={[styles.navSubtitle, { color: PURPLE_THEME.textSecondary }]} numberOfLines={1}>
                     {item.subtitle}
                   </Text>
                 </TouchableOpacity>
@@ -615,15 +663,17 @@ const DashboardScreen = ({ navigation }) => {
 
           {/* Last Command & Voice Guide Combined */}
           {(lastCommand || currentStatus !== 'idle') && (
-            <View style={[styles.commandCard, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Voice</Text>
+            <View style={[styles.commandCard, { backgroundColor: PURPLE_THEME.surface, shadowColor: PURPLE_THEME.shadowDark }]}>
+              <Text style={[styles.sectionTitle, { color: PURPLE_THEME.textPrimary }]}>Voice</Text>
               {lastCommand && (
-                <View style={[styles.lastCommand, { backgroundColor: colors.background }]}>
-                  <Text style={[styles.commandText, { color: colors.text }]}>Last: "{lastCommand}"</Text>
+                <View style={[styles.lastCommand, { backgroundColor: PURPLE_THEME.background, borderWidth: 1, borderColor: PURPLE_THEME.primary200 }]}>
+                  <Text style={[styles.commandText, { color: PURPLE_THEME.textPrimary }]}>Last: "{lastCommand}"</Text>
                 </View>
               )}
               <View style={styles.voiceHints}>
-                <Text style={[styles.hintText, { color: colors.textSecondary }]}>Say: "Help", "Settings", "Contacts"</Text>
+                <Text style={[styles.hintText, { color: PURPLE_THEME.textSecondary, fontStyle: 'italic' }]}>
+                  Say: "Help", "Settings", "Contacts"
+                </Text>
               </View>
             </View>
           )}
@@ -642,6 +692,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     paddingTop: 24,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   headerContent: {
     alignItems: 'center',
@@ -709,6 +761,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     textAlign: 'center',
+    color: PURPLE_THEME.textSecondary,
   },
   // Status Card
   statusCard: {
@@ -716,11 +769,11 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     padding: 12,
     borderRadius: 12,
-    shadowColor: '#3B0764',
+    shadowColor: PURPLE_THEME.shadowDark,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 1,
+    elevation: 2,
   },
   statusTitle: {
     fontSize: 14,
@@ -735,23 +788,25 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
     padding: 16,
-    borderRadius: 12,
-    shadowColor: '#3B0764',
+    borderRadius: 16,
+    shadowColor: PURPLE_THEME.shadowDark,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 12,
+    color: PURPLE_THEME.textPrimary,
   },
   subsectionTitle: {
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
     marginTop: 16,
+    color: PURPLE_THEME.textPrimary,
   },
   // Actions Grid
   actionsGrid: {
@@ -761,14 +816,14 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     flex: 1,
-    padding: 12,
-    borderRadius: 10,
+    padding: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: PURPLE_THEME.shadowMedium,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 1,
+    elevation: 2,
   },
   actionIconContainer: {
     marginBottom: 6,
@@ -776,14 +831,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 2,
+    color: PURPLE_THEME.textPrimary,
   },
   actionSubtitle: {
-    fontSize: 9,
+    fontSize: 10,
     textAlign: 'center',
+    color: PURPLE_THEME.textSecondary,
   },
   // Metrics
   metricsSection: {
@@ -800,12 +857,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   metricValue: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 2,
   },
   metricLabel: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '600',
   },
   // Navigation Card
@@ -813,12 +870,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
     padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
+    borderRadius: 16,
+    shadowColor: PURPLE_THEME.shadowDark,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
   },
   navGrid: {
     flexDirection: 'row',
@@ -827,15 +884,15 @@ const styles = StyleSheet.create({
   },
   navItem: {
     width: '48%',
-    padding: 12,
-    borderRadius: 10,
+    padding: 14,
+    borderRadius: 12,
     alignItems: 'center',
     marginBottom: 10,
-    shadowColor: '#000',
+    shadowColor: PURPLE_THEME.shadowMedium,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 1,
+    elevation: 2,
   },
   navIconContainer: {
     marginBottom: 6,
@@ -843,66 +900,71 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   navTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 2,
+    color: PURPLE_THEME.textPrimary,
   },
   navSubtitle: {
-    fontSize: 9,
+    fontSize: 10,
     textAlign: 'center',
+    color: PURPLE_THEME.textSecondary,
   },
   // Command Card
   commandCard: {
     marginHorizontal: 16,
     marginVertical: 8,
     padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
+    borderRadius: 16,
+    shadowColor: PURPLE_THEME.shadowDark,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
   },
   lastCommand: {
-    padding: 10,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: 10,
     marginBottom: 8,
   },
   commandText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
+    color: PURPLE_THEME.textPrimary,
   },
   voiceHints: {
     paddingTop: 8,
   },
   hintText: {
-    fontSize: 11,
+    fontSize: 12,
     fontStyle: 'italic',
+    color: PURPLE_THEME.textSecondary,
   },
   // Charts Styles
   chartsCard: {
     marginHorizontal: 16,
     marginVertical: 8,
     padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
+    borderRadius: 16,
+    shadowColor: PURPLE_THEME.shadowDark,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
   },
   chartSection: {
     marginBottom: 16,
   },
   chartTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     marginBottom: 8,
+    color: PURPLE_THEME.textPrimary,
   },
   chartContainer: {
     height: 120,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
   },
   chartBars: {
@@ -919,16 +981,17 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   chartBar: {
-    width: 16,
-    borderRadius: 2,
+    width: 18,
+    borderRadius: 4,
     marginBottom: 4,
   },
   barLabel: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '600',
+    color: PURPLE_THEME.textSecondary,
   },
   trendContainer: {
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
   },
   trendRow: {
@@ -940,13 +1003,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   trendValue: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 2,
   },
   trendLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600',
+    color: PURPLE_THEME.textSecondary,
   },
   progressIndicators: {
     gap: 8,
@@ -955,13 +1019,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     marginBottom: 4,
+    color: PURPLE_THEME.textSecondary,
   },
   progressBar: {
-    height: 6,
-    borderRadius: 3,
+    height: 8,
+    borderRadius: 4,
   },
   progressFill: {
     height: '100%',
@@ -972,8 +1037,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   legendText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600',
+    color: PURPLE_THEME.textSecondary,
   },
 });
 
