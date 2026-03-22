@@ -56,9 +56,9 @@ const TranslationModal = ({ visible, onClose }) => {
   const [supportedLanguages, setSupportedLanguages] = useState({});
   const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
 
-  // Animation refs
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
+  // Animation refs - Initialize to 1 for guaranteed visibility
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
 
   // Animate modal on open - SIMPLIFIED APPROACH
   useEffect(() => {
@@ -382,13 +382,11 @@ const TranslationModal = ({ visible, onClose }) => {
       statusBarTranslucent={true}
     >
       <View style={styles.modalOverlay}>
-        <Animated.View
+        <View
           style={[
             styles.modalContent,
             {
               backgroundColor: colors.surface || '#FFFFFF',
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
             },
           ]}
         >
@@ -475,7 +473,7 @@ const TranslationModal = ({ visible, onClose }) => {
                 {transcribedText.trim() ? (
                   <TouchableOpacity
                     style={[styles.workflowButton, { backgroundColor: colors.primary }]}
-                    onPress={() => setIsConfirmed(true)}
+                    onPress={confirmTranscription}
                     accessibilityLabel="Translate typed text"
                   >
                     <Text style={styles.workflowButtonText}>🔄 Translate Typed Text</Text>
@@ -605,7 +603,7 @@ const TranslationModal = ({ visible, onClose }) => {
               </View>
             )}
           </ScrollView>
-        </Animated.View>
+        </View>
       </View>
     </Modal>
   );
