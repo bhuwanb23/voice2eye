@@ -107,10 +107,10 @@ cd backend
 python -m uvicorn api.server:app --reload --host 0.0.0.0 --port 8000
 
 # Test connection
-curl http://192.168.1.8:8000/api
+curl http://192.168.1.5:8000/api
 
 # View API docs
-open http://192.168.1.8:8000/api/docs
+open http://192.168.1.5:8000/api/docs
 ```
 
 ## Important Notes

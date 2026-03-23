@@ -91,7 +91,7 @@ This document tracks the progress of Phase 2.1 API Integration tasks.
 
 ### API Service Configuration
 **File**: `App/api/services/apiService.js`
-- **Development URL**: `http://192.168.1.8:8000/api`
+- **Development URL**: `http://192.168.1.5:8000/api`
 - **Production URL**: Update for production deployment
 
 ### Database Configuration

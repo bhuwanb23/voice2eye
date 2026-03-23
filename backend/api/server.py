@@ -192,10 +192,10 @@ if FASTAPI_AVAILABLE:
         allow_origins=[
             "http://localhost:8081",
             "http://localhost:8082",
-            "http://192.168.1.8:8081",
-            "http://192.168.1.8:8082",
-            "exp://192.168.1.8:8081",
-            "exp://192.168.1.8:8082",
+            "http://192.168.1.5:8081",
+            "http://192.168.1.5:8082",
+            "exp://192.168.1.5:8081",
+            "exp://192.168.1.5:8082",
             "*"  # Allow all for mobile app
         ],
         allow_credentials=True,
@@ -272,8 +272,8 @@ if __name__ == "__main__":
     
     print(f"Starting VOICE2EYE API server on {host}:{port}")
     print(f"Reload: {reload}, Workers: {workers}")
-    print(f"Access the API at: http://192.168.1.8:{port}")
-    print(f"Health check: http://192.168.1.8:{port}/api/health")
+    print(f"Access the API at: http://192.168.1.5:{port}")
+    print(f"Health check: http://192.168.1.5:{port}/api/health")
 
     if FASTAPI_AVAILABLE:
         uvicorn.run(

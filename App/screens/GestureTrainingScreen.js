@@ -69,7 +69,7 @@ const CameraPreview = ({ onGestureDetected }) => {
           reader.readAsDataURL(blob);
         });
 
-        const res = await fetch('http://192.168.1.8:8000/api/gestures/detect', {
+        const res = await fetch('http://192.168.1.5:8000/api/gestures/detect', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ frame: base64 }),
