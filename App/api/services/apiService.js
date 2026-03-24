@@ -4,11 +4,11 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Backend API configuration - Using PC IP: 192.168.1.5
+// Backend API configuration - Using PC IP: 192.168.1.4
 const API_BASE_URL = __DEV__ 
   ? (typeof navigator !== 'undefined' && navigator.product === 'ReactNative')
-    ? 'http://192.168.1.5:8000/api'  // Android emulator IP for localhost
-    : 'http://192.168.1.5:8000/api'  // Direct browser/mobile IP for localhost
+    ? 'http://192.168.1.4:8000/api'  // Android emulator IP for localhost
+    : 'http://192.168.1.4:8000/api'  // Direct browser/mobile IP for localhost
   : 'https://your-production-domain.com/api';  // Production URL
 
 class ApiService {

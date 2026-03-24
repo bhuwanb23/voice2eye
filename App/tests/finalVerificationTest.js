@@ -13,7 +13,7 @@ async function runFinalVerification() {
   // Test 1: API Health Check
   console.log('\n📝 Test 1: API Health Check');
   try {
-    const response = await fetch('http://192.168.1.5:8000/api/');
+    const response = await fetch('http://192.168.1.4:8000/api/');
     if (response.ok) {
       const data = await response.json();
       console.log('✅ API Health Check PASSED');
@@ -34,7 +34,7 @@ async function runFinalVerification() {
   // Test 2: Settings API
   console.log('\n📝 Test 2: Settings API');
   try {
-    const response = await fetch('http://192.168.1.5:8000/api/settings/');
+    const response = await fetch('http://192.168.1.4:8000/api/settings/');
     if (response.ok) {
       console.log('✅ Settings API PASSED');
     } else {
@@ -51,7 +51,7 @@ async function runFinalVerification() {
   // Test 3: Gestures Vocabulary API
   console.log('\n📝 Test 3: Gestures Vocabulary API');
   try {
-    const response = await fetch('http://192.168.1.5:8000/api/gestures/vocabulary');
+    const response = await fetch('http://192.168.1.4:8000/api/gestures/vocabulary');
     if (response.ok) {
       console.log('✅ Gestures Vocabulary API PASSED');
     } else {
