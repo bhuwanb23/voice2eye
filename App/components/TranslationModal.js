@@ -129,7 +129,7 @@ const TranslationModal = ({ visible, onClose }) => {
 
   useSpeechRecognitionEvent('end', () => {
     setIsRecording(false);
-    console.log('🎤 Speech recognition ended');
+    console.log('🎤 Speech recognition ended - Safe to cleanup');
   });
 
   useSpeechRecognitionEvent('result', (event) => {
@@ -142,29 +142,22 @@ const TranslationModal = ({ visible, onClose }) => {
   useSpeechRecognitionEvent('error', (event) => {
     console.error('🎤 Speech recognition error:', event.error, event.message);
     setIsRecording(false);
-    // Only show alert for critical errors, not for 'no_speech' or timeout
-    if (event.error !== 'no_speech' && event.error !== 'timeout') {
+    // Silently ignore common non-critical errors - these are normal operation
+    const silentErrors = ['no_speech', 'timeout', 'network', 'audio-capture', 'not-allowed'];
+    if (!silentErrors.includes(event.error)) {
       Alert.alert(
         'Voice Input Error',
         event.message || 'Unable to recognize speech. Please try again.',
         [{ text: 'OK' }]
       );
+    } else {
+      console.log(`🎤 Ignored expected error: ${event.error} - This is normal behavior`);
     }
   });
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      // Stop any ongoing recognition when component unmounts
-      try {
-        if (isRecording) {
-          ExpoSpeechRecognitionModule.stop();
-        }
-      } catch (error) {
-        console.error('Cleanup error:', error);
-      }
-    };
-  }, [isRecording]);
+  // NOTE: Removed cleanup useEffect - DO NOT call stop() on unmount
+  // The native module handles its own cleanup automatically
+  // Calling stop() during React cleanup can cause race conditions and crashes
 
   // ── Voice Recording Functions ────────────────────────────────────────────
   const requestPermissions = async () => {
@@ -329,22 +322,18 @@ const TranslationModal = ({ visible, onClose }) => {
   };
 
   const handleClose = () => {
-    console.log('🎤 Closing translation modal, cleaning up...');
+    console.log('🎤 Closing translation modal...');
     
-    // Stop any ongoing voice recognition first
-    if (isRecording) {
-      try {
-        ExpoSpeechRecognitionModule.stop();
-        console.log('🎤 Stopped voice recognition on close');
-      } catch (error) {
-        console.error('🎤 Error stopping voice recognition:', error);
-      }
-      setIsRecording(false);
-    }
+    // IMPORTANT: Don't call ExpoSpeechRecognitionModule.stop() here
+    // The native module will auto-cleanup when the component unmounts
+    // Calling stop() can cause race conditions with the 'end' event
     
-    // Stop any ongoing speech
-    Speech.stop();
+    // Just update our React state to stop UI indicators
+    setIsRecording(false);
     setIsSpeaking(false);
+    
+    // Stop text-to-speech (safe to call)
+    Speech.stop();
     
     // Clear all text and state
     setInputText('');
