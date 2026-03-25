@@ -142,12 +142,29 @@ const TranslationModal = ({ visible, onClose }) => {
   useSpeechRecognitionEvent('error', (event) => {
     console.error('🎤 Speech recognition error:', event.error, event.message);
     setIsRecording(false);
-    Alert.alert(
-      'Voice Input Error',
-      event.message || 'Unable to recognize speech. Please try again.',
-      [{ text: 'OK' }]
-    );
+    // Only show alert for critical errors, not for 'no_speech' or timeout
+    if (event.error !== 'no_speech' && event.error !== 'timeout') {
+      Alert.alert(
+        'Voice Input Error',
+        event.message || 'Unable to recognize speech. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   });
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Stop any ongoing recognition when component unmounts
+      try {
+        if (isRecording) {
+          ExpoSpeechRecognitionModule.stop();
+        }
+      } catch (error) {
+        console.error('Cleanup error:', error);
+      }
+    };
+  }, [isRecording]);
 
   // ── Voice Recording Functions ────────────────────────────────────────────
   const requestPermissions = async () => {
@@ -163,6 +180,12 @@ const TranslationModal = ({ visible, onClose }) => {
   };
 
   const startVoiceRecognition = async () => {
+    // Prevent multiple simultaneous requests
+    if (isRecording) {
+      console.log('🎤 Already recording, ignoring duplicate start request');
+      return;
+    }
+
     const granted = await requestPermissions();
     if (!granted) {
       Alert.alert(
@@ -180,16 +203,21 @@ const TranslationModal = ({ visible, onClose }) => {
         setIsSpeaking(false);
       }
 
+      console.log('🎤 Starting speech recognition for language:', sourceLanguage);
+      
       // Start speech recognition with source language
       await ExpoSpeechRecognitionModule.start({
         lang: sourceLanguage,
         interimResults: true,
-        continuous: false,
+        continuous: false,  // Auto-stop after no speech detected
         requiresOnDeviceRecognition: Platform.OS === 'ios',
         addsPunctuation: true,
       });
+      
+      console.log('🎤 Speech recognition started successfully');
     } catch (error) {
-      console.error('Voice recognition start error:', error);
+      console.error('🎤 Voice recognition start error:', error);
+      setIsRecording(false);
       Alert.alert(
         'Voice Input Failed',
         error.message || 'Unable to start voice recognition.',
@@ -200,9 +228,14 @@ const TranslationModal = ({ visible, onClose }) => {
 
   const stopVoiceRecognition = async () => {
     try {
+      console.log('🎤 Stopping speech recognition...');
       await ExpoSpeechRecognitionModule.stop();
+      console.log('🎤 Speech recognition stopped successfully');
     } catch (error) {
-      console.error('Stop voice recognition error:', error);
+      console.error('🎤 Stop voice recognition error:', error);
+      // Don't show alert for stop errors, just log them
+    } finally {
+      setIsRecording(false);
     }
   };
 
@@ -296,16 +329,29 @@ const TranslationModal = ({ visible, onClose }) => {
   };
 
   const handleClose = () => {
-    // Stop any ongoing voice recognition
+    console.log('🎤 Closing translation modal, cleaning up...');
+    
+    // Stop any ongoing voice recognition first
     if (isRecording) {
-      ExpoSpeechRecognitionModule.stop();
+      try {
+        ExpoSpeechRecognitionModule.stop();
+        console.log('🎤 Stopped voice recognition on close');
+      } catch (error) {
+        console.error('🎤 Error stopping voice recognition:', error);
+      }
       setIsRecording(false);
     }
+    
     // Stop any ongoing speech
     Speech.stop();
+    setIsSpeaking(false);
+    
+    // Clear all text and state
     setInputText('');
     setTranslatedText('');
-    setIsSpeaking(false);
+    setTranscription('');
+    
+    // Close the modal
     onClose();
   };
 
