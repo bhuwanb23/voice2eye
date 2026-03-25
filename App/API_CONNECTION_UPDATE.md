@@ -1,6 +1,6 @@
 # API Connection Update Summary
 
-## Files Updated to Use Backend IP: 192.168.1.4:8000
+## Files Updated to Use Backend IP: 192.168.31.67:8000
 
 ### 1. apiService.js
 **Location:** `App/api/services/apiService.js`
@@ -19,8 +19,8 @@ const API_BASE_URL = __DEV__
 // Backend API configuration - Update with your PC's IP address
 const API_BASE_URL = __DEV__ 
   ? (typeof navigator !== 'undefined' && navigator.product === 'ReactNative')
-    ? 'http://192.168.1.4:8000/api'  // Your PC's IP for Android/mobile
-    : 'http://192.168.1.4:8000/api'  // Your PC's IP for web
+    ? 'http://192.168.31.67:8000/api'  // Your PC's IP for Android/mobile
+    : 'http://192.168.31.67:8000/api'  // Your PC's IP for web
   : 'https://your-production-domain.com/api';  // Production URL
 ```
 
@@ -29,7 +29,7 @@ const API_BASE_URL = __DEV__
 
 **Line 9 is already correct:**
 ```javascript
-const BACKEND_URL = 'http://192.168.1.4:8000/api/gestures/detect';
+const BACKEND_URL = 'http://192.168.31.67:8000/api/gestures/detect';
 ```
 ✅ This file already has the correct IP!
 
@@ -42,7 +42,7 @@ This service uses `apiService.connectGestureStream()` which will automatically u
 
 ## Summary
 
-All API connections will now point to: **http://192.168.1.4:8000**
+All API connections will now point to: **http://192.168.31.67:8000**
 
 ### What this connects:
 - ✅ Settings API endpoints

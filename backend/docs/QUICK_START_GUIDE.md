@@ -134,7 +134,7 @@ cd backend
 python api/server.py
 
 # Test with curl or Postman
-curl http://192.168.1.4:8000/api/health
+curl http://192.168.31.67:8000/api/health
 
 # Expected response:
 {

@@ -5,7 +5,7 @@
 import WebSocket from 'ws';
 
 // Test configuration
-const API_BASE_URL = 'http://192.168.1.4:8000/api';
+const API_BASE_URL = 'http://192.168.31.67:8000/api';
 const WEBSOCKET_ENDPOINTS = {
   speech: 'ws://localhost:8000/api/speech/recognize/stream',
   gesture: 'ws://localhost:8000/api/gestures/analyze/stream'

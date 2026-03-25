@@ -71,7 +71,7 @@ cd backend
 python -m uvicorn api.server:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Verify it's running: http://192.168.1.4:8000/api/docs
+Verify it's running: http://192.168.31.67:8000/api/docs
 
 ### Step 2: Test Backend API
 ```bash
