@@ -134,9 +134,24 @@ const TranslationModal = ({ visible, onClose }) => {
 
   useSpeechRecognitionEvent('result', (event) => {
     const currentTranscript = event.results[0]?.transcript || '';
-    setTranscription(currentTranscript);
-    setInputText(currentTranscript);
-    console.log('🎤 Transcription result:', currentTranscript);
+    const isFinal = event.results[0]?.isFinal || false;
+    
+    console.log('🎤 Transcription:', currentTranscript, '- Final:', isFinal);
+    
+    // Only update state if we have valid transcript
+    if (currentTranscript && currentTranscript.trim().length > 0) {
+      setTranscription(currentTranscript);
+      setInputText(currentTranscript);
+      
+      // If this is a final result, auto-stop recognition after a brief delay
+      if (isFinal) {
+        console.log('🎤 Final result received, will auto-stop in 500ms...');
+        setTimeout(() => {
+          console.log('🎤 Auto-stopping after final result');
+          ExpoSpeechRecognitionModule.stop();
+        }, 500);
+      }
+    }
   });
 
   useSpeechRecognitionEvent('error', (event) => {
@@ -198,15 +213,22 @@ const TranslationModal = ({ visible, onClose }) => {
 
       console.log('🎤 Starting speech recognition for language:', sourceLanguage);
       
-      // Start speech recognition with source language
-      await ExpoSpeechRecognitionModule.start({
+      // Configure platform-specific options for auto-stop
+      const startOptions = {
         lang: sourceLanguage,
         interimResults: true,
-        continuous: false,  // Auto-stop after no speech detected
+        continuous: false,  // Auto-stop after utterance completes
         requiresOnDeviceRecognition: Platform.OS === 'ios',
         addsPunctuation: true,
-      });
+        // Android: Set silence timeout to 2 seconds (default is much longer)
+        androidIntentOptions: {
+          EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS: 2000,
+          EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS: 2000,
+        },
+      };
       
+      await ExpoSpeechRecognitionModule.start(startOptions);
+
       console.log('🎤 Speech recognition started successfully');
     } catch (error) {
       console.error('🎤 Voice recognition start error:', error);
