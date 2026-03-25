@@ -85,26 +85,12 @@ const TranslationModal = ({ visible, onClose }) => {
   useEffect(() => {
     if (visible) {
       loadLanguages();
-      checkSpeechRecognitionAvailability();
-      // Fade in content
       Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }).start();
     } else {
       fadeAnim.setValue(0);
       slideAnim.setValue(0);
     }
   }, [visible]);
-
-  const checkSpeechRecognitionAvailability = async () => {
-    try {
-      const isAvailable = await ExpoSpeechRecognitionModule.isAvailableAsync();
-      console.log('🎤 Speech recognition available:', isAvailable);
-      if (!isAvailable) {
-        console.warn('🎤 Speech recognition not available on this device');
-      }
-    } catch (error) {
-      console.error('🎤 Error checking speech recognition:', error);
-    }
-  };
 
   // Animate result in when it appears
   useEffect(() => {
