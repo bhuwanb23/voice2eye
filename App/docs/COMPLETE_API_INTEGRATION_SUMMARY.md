@@ -71,7 +71,7 @@
 ============================================================
  VOICE2EYE API Integration Test
 ============================================================
-Testing against: http://192.168.31.67:8000/api
+Testing against: http://172.20.10.3:8000/api
 Time: 2025-10-26 14:11:52
 
 ============================================================
@@ -139,7 +139,7 @@ Time: 2025-10-26 14:11:52
 
 ### API Service Configuration
 **File**: `App/api/services/apiService.js`
-- **Development URL**: `http://192.168.31.67:8000/api`
+- **Development URL**: `http://172.20.10.3:8000/api`
 - **Production URL**: Update for production deployment
 - **All endpoints**: Fully implemented and tested
 

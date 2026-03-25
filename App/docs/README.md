@@ -62,7 +62,7 @@ npx expo start
 ## 🔧 Configuration
 
 ### API Endpoints
-- **Development**: `http://192.168.31.67:8000/api`
+- **Development**: `http://172.20.10.3:8000/api`
 - **Production**: Update in `api/services/apiService.js`
 
 ### Database

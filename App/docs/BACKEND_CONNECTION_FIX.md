@@ -10,10 +10,10 @@
 allow_origins=[
     "http://localhost:8081",
     "http://localhost:8082",
-    "http://192.168.31.67:8081",
-    "http://192.168.31.67:8082",
-    "exp://192.168.31.67:8081",
-    "exp://192.168.31.67:8082",
+    "http://172.20.10.3:8081",
+    "http://172.20.10.3:8082",
+    "exp://172.20.10.3:8081",
+    "exp://172.20.10.3:8082",
     "*"  # Allow all for mobile app
 ]
 ```
@@ -36,7 +36,7 @@ The health check API already exists! You can test these endpoints:
 
 ### Main Health Check
 ```
-GET http://192.168.31.67:8000/api/health
+GET http://172.20.10.3:8000/api/health
 ```
 **Response:**
 ```json
@@ -54,15 +54,15 @@ GET http://192.168.31.67:8000/api/health
 
 ### Individual Service Health Checks
 ```
-GET http://192.168.31.67:8000/api/health/speech
-GET http://192.168.31.67:8000/api/health/gestures
-GET http://192.168.31.67:8000/api/health/emergency
-GET http://192.168.31.67:8000/api/health/storage
+GET http://172.20.10.3:8000/api/health/speech
+GET http://172.20.10.3:8000/api/health/gestures
+GET http://172.20.10.3:8000/api/health/emergency
+GET http://172.20.10.3:8000/api/health/storage
 ```
 
 ### API Root
 ```
-GET http://192.168.31.67:8000/api/
+GET http://172.20.10.3:8000/api/
 ```
 **Response:**
 ```json
@@ -80,10 +80,10 @@ GET http://192.168.31.67:8000/api/
 ### 1. Test from Your PC (Browser or Terminal)
 ```bash
 # Test health endpoint
-curl http://192.168.31.67:8000/api/health
+curl http://172.20.10.3:8000/api/health
 
 # Test root endpoint
-curl http://192.168.31.67:8000/api/
+curl http://172.20.10.3:8000/api/
 ```
 
 Expected: JSON responses with status "healthy" or "operational"
@@ -91,7 +91,7 @@ Expected: JSON responses with status "healthy" or "operational"
 ### 2. Test from Mobile Device (Same Network)
 Open browser on your phone and go to:
 ```
-http://192.168.31.67:8000/api/health
+http://172.20.10.3:8000/api/health
 ```
 
 Expected: Same JSON response
@@ -101,7 +101,7 @@ The app will automatically test connection when loading analytics, etc.
 
 Check terminal logs for:
 ```
-LOG  API Request: GET http://192.168.31.67:8000/api/...
+LOG  API Request: GET http://172.20.10.3:8000/api/...
 ```
 
 ---
@@ -119,8 +119,8 @@ python api/server.py
 Look for:
 ```
 Starting VOICE2EYE API server on 0.0.0.0:8000
-Access the API at: http://192.168.31.67:8000
-Health check: http://192.168.31.67:8000/api/health
+Access the API at: http://172.20.10.3:8000
+Health check: http://172.20.10.3:8000/api/health
 ```
 
 #### Check 2: Firewall Blocking?
@@ -137,15 +137,15 @@ Or manually:
 5. Name: "VOICE2EYE Backend"
 
 #### Check 3: Same Network?
-- PC IP: `192.168.31.67`
+- PC IP: `172.20.10.3`
 - Mobile should be on same `192.168.31.x` network
-- Test: `ping 192.168.31.67` from phone (use network analyzer app)
+- Test: `ping 172.20.10.3` from phone (use network analyzer app)
 
 #### Check 4: Correct IP?
 Run `ipconfig` on your PC:
 ```
 Wireless LAN adapter Wi-Fi:
-   IPv4 Address. . . . . . . . . . . : 192.168.31.67
+   IPv4 Address. . . . . . . . . . . : 172.20.10.3
 ```
 
 If different, update your frontend API URLs.
@@ -155,8 +155,8 @@ If different, update your frontend API URLs.
 ## Frontend API Configuration
 
 Your frontend is already configured correctly in:
-- ✅ `App/api/services/apiService.js` → Uses `http://192.168.31.67:8000/api`
-- ✅ `App/hooks/useGestureDetector.js` → Uses `http://192.168.31.67:8000/api/gestures/detect`
+- ✅ `App/api/services/apiService.js` → Uses `http://172.20.10.3:8000/api`
+- ✅ `App/hooks/useGestureDetector.js` → Uses `http://172.20.10.3:8000/api/gestures/detect`
 
 No changes needed!
 
@@ -172,11 +172,11 @@ No changes needed!
 
 2. ✅ **Verify Backend is Listening:**
    - Should show: `Starting VOICE2EYE API server on 0.0.0.0:8000`
-   - Open browser: `http://192.168.31.67:8000/api/health`
+   - Open browser: `http://172.20.10.3:8000/api/health`
    - Should return: `{"status": "healthy", ...}`
 
 3. ✅ **Test Mobile Connection:**
-   - On your phone's browser: `http://192.168.31.67:8000/api/health`
+   - On your phone's browser: `http://172.20.10.3:8000/api/health`
    - Should work if on same network
 
 4. ✅ **Restart Expo App:**
@@ -204,8 +204,8 @@ No changes needed!
 ---
 
 **Status:** ✅ FIXED  
-**Backend URL:** http://192.168.31.67:8000  
-**Health Check:** http://192.168.31.67:8000/api/health  
+**Backend URL:** http://172.20.10.3:8000  
+**Health Check:** http://172.20.10.3:8000/api/health  
 **Date:** March 14, 2026
 
 🎉 Your backend should now accept connections from your mobile app!
