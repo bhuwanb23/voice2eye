@@ -20,6 +20,10 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import * as Speech from 'expo-speech';
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from 'expo-speech-recognition';
 import apiService from '../api/services/apiService';
 import { useAccessibility } from './AccessibilityProvider';
 
@@ -66,6 +70,9 @@ const TranslationModal = ({ visible, onClose }) => {
   const [languages, setLanguages] = useState(FALLBACK_LANGUAGES);
   const [isLoading, setIsLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcription, setTranscription] = useState('');
+  const [hasPermission, setHasPermission] = useState(null);
 
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -78,6 +85,7 @@ const TranslationModal = ({ visible, onClose }) => {
   useEffect(() => {
     if (visible) {
       loadLanguages();
+      checkSpeechRecognitionAvailability();
       // Fade in content
       Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }).start();
     } else {
@@ -85,6 +93,18 @@ const TranslationModal = ({ visible, onClose }) => {
       slideAnim.setValue(0);
     }
   }, [visible]);
+
+  const checkSpeechRecognitionAvailability = async () => {
+    try {
+      const isAvailable = await ExpoSpeechRecognitionModule.isAvailableAsync();
+      console.log('🎤 Speech recognition available:', isAvailable);
+      if (!isAvailable) {
+        console.warn('🎤 Speech recognition not available on this device');
+      }
+    } catch (error) {
+      console.error('🎤 Error checking speech recognition:', error);
+    }
+  };
 
   // Animate result in when it appears
   useEffect(() => {
@@ -112,6 +132,91 @@ const TranslationModal = ({ visible, onClose }) => {
       setLanguages(FALLBACK_LANGUAGES);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // ── Speech Recognition Event Listeners ──────────────────────────────────
+  useSpeechRecognitionEvent('start', () => {
+    setIsRecording(true);
+    console.log('🎤 Speech recognition started');
+  });
+
+  useSpeechRecognitionEvent('end', () => {
+    setIsRecording(false);
+    console.log('🎤 Speech recognition ended');
+  });
+
+  useSpeechRecognitionEvent('result', (event) => {
+    const currentTranscript = event.results[0]?.transcript || '';
+    setTranscription(currentTranscript);
+    setInputText(currentTranscript);
+    console.log('🎤 Transcription result:', currentTranscript);
+  });
+
+  useSpeechRecognitionEvent('error', (event) => {
+    console.error('🎤 Speech recognition error:', event.error, event.message);
+    setIsRecording(false);
+    Alert.alert(
+      'Voice Input Error',
+      event.message || 'Unable to recognize speech. Please try again.',
+      [{ text: 'OK' }]
+    );
+  });
+
+  // ── Voice Recording Functions ────────────────────────────────────────────
+  const requestPermissions = async () => {
+    try {
+      const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      setHasPermission(result.granted);
+      return result.granted;
+    } catch (error) {
+      console.error('Permission error:', error);
+      setHasPermission(false);
+      return false;
+    }
+  };
+
+  const startVoiceRecognition = async () => {
+    const granted = await requestPermissions();
+    if (!granted) {
+      Alert.alert(
+        'Permission Required',
+        'Please grant microphone and speech recognition permissions to use voice input.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    try {
+      // Stop any ongoing speech first
+      if (isSpeaking) {
+        Speech.stop();
+        setIsSpeaking(false);
+      }
+
+      // Start speech recognition with source language
+      await ExpoSpeechRecognitionModule.start({
+        lang: sourceLanguage,
+        interimResults: true,
+        continuous: false,
+        requiresOnDeviceRecognition: Platform.OS === 'ios',
+        addsPunctuation: true,
+      });
+    } catch (error) {
+      console.error('Voice recognition start error:', error);
+      Alert.alert(
+        'Voice Input Failed',
+        error.message || 'Unable to start voice recognition.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const stopVoiceRecognition = async () => {
+    try {
+      await ExpoSpeechRecognitionModule.stop();
+    } catch (error) {
+      console.error('Stop voice recognition error:', error);
     }
   };
 
@@ -205,6 +310,12 @@ const TranslationModal = ({ visible, onClose }) => {
   };
 
   const handleClose = () => {
+    // Stop any ongoing voice recognition
+    if (isRecording) {
+      ExpoSpeechRecognitionModule.stop();
+      setIsRecording(false);
+    }
+    // Stop any ongoing speech
     Speech.stop();
     setInputText('');
     setTranslatedText('');
@@ -336,6 +447,47 @@ const TranslationModal = ({ visible, onClose }) => {
 
             {/* ── Input ── */}
             <View style={[styles.inputCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              {/* Voice Recording Button */}
+              <View style={styles.voiceInputHeader}>
+                <TouchableOpacity
+                  style={[
+                    styles.voiceButton,
+                    {
+                      backgroundColor: isRecording ? colors.primary : colors.surface,
+                      borderColor: isRecording ? colors.primary : colors.border,
+                    },
+                  ]}
+                  onPress={isRecording ? stopVoiceRecognition : startVoiceRecognition}
+                  activeOpacity={0.8}
+                  disabled={isProcessing}
+                >
+                  <Text
+                    style={[
+                      styles.voiceIcon,
+                      { color: isRecording ? '#FFFFFF' : colors.primary },
+                    ]}
+                  >
+                    {isRecording ? '⏹' : '🎤'}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.voiceLabel,
+                      { color: isRecording ? '#FFFFFF' : colors.textSecondary },
+                    ]}
+                  >
+                    {isRecording ? 'Stop' : 'Speak'}
+                  </Text>
+                </TouchableOpacity>
+                {isRecording && (
+                  <View style={styles.recordingIndicator}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                    <Text style={[styles.recordingText, { color: colors.textSecondary }]}>
+                      Listening...
+                    </Text>
+                  </View>
+                )}
+              </View>
+
               <TextInput
                 style={[styles.textInput, { color: colors.text }]}
                 value={inputText}
@@ -346,7 +498,7 @@ const TranslationModal = ({ visible, onClose }) => {
                 placeholder={`Type in ${getLanguageName(sourceLanguage)}…`}
                 placeholderTextColor={colors.textSecondary + '80'}
                 multiline
-                editable={!isProcessing}
+                editable={!isProcessing && !isRecording}
                 textAlignVertical="top"
                 maxLength={1000}
               />
@@ -580,6 +732,39 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     overflow: 'hidden',
+  },
+  voiceInputHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
+  },
+  voiceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  voiceIcon: {
+    fontSize: 14,
+  },
+  voiceLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  recordingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  recordingText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   textInput: {
     fontSize: 16,

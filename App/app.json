@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera for gesture recognition.",
-        "NSMicrophoneUsageDescription": "This app uses the microphone for voice commands."
+        "NSMicrophoneUsageDescription": "This app uses the microphone for voice commands and speech-to-text translation.",
+        "NSSpeechRecognitionUsageDescription": "This app uses speech recognition to convert your voice to text for translation."
       }
     },
     "android": {
